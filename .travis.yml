@@ -1,16 +1,20 @@
 language: erlang
 before_script:
-- ".travis/before_script.sh"
-- make get-lfetool
+  - make get-lfetool
 script:
-- make check
+  - make check
 notifications:
   recipients:
-  - quasiquoting@gmail.com
+    - quasiquoting@gmail.com
 otp_release:
-- 18.1
-- 17.5
-- 17.3
+  - 18.1
+  - 17.5
+  - 17.3
+# http://stackoverflow.com/a/24600210/1793234
+# Handle git submodules yourself
+git:
+  submodules: false
+# Use sed to replace the SSH URL with the public URL, then initialize submodules
 before_install:
-- openssl aes-256-cbc -K $encrypted_752b3d8e11c5_key -iv $encrypted_752b3d8e11c5_iv
-  -in .travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
