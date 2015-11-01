@@ -1,15 +1,15 @@
 language: erlang
 before_script:
-  - make get-lfetool
+- make get-lfetool
 script:
-  - make check
+- make check
 notifications:
-  #irc: "irc.freenode.org#YOUR-PROJECT-CHANNEL"
   recipients:
-    - quasiquoting@gmail.com
+  - quasiquoting@gmail.com
 otp_release:
-  - 18.1
-  # - 18.0
-  - 17.5
-  # - 17.4
-  - 17.3
+- 18.1
+- 17.5
+- 17.3
+before_install:
+- openssl aes-256-cbc -K $encrypted_752b3d8e11c5_key -iv $encrypted_752b3d8e11c5_iv
+  -in .travis/id_rsa.enc -out ~/.ssh/id_rsa -d
