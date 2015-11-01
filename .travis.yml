@@ -1,8 +1,9 @@
 language: erlang
 before_script:
-  - make get-lfetool
+    - wget https://s3.amazonaws.com/rebar3/rebar3
+    - chmod 755 rebar3
 script:
-  - make check
+  - ./rebar3 eunit
 notifications:
   recipients:
     - quasiquoting@gmail.com
