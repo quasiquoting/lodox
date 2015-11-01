@@ -1,0 +1,27 @@
+[submodule "clj"]
+	path = _build/default/lib/clj
+	url = git@github.com:lfex/clj.git
+[submodule "color"]
+	path = _build/default/lib/color
+	url = git@github.com:julianduque/erlang-color.git
+[submodule "kla"]
+	path = _build/default/lib/kla
+	url = git@github.com:lfex/kla.git
+[submodule "lfe"]
+	path = _build/default/lib/lfe
+	url = git@github.com:rvirding/lfe.git
+[submodule "lfe"]
+	path = _build/default/plugins/lfe
+	url = git@github.com:rvirding/lfe.git
+[submodule "lfe-compile"]
+	path = _build/default/plugins/lfe-compile
+	url = git@github.com:lfe-rebar3/compile.git
+[submodule "lfe-version"]
+	path = _build/default/plugins/lfe-version
+	url = git@github.com:lfe-rebar3/version.git
+[submodule "ltest"]
+	path = _build/default/lib/ltest
+	url = git@github.com:lfex/ltest.git
+[submodule "lutil"]
+	path = _build/default/lib/lutil
+	url = git@github.com:lfex/lutil.git
