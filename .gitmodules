@@ -7,15 +7,15 @@
 [submodule "kla"]
 	path = _build/default/lib/kla
 	url = git@github.com:lfex/kla.git
-[submodule "lfe"]
+[submodule "lfe-lib"]
 	path = _build/default/lib/lfe
-	url = git@github.com:rvirding/lfe.git
-[submodule "lfe"]
-	path = _build/default/plugins/lfe
 	url = git@github.com:rvirding/lfe.git
 [submodule "lfe-compile"]
 	path = _build/default/plugins/lfe-compile
 	url = git@github.com:lfe-rebar3/compile.git
+[submodule "lfe-plugin"]
+	path = _build/default/plugins/lfe
+	url = git@github.com:rvirding/lfe.git
 [submodule "lfe-version"]
 	path = _build/default/plugins/lfe-version
 	url = git@github.com:lfe-rebar3/version.git
