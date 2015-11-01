@@ -1,0 +1,15 @@
+language: erlang
+before_script:
+  - make get-lfetool
+script:
+  - make check
+notifications:
+  #irc: "irc.freenode.org#YOUR-PROJECT-CHANNEL"
+  recipients:
+    - quasiquoting@Ygmail.com
+otp_release:
+  - 18.1
+  - 18.0
+  - 17.5
+  - 17.4
+  - 17.3

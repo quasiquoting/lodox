@@ -5,3 +5,7 @@ deps
 ebin/*.beam
 *.beam
 .DS_Store
+debug-*
+*.dump
+.rebar
+logs/*

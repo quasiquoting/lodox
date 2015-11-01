@@ -1,4 +1,13 @@
 * Lodox
+
+** Introduction
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]].
 
+** Installation
 Coming soon...
+
+** Usage
+Coming soon...
+
+** License
+[[http://yurrriq.mit-license.org][MIT]]
