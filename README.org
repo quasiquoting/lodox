@@ -1,4 +1,5 @@
 * Lodox
+[[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
 
 ** Introduction
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]].
