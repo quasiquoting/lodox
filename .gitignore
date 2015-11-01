@@ -9,3 +9,6 @@ debug-*
 *.dump
 .rebar
 logs/*
+_build/test/lib/*
+!_build/test/lib/lodox
+_build/test/plugins/*

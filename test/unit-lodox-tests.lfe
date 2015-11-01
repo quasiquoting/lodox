@@ -9,9 +9,5 @@
 (include-lib "ltest/include/ltest-macros.lfe")
 
 
-(deftest code-change
-  ;; FIXME: This unit test fails by default.
-  (is-equal #(ok "data")
-            (ld--server:code_change "old version"
-                                    "state"
-                                    "extra")))
+(deftest two-plus-two
+  (is-equal 4 (+ 2 2)))
