@@ -1,5 +1,6 @@
 language: erlang
 before_script:
+- ".travis/before_script.sh"
 - make get-lfetool
 script:
 - make check
