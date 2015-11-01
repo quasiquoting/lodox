@@ -1,0 +1,7 @@
+## -*- conf -*-
+.eunit
+.rebar
+deps
+ebin/*.beam
+*.beam
+.DS_Store

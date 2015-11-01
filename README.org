@@ -1,0 +1,6 @@
+* Lodox
+Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]].
+
+Coming soon[fn:1]...
+
+[fn:1] ...er or later.
