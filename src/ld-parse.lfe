@@ -1,14 +1,18 @@
 (defmodule ld-parse
-  (export (docs 1) (docs 2)))
+  (export (docs 0) (docs 1) (docs 2)))
 
 ;;;===================================================================
 ;;; API
 ;;;===================================================================
 
+(defun docs ()
+  "TODO: write docstring"
+  (docs "src"))
+
+;; TODO: write a better docstring
 (defun docs
   "Given a path to an LFE file or a directory containing LFE files,
-return a proplist with module names as keys and for values,
-proplists with keys of the form, `(fname arity)`, and their docstrings as values."
+return a map from module name to orddict from fun/arity to a property map."
   ([file-or-dir]
    (case (filelib:is_dir file-or-dir)
      ('true
