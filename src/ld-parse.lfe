@@ -7,7 +7,8 @@
 
 (defun docs
   "Given a path to an LFE file or a directory containing LFE files,
-return a proplist with keys of the form, `(fname arity)`, and their docstrings as values."
+return a proplist with module names as keys and for values,
+proplists with keys of the form, `(fname arity)`, and their docstrings as values."
   ([file-or-dir]
    (case (filelib:is_dir file-or-dir)
      ('true
