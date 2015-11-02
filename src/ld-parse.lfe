@@ -1,25 +1,43 @@
 (defmodule ld-parse
-  (export (docs 1)))
+  (export (docs 1) (docs 2)))
 
 ;;;===================================================================
 ;;; API
 ;;;===================================================================
 
-(defun docs (file)
-  "Given a path to an LFE file, return a proplist with keys of the form,
-`(fname arity)`, and their docstrings as values."
-  (let* ((`#(ok ,forms)          (lfe_io:read_file file))
-         (`#(ok ,mod-form)       (find-first forms #'defmodule?/1))
-         (`#(ok (,_ . ,exports)) (find-first mod-form #'export?/1))
-         (all?                   (=:= '(all) exports)))
-    (lists:foldr (lambda (form docs)
-                   (case (doc form)
-                     (`#(ok ,(= fa `[,f ,a]) ,doc)
-                      (case (orelse all? (lists:member fa exports))
-                        ('true `(#(,fa ,doc) . ,docs))
-                        (_ docs)))
-                     (_ docs)))
-                 '() forms)))
+(defun docs
+  "Given a path to an LFE file or a directory containing LFE files,
+return a proplist with keys of the form, `(fname arity)`, and their docstrings as values."
+  ([file-or-dir]
+   (case (filelib:is_dir file-or-dir)
+     ('true
+      (let ((dir (filename:absname file-or-dir)))
+        (lists:flatmap (lambda (file) (docs file dir))
+                       (filelib:wildcard "*.lfe" dir))))
+     ('false
+      (case (filelib:is_file file-or-dir)
+        ('true
+         (let* ((`#(ok ,forms)          (lfe_io:read_file file-or-dir))
+                (`#(ok ,mod-form)       (find-first forms #'defmodule?/1))
+                (`#(ok (,_ . ,exports)) (find-first mod-form #'export?/1))
+                (all? (=:= '(all) exports))
+                (f    (lambda (form docs)
+                        (case (doc form)
+                          (`#(ok ,(= fa `[,f ,a]) ,doc)
+                           (case (orelse all? (lists:member fa exports))
+                             ('true `(#(,fa ,doc) . ,docs))
+                             (_ docs)))
+                          (_ docs)))))
+           (case (lists:foldr f '() forms)
+             ('()     '())
+             (results `(#(,(mod-name file-or-dir) ,results))))))
+        ('false
+         '#(error no-file-or-directory)))))))
+
+(defun docs (file dir)
+  "Given a filename, `file`, and a directory, `dir`,
+call #'docs/1 on `(filename:join dir file)`."
+  (docs (filename:join dir file)))
 
 
 ;;;===================================================================
