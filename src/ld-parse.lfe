@@ -54,6 +54,8 @@
     ('true 'not-found)))
   ([_] 'not-found))
 
+(defun mod-name (file) (list_to_atom (filename:basename file ".lfe")))
+
 (defun arglist?
   (['()] 'true)
   ([lst] (when (is_list lst)) (lists:all #'is_atom/1 lst))
