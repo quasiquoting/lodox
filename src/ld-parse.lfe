@@ -34,10 +34,10 @@ return a map from module name to orddict from fun/arity to a property map."
                         (case (doc form)
                           (`#(ok ,(= doc `#m(name ,f arity ,a)))
                            (case (orelse all? (lists:member `(,f ,a) exports))
-                             ('true (orddict:update
+                             ('true (orddict:store
                                      (list_to_atom (lists:flatten `(,(atom_to_list f) "/" ,(integer_to_list a))))
-                                     (lambda (old) (++ old `(,doc)))
-                                     `(,doc) dict))
+                                     doc
+                                     dict))
                              (_    dict)))
                           (_ dict)))))
            (lists:foldl f (orddict:new) forms)))
