@@ -35,8 +35,7 @@ return a proplist with keys of the form, `(fname arity)`, and their docstrings a
          '#(error no-file-or-directory)))))))
 
 (defun docs (file dir)
-  "Given a filename, `file`, and a directory, `dir`,
-call #'docs/1 on `(filename:join dir file)`."
+  "Given a filename, `file`, and a directory, `dir`, call #'docs/1 on `(filename:join dir file)`."
   (docs (filename:join dir file)))
 
 
@@ -88,8 +87,7 @@ call #'docs/1 on `(filename:join dir file)`."
   ([_]              'false))
 
 (defun find-first
-  "Ported from
-http://joearms.github.io/2015/01/08/Some_Performance-Measurements-On-Maps.html"
+  "Ported from http://joearms.github.io/2015/01/08/Some_Performance-Measurements-On-Maps.html"
   ([`(,h . ,t) pred]
    (case (funcall pred h)
      ('true  `#(ok ,h))
