@@ -75,9 +75,20 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
 (defun mod-name (file) (list_to_atom (filename:basename file ".lfe")))
 
 (defun arglist?
-  (['()] 'true)
-  ([lst] (when (is_list lst)) (lists:all #'is_atom/1 lst))
-  ([_]   'false))
+  "Given a term, return true if it seems like a valid arglist, otherwise false."
+  (['()]                      'true)
+  ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
+  ([_]                        'false))
+
+(defun arg?
+  "Given a term, return true if it seems like a valid member of an arglist,
+otherwise false."
+  ([x] (when (is_atom x)) 'true)
+  ([x] (when (is_list x))
+   (lists:member (car x) '(= () backquote quote binary list tuple)))
+  ([x] (when (is_map x)) 'true)
+  ([x] (when (is_tuple x)) 'true)
+  ([_] 'false))
 
 (defun defmodule?
   ([`(defmodule . ,_)] 'true)
