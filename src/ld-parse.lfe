@@ -13,8 +13,10 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
    (case (filelib:is_dir file-or-dir)
      ('true
       (let ((dir (filename:absname file-or-dir)))
-        (lists:flatmap (lambda (file) (docs file dir))
-                       (filelib:wildcard "*.lfe" dir))))
+        (lists:foldl (lambda (file dict)
+                       (orddict:store (mod-name file) (docs file dir) dict))
+                     (orddict:new)
+                     (filelib:wildcard "*.lfe" dir))))
      ('false
       (case (filelib:is_file file-or-dir)
         ('true
@@ -22,16 +24,17 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
                 (`#(ok ,mod-form)       (find-first forms #'defmodule?/1))
                 (`#(ok (,_ . ,exports)) (find-first mod-form #'export?/1))
                 (all? (=:= '(all) exports))
-                (f    (lambda (form docs)
+                (f    (lambda (form dict)
                         (case (doc form)
-                          (`#(ok ,(= fa `[,f ,a]) ,doc)
-                           (case (orelse all? (lists:member fa exports))
-                             ('true `(#(,fa ,doc) . ,docs))
-                             (_ docs)))
-                          (_ docs)))))
-           (case (lists:foldr f '() forms)
-             ('()     '())
-             (results `(#(,(mod-name file-or-dir) ,results))))))
+                          (`#(ok ,(= doc `#m(name ,f arity ,a)))
+                           (case (orelse all? (lists:member `(,f ,a) exports))
+                             ('true (orddict:update
+                                     (list_to_atom (lists:flatten `(,(atom_to_list f) "/" ,(integer_to_list a))))
+                                     (lambda (old) (++ old `(,doc)))
+                                     `(,doc) dict))
+                             (_    dict)))
+                          (_ dict)))))
+           (lists:foldl f (orddict:new) forms)))
         ('false
          '#(error no-file-or-directory)))))))
 
@@ -53,9 +56,15 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
          (is_list body-or-clause))
    (cond
     ((andalso (io_lib:printable_list doc-or-form) (arglist? arglist-or-doc))
-     `#(ok (,name ,(length arglist-or-doc)) ,doc-or-form))
-    ((io_lib:printable_list arglist-or-doc)
-     `#(ok (,name ,(length (car doc-or-form))) ,arglist-or-doc))
+     `#(ok #m(name     ,name
+              arity    ,(length arglist-or-doc)
+              arglists (,arglist-or-doc)
+              doc      ,doc-or-form)))
+    ((andalso (=/= arglist-or-doc '()) (io_lib:printable_list arglist-or-doc))
+     `#(ok #m(name     ,name
+              arity    ,(length (car doc-or-form))
+              arglists ,(lists:map #'pattern/1 `(,doc-or-form ,body-or-clause))
+              doc      ,arglist-or-doc)))
     ('true 'not-found)))
   ([`(defun ,name ,doc-or-arglist . ,forms)]
    (when (is_atom name)
@@ -67,10 +76,16 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
                            ([`(,maybe-arglist . ,_t)] (arglist? maybe-arglist))
                            ([_]                       'false))
                          forms))
-     `#(ok (,name ,(length (caar forms))) ,doc-or-arglist))
+     `#(ok #m(name     ,name
+              arity    ,(length (caar forms))
+              arglists ,(lists:map #'pattern/1 forms)
+              doc      ,doc-or-arglist)))
     ((andalso (arglist? doc-or-arglist)
               (io_lib:printable_list (car forms)))
-     `#(ok (,name ,(length doc-or-arglist)) ,(car forms)))
+     `#(ok #m(name     ,name
+              arity    ,(length doc-or-arglist)
+              arglists (,doc-or-arglist)
+              doc      ,(car forms))))
     ('true 'not-found)))
   ([_] 'not-found))
 
