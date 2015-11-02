@@ -1,7 +1,10 @@
-- [get-version/0](#sec-1)
-- [get-versions/0](#sec-2)
+- [ld-util](#sec-1)
+  - [get-version/0](#sec-1-1)
+  - [get-versions/0](#sec-1-2)
 
-# get-version/0<a id="sec-1" name="sec-1"></a>
+# ld-util<a id="sec-1" name="sec-1"></a>
+
+## get-version/0<a id="sec-1-1" name="sec-1-1"></a>
 
 ```lfe
 ()
@@ -9,7 +12,7 @@
 
     Return the current version of Lodox.
 
-# get-versions/0<a id="sec-2" name="sec-2"></a>
+## get-versions/0<a id="sec-1-2" name="sec-1-2"></a>
 
 ```lfe
 ()

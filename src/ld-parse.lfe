@@ -123,7 +123,7 @@ Module level."
                    arglists ,arglists
                    doc      ,doc)
                output]
-              (let ((parts `(,(lists:flatten (++ "* " (atom_to_list sig)))
+              (let ((parts `(,(++ "** " (atom_to_list sig))
                              "#+BEGIN_SRC lfe"
                              ,(string:join
                                (lists:map (lambda (arglist)
@@ -136,12 +136,13 @@ Module level."
                              "#+END_SRC"
                              "#+BEGIN_EXAMPLE"
                              ,doc
-                             "#+END_EXAMPLE")))
+                             "#+END_EXAMPLE\n")))
                 (case output
                   ("" (string:join parts "\n"))
                   (_  (string:join `(,output ,(string:join parts "\n")) "\n")))))
              ([_ _ _] 'bad-dict))))
-    (file:write_file filename (orddict:fold f "" dict))))
+    (file:write_file filename (++ "* " (filename:basename filename ".org") "\n"
+                                  (orddict:fold f "" dict)))))
 
 (defun arglist?
   "Given a term, return true if it seems like a valid arglist, otherwise false."

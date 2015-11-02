@@ -1,11 +1,13 @@
-* docs/0
+* ld-parse
+** docs/0
 #+BEGIN_SRC lfe
 ()
 #+END_SRC
 #+BEGIN_EXAMPLE
 TODO: write docstring
 #+END_EXAMPLE
-* docs/1
+
+** docs/1
 #+BEGIN_SRC lfe
 (file-or-dir)
 #+END_SRC
@@ -13,14 +15,16 @@ TODO: write docstring
 Given a path to an LFE file or a directory containing LFE files,
 return a map from module name to orddict from fun/arity to a property map.
 #+END_EXAMPLE
-* docs/2
+
+** docs/2
 #+BEGIN_SRC lfe
 (file dir)
 #+END_SRC
 #+BEGIN_EXAMPLE
 Given a filename, `file`, and a directory, `dir`, call #'docs/1 on `(filename:join dir file)`.
 #+END_EXAMPLE
-* to-org/1
+
+** to-org/1
 #+BEGIN_SRC lfe
 (dict)
 #+END_SRC
@@ -29,7 +33,8 @@ TODO: write docstring
 
 Project level.
 #+END_EXAMPLE
-* to-org/2
+
+** to-org/2
 #+BEGIN_SRC lfe
 (dict filename)
 #+END_SRC
