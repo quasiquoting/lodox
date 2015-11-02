@@ -1,5 +1,6 @@
 (defmodule ld-parse
-  (export (docs 0) (docs 1) (docs 2)))
+  (export (docs 0) (docs 1) (docs 2)
+          (to-org 1) (to-org 2)))
 
 ;;;===================================================================
 ;;; API
@@ -100,6 +101,47 @@ return a map from module name to orddict from fun/arity to a property map."
 (defun pattern
   ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,patt ,guard))
   ([`(,arglist . ,_)] arglist))
+
+(defun to-org (dict)
+  "TODO: write docstring
+
+Project level."
+  (lists:foreach
+   (match-lambda
+     ([`#(,mod-name ,mod-dict)]
+      (to-org mod-dict (filename:join "doc" (++ (atom_to_list mod-name) ".org")))))
+   (orddict:to_list dict)))
+
+(defun to-org (dict filename)
+  "TODO: write docstring
+
+Module level."
+  (let ((f (match-lambda
+             ([sig
+               `#m(name     ,name
+                   arity    ,arity
+                   arglists ,arglists
+                   doc      ,doc)
+               output]
+              (let ((parts `(,(lists:flatten (++ "* " (atom_to_list sig)))
+                             "#+BEGIN_SRC lfe"
+                             ,(string:join
+                               (lists:map (lambda (arglist)
+                                            (re:replace
+                                             (lfe_io_pretty:term arglist)
+                                             "comma " ". ,"
+                                             '(#(return list))))
+                                          arglists)
+                               "\n")
+                             "#+END_SRC"
+                             "#+BEGIN_EXAMPLE"
+                             ,doc
+                             "#+END_EXAMPLE")))
+                (case output
+                  ("" (string:join parts "\n"))
+                  (_  (string:join `(,output ,(string:join parts "\n")) "\n")))))
+             ([_ _ _] 'bad-dict))))
+    (file:write_file filename (orddict:fold f "" dict))))
 
 (defun arglist?
   "Given a term, return true if it seems like a valid arglist, otherwise false."
