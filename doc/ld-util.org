@@ -1,0 +1,17 @@
+* get-version/0
+#+BEGIN_SRC lfe
+()
+#+END_SRC
+#+BEGIN_EXAMPLE
+Return the current version of Lodox.
+#+END_EXAMPLE
+* get-versions/0
+#+BEGIN_SRC lfe
+()
+#+END_SRC
+#+BEGIN_EXAMPLE
+Return a proplist with keys, `erlang`, `emulator`, `driver-version`, `lfe`,
+`lutil` and `lodox`, mapped to the respective versions.
+
+See also: #'get-version/0
+#+END_EXAMPLE
