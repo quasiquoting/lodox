@@ -76,6 +76,10 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
 
 (defun mod-name (file) (list_to_atom (filename:basename file ".lfe")))
 
+(defun pattern
+  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,patt ,guard))
+  ([`(,arglist . ,_)] arglist))
+
 (defun arglist?
   "Given a term, return true if it seems like a valid arglist, otherwise false."
   (['()]                      'true)
