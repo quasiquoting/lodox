@@ -10,11 +10,17 @@
 
 (deftest meta-docs
   (is-equal
-   '(#(ld-parse
-       (#((docs 1)
-          "Given a path to an LFE file or a directory containing LFE files,
+   '(#(docs/1
+       (#M(name      docs
+            arity    1
+            arglists ((file-or-dir))
+           doc       "Given a path to an LFE file or a directory containing LFE files,
 return a proplist with module names as keys and for values,
-proplists with keys of the form, `(fname arity)`, and their docstrings as values.")
-        #((docs 2)
-          "Given a filename, `file`, and a directory, `dir`, call #'docs/1 on `(filename:join dir file)`."))))
+proplists with keys of the form, `(fname arity)`, and their docstrings as values."
+           )))
+     #(docs/2
+       (#M(name     docs
+           arity    2
+           arglists ((file dir))
+           doc      "Given a filename, `file`, and a directory, `dir`, call #'docs/1 on `(filename:join dir file)`."))))
    (ld-parse:docs "src/ld-parse.lfe")))
