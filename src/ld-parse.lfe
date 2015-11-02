@@ -14,7 +14,9 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
      ('true
       (let ((dir (filename:absname file-or-dir)))
         (lists:foldl (lambda (file dict)
-                       (orddict:store (mod-name file) (docs file dir) dict))
+                       (case (docs file dir)
+                         ('()    dict)
+                         (result (orddict:store (mod-name file) result dict))))
                      (orddict:new)
                      (filelib:wildcard "*.lfe" dir))))
      ('false
