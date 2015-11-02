@@ -43,8 +43,9 @@
                                                    (is_list forms))
    (cond
     ((andalso (io_lib:printable_list doc-or-arglist)
-              (lists:all (lambda (form)
-                           (andalso (is_list form) (arglist? (car form))))
+              (lists:all (match-lambda
+                           ([`(,maybe-arglist . ,_t)] (arglist? maybe-arglist))
+                           ([_] 'false))
                          forms))
      `#(ok (,name ,(length (caar forms))) ,doc-or-arglist))
     ((andalso (arglist? doc-or-arglist)
@@ -53,7 +54,10 @@
     ('true 'not-found)))
   ([_] 'not-found))
 
-(defun arglist? (lst) (lists:all #'is_atom/1 lst))
+(defun arglist?
+  (['()] 'true)
+  ([lst] (when (is_list lst)) (lists:all #'is_atom/1 lst))
+  ([_]   'false))
 
 (defun defmodule?
   ([`(defmodule . ,_)] 'true)
