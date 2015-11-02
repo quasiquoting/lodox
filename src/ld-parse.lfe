@@ -45,25 +45,27 @@ proplists with keys of the form, `(fname arity)`, and their docstrings as values
 ;;;===================================================================
 
 (defun doc
-  ([`(defun ,name ,arglist-or-doc ,doc-or-form ,body-or-forms)]
+  "TODO: write docstring"
+  ([`(defun ,name ,arglist-or-doc ,doc-or-form ,body-or-clause)]
    (when (is_atom name)
          (is_list arglist-or-doc)
          (is_list doc-or-form)
-         (is_list body-or-forms))
+         (is_list body-or-clause))
    (cond
     ((andalso (io_lib:printable_list doc-or-form) (arglist? arglist-or-doc))
      `#(ok (,name ,(length arglist-or-doc)) ,doc-or-form))
     ((io_lib:printable_list arglist-or-doc)
      `#(ok (,name ,(length (car doc-or-form))) ,arglist-or-doc))
     ('true 'not-found)))
-  ([`(defun ,name ,doc-or-arglist . ,forms)] (when (is_atom name)
-                                                   (is_list doc-or-arglist)
-                                                   (is_list forms))
+  ([`(defun ,name ,doc-or-arglist . ,forms)]
+   (when (is_atom name)
+         (is_list doc-or-arglist)
+         (is_list forms))
    (cond
     ((andalso (io_lib:printable_list doc-or-arglist)
               (lists:all (match-lambda
                            ([`(,maybe-arglist . ,_t)] (arglist? maybe-arglist))
-                           ([_] 'false))
+                           ([_]                       'false))
                          forms))
      `#(ok (,name ,(length (caar forms))) ,doc-or-arglist))
     ((andalso (arglist? doc-or-arglist)
