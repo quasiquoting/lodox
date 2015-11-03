@@ -130,7 +130,7 @@ Module level."
                                             (re:replace
                                              (lfe_io_pretty:term arglist)
                                              "comma " ". ,"
-                                             '(#(return list))))
+                                             '(global #(return list))))
                                           arglists)
                                "\n")
                              "#+END_SRC"
