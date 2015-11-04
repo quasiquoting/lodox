@@ -1,10 +1,58 @@
+#+OPTIONS: toc:nil
+
 * Lodox
+  :PROPERTIES:
+  :padline:  no
+  :END:
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
 [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
-
 ** Introduction
+   :PROPERTIES:
+   :tangle:   src/lodox.app.src
+   :END:
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]].
+#+BEGIN_SRC erlang :exports none
+%% -*- erlang -*-
+#+END_SRC
+#+BEGIN_SRC erlang
+{application,     lodox,
+ [{description,   "Like Codox for LFE."},
+  {vsn,           "0.1.2"},
+  {modules,      ['ld-app','ld-html-writer','ld-parse','ld-server',
+                  'ld-sup','ld-util','unit-lodox-tests']},
+  {registered,   ['lodox-sup']},
+  {applications, [kernel, stdlib]},
+  {mod,          {'ld-app', []}},
+  {env,          []}]}.
+#+END_SRC
+
+** Dependencies
+   :PROPERTIES:
+   :tangle:   rebar.config
+   :END:
+#+BEGIN_SRC erlang :exports none
+{erl_opts,           [debug_info, {src_dirs, ["test"]}]}.
+{lfe_first_files,    []}.
+{eunit_compile_opts, [{src_dirs, ["test"]}]}.
+#+END_SRC
+#+BEGIN_SRC erlang
+{provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
+{deps,
+ [{lfe, ".*",
+   {git, "git://github.com/rvirding/lfe.git", {tag, "v0.10.0"}}},
+  {lutil, ".*",
+   {git, "git://github.com/lfex/lutil.git", {tag, "0.7.0"}}},
+  {ltest, ".*",
+   {git, "git://github.com/lfex/ltest.git", {tag, "0.7.0"}}},
+  {exemplar, ".*",
+   {git, "git://github.com/yurrriq/exemplar.git", {tag, "0.3.0"}}}]}.
+{plugins,
+ [{'lfe-compile', ".*",
+   {git, "git://github.com/lfe-rebar3/compile.git", {tag, "0.2.0"}}},
+  {'lfe-version', ".*",
+   {git, "git://github.com/lfe-rebar3/version.git", {tag, "0.2.0"}}}]}.
+#+END_SRC
 
 ** Installation
 Coming soon...
@@ -12,5 +60,134 @@ Coming soon...
 ** Usage
 Coming soon...
 
+** Testing
+*** Unit Tests
+    :PROPERTIES:
+    :tangle:   test/unit-lodox-tests.lfe
+    :padline:  yes
+    :END:
+#+BEGIN_SRC lfe :exports none :padline no
+(defmodule unit-lodox-tests
+  (behaviour ltest-unit)
+  (export all)
+  (import
+    (from ltest
+      (check-failed-assert 2)
+      (check-wrong-assert-exception 2))))
+
+(include-lib "ltest/include/ltest-macros.lfe")
+#+END_SRC
+
+**** ~project~ Shape
+#+BEGIN_SRC lfe
+(deftest project-shape
+  (let ((project (ld-parse:docs)))
+    (is (is_map project))
+    (is (non-empty-list? (mref* project 'description)))
+    (is (is_list (mref* project 'documents)))
+    (is (is_list (mref* project 'modules)))
+    (is-equal "lodox" (mref* project 'name))
+    (is (is_list (mref* project 'version)))))
+#+END_SRC
+
+**** ~modules~ Shapes
+#+BEGIN_SRC lfe
+(deftest modules-shapes
+  (let ((modules (mref* (ld-parse:docs) 'modules)))
+    (is (is_list modules))
+    (lists:foreach #'module?/1 modules)))
+
+(defun module? (module)
+  (is (is_map module))
+  (is-equal '(doc exports name) (maps:keys module))
+  (is (non-empty-list? (mref* module 'doc)))
+  (is (is_list (mref* module 'exports)))
+  (is (non-empty-list? (mref* module 'name))))
+#+END_SRC
+
+**** ~exports~ Shapes
+#+BEGIN_SRC lfe
+(deftest exports-shapes
+  (let ((exports (lists:map (lambda (module) (mref* module 'exports))
+                            (mref* (ld-parse:docs) 'modules))))
+    (is (is_list exports))))
+
+(defun export? (export)
+  (is (is_map export))
+  (is-equal '(arglists arity doc name) (maps:keys export))
+  (let ((arglists (mref* export 'arglists)))
+    (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
+  (is (is_integer (mref* export 'arity)))
+  (is (non-empty-list? (mref* export 'doc)))
+  (is (non-empty-list? (mref* export 'name))))
+#+END_SRC
+#+BEGIN_SRC lfe :exports none
+(defun mref* (m k) (maps:get k m 'error))
+
+(defun non-empty-list?
+  (['()]                      'false)
+  ([lst] (when (is_list lst)) 'true)
+  ([_]                        'false))
+#+END_SRC
+
+*** [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
+   :PROPERTIES:
+   :tangle:   .travis.yml
+   :END:
+#+BEGIN_SRC yaml
+language: erlang
+# http://stackoverflow.com/a/24600210/1793234
+# Handle git submodules yourself
+git:
+  submodules: false
+# Use sed to replace the SSH URL with the public URL, then initialize submodules
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+install: true
+before_script:
+    - wget https://s3.amazonaws.com/rebar3/rebar3
+    - chmod 755 rebar3
+script:
+  - ./rebar3 eunit
+notifications:
+  recipients:
+    - quasiquoting@gmail.com
+otp_release:
+  - 18.1
+  - 18.0
+#+END_SRC
+
 ** License
-[[http://yurrriq.mit-license.org][MIT]]
+   :PROPERTIES:
+   :tangle:   LICENSE
+   :END:
+Lodox is licensed under [[http://yurrriq.mit-license.org][the MIT License]].
+
+#+BEGIN_SRC text
+The MIT License (MIT)
+Copyright © 2015 Eric Bailey <eric@ericb.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+#+END_SRC
+
+
+Significant code and inspiration from [[https://github.com/weavejester/codox][Codox]]. Copyright © 2015 James Revees
+
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.

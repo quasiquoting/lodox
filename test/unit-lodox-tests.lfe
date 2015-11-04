@@ -8,7 +8,6 @@
 
 (include-lib "ltest/include/ltest-macros.lfe")
 
-
 (deftest project-shape
   (let ((project (ld-parse:docs)))
     (is (is_map project))
@@ -23,17 +22,17 @@
     (is (is_list modules))
     (lists:foreach #'module?/1 modules)))
 
-(deftest exports-shapes
-  (let ((exports (lists:map (lambda (module) (mref* module 'exports))
-                            (mref* (ld-parse:docs) 'modules))))
-    (is (is_list exports))))
-
 (defun module? (module)
   (is (is_map module))
   (is-equal '(doc exports name) (maps:keys module))
   (is (non-empty-list? (mref* module 'doc)))
   (is (is_list (mref* module 'exports)))
   (is (non-empty-list? (mref* module 'name))))
+
+(deftest exports-shapes
+  (let ((exports (lists:map (lambda (module) (mref* module 'exports))
+                            (mref* (ld-parse:docs) 'modules))))
+    (is (is_list exports))))
 
 (defun export? (export)
   (is (is_map export))
