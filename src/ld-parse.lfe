@@ -13,17 +13,25 @@
 ;; TODO: write a better docstring
 (defun docs
   "Given a path to an LFE file or a directory containing LFE files,
-return a map from module name to orddict from fun/arity to a property map."
+return a map... TODO: rewrite docstring."
   ([file-or-dir]
    (case (filelib:is_dir file-or-dir)
      ('true
-      (let ((dir (filename:absname file-or-dir)))
-        (lists:foldl (lambda (file dict)
-                       (case (docs file dir)
-                         ('()    dict)
-                         (result (orddict:store (mod-name file) result dict))))
-                     (orddict:new)
-                     (filelib:wildcard "*.lfe" dir))))
+      (let* ((dir          (filename:absname file-or-dir))
+             (project-name (filename:basename (filename:dirname dir))))
+        (map 'name        project-name
+             'version     "VERSION"
+             'description "DESCRIPTION"
+             'documents   '()
+             'modules
+             (lists:foldl (lambda (file acc)
+                            (case (docs file dir)
+                              ('()     acc)
+                              (exports (cons (map 'name    (mod-name file)
+                                                  'doc     "MODULE DOC"
+                                                  'exports exports)
+                                             acc))))
+                          '() (filelib:wildcard "*.lfe" dir)))))
      ('false
       (case (filelib:is_file file-or-dir)
         ('true
@@ -31,17 +39,14 @@ return a map from module name to orddict from fun/arity to a property map."
                 (`#(ok ,mod-form)       (find-first forms #'defmodule?/1))
                 (`#(ok (,_ . ,exports)) (find-first mod-form #'export?/1))
                 (all? (=:= '(all) exports))
-                (f    (lambda (form dict)
+                (f    (lambda (form acc)
                         (case (doc form)
                           (`#(ok ,(= doc `#m(name ,f arity ,a)))
-                           (case (orelse all? (lists:member `(,f ,a) exports))
-                             ('true (orddict:store
-                                     (list_to_atom (lists:flatten `(,(atom_to_list f) "/" ,(integer_to_list a))))
-                                     doc
-                                     dict))
-                             (_    dict)))
-                          (_ dict)))))
-           (lists:foldl f (orddict:new) forms)))
+                           (case (orelse all? (lists:member `(,(list_to_atom f) ,a) exports))
+                             ('true  (cons doc acc))
+                             ('false acc)))
+                          (_ acc)))))
+           (lists:foldl f '() forms)))
         ('false
          '#(error no-file-or-directory)))))))
 
@@ -63,12 +68,12 @@ return a map from module name to orddict from fun/arity to a property map."
          (is_list body-or-clause))
    (cond
     ((andalso (io_lib:printable_list doc-or-form) (arglist? arglist-or-doc))
-     `#(ok #m(name     ,name
+     `#(ok #m(name     ,(atom_to_list name)
               arity    ,(length arglist-or-doc)
               arglists (,arglist-or-doc)
               doc      ,doc-or-form)))
     ((andalso (=/= arglist-or-doc '()) (io_lib:printable_list arglist-or-doc))
-     `#(ok #m(name     ,name
+     `#(ok #m(name     ,(atom_to_list name)
               arity    ,(length (car doc-or-form))
               arglists ,(lists:map #'pattern/1 `(,doc-or-form ,body-or-clause))
               doc      ,arglist-or-doc)))
@@ -83,20 +88,20 @@ return a map from module name to orddict from fun/arity to a property map."
                            ([`(,maybe-arglist . ,_t)] (arglist? maybe-arglist))
                            ([_]                       'false))
                          forms))
-     `#(ok #m(name     ,name
+     `#(ok #m(name     ,(atom_to_list name)
               arity    ,(length (caar forms))
               arglists ,(lists:map #'pattern/1 forms)
               doc      ,doc-or-arglist)))
     ((andalso (arglist? doc-or-arglist)
               (io_lib:printable_list (car forms)))
-     `#(ok #m(name     ,name
+     `#(ok #m(name     ,(atom_to_list name)
               arity    ,(length doc-or-arglist)
               arglists (,doc-or-arglist)
               doc      ,(car forms))))
     ('true 'not-found)))
   ([_] 'not-found))
 
-(defun mod-name (file) (list_to_atom (filename:basename file ".lfe")))
+(defun mod-name (file) (filename:basename file ".lfe"))
 
 (defun pattern
   ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,patt ,guard))
