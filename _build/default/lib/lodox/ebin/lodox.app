@@ -1,6 +1,6 @@
 {application,lodox,
              [{description,"Like Codox for LFE."},
-              {vsn,"0.1.0"},
+              {vsn,"0.1.1"},
               {modules,['ld-app','ld-html-writer','ld-parse','ld-server',
                         'ld-sup','ld-util','unit-lodox-tests']},
               {registered,['lodox-sup']},

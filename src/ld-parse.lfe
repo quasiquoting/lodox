@@ -1,6 +1,8 @@
 (defmodule ld-parse
-  (export (docs 0) (docs 1) (docs 2)
-          (to-org 1) (to-org 2)))
+  (export all)
+  ;; (export (docs 0) (docs 1) (docs 2)
+  ;;         (to-org 1) (to-org 2))
+  )
 
 ;;;===================================================================
 ;;; API

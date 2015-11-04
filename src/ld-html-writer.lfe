@@ -115,7 +115,7 @@
   `(,(meta '(charset "UTF-8"))
     ,(include-css "css/default.css")
     ,(include-js "js/jquery.min.js")
-    ,(include-js "js/page_effect.js")))
+    ,(include-js "js/page_effects.js")))
 
 (defun project-title (project)
   (span '(class "project-title")
