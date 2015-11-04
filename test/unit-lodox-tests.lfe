@@ -8,32 +8,45 @@
 
 (include-lib "ltest/include/ltest-macros.lfe")
 
-(deftest meta-docs
-  (is-equal
-   '(#(docs/0 #M(arglists (()) arity 0 doc "TODO: write docstring" name docs))
-     #(docs/1
-       #M(name     docs
-          arity    1
-          arglists ((file-or-dir))
-          doc      "Given a path to an LFE file or a directory containing LFE files,
-return a map from module name to orddict from fun/arity to a property map."))
-     #(docs/2
-       #M(name     docs
-          arity    2
-          arglists ((file dir))
-          doc      "Given a filename, `file`, and a directory, `dir`, call #'docs/1 on `(filename:join dir file)`."))
-     #(to-org/1
-       #M(name     to-org
-          arity    1
-          arglists ((dict))
-          doc      "TODO: write docstring
 
-Project level."))
-     #(to-org/2
-       #M(name     to-org
-          arity    2
-          arglists ((dict filename))
-          doc      "TODO: write docstring
+(deftest project-shape
+  (let ((project (ld-parse:docs)))
+    (is (is_map project))
+    (is (non-empty-list? (mref* project 'description)))
+    (is (is_list (mref* project 'documents)))
+    (is (is_list (mref* project 'modules)))
+    (is-equal "lodox" (mref* project 'name))
+    (is (is_list (mref* project 'version)))))
 
-Module level.")))
-   (ld-parse:docs "src/ld-parse.lfe")))
+(deftest modules-shapes
+  (let ((modules (mref* (ld-parse:docs) 'modules)))
+    (is (is_list modules))
+    (lists:foreach #'module?/1 modules)))
+
+(deftest exports-shapes
+  (let ((exports (lists:map (lambda (module) (mref* module 'exports))
+                            (mref* (ld-parse:docs) 'modules))))
+    (is (is_list exports))))
+
+(defun module? (module)
+  (is (is_map module))
+  (is-equal '(doc exports name) (maps:keys module))
+  (is (non-empty-list? (mref* module 'doc)))
+  (is (is_list (mref* module 'exports)))
+  (is (non-empty-list? (mref* module 'name))))
+
+(defun export? (export)
+  (is (is_map export))
+  (is-equal '(arglists arity doc name) (maps:keys export))
+  (let ((arglists (mref* export 'arglists)))
+    (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
+  (is (is_integer (mref* export 'arity)))
+  (is (non-empty-list? (mref* export 'doc)))
+  (is (non-empty-list? (mref* export 'name))))
+
+(defun mref* (m k) (maps:get k m 'error))
+
+(defun non-empty-list?
+  (['()]                      'false)
+  ([lst] (when (is_list lst)) 'true)
+  ([_]                        'false))
