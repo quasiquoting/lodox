@@ -1,7 +1,7 @@
 %% -*- erlang -*-
 {application,     lodox,
  [{description,   "Like Codox for LFE."},
-  {vsn,           "0.0.4"},
+  {vsn,           "0.1.0"},
   {modules,      ['ld-app','ld-server','ld-sup','ld-util',
                   'unit-lodox-tests']},
   {registered,   ['lodox-sup']},
