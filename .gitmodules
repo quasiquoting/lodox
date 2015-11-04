@@ -28,7 +28,7 @@
 [submodule "_build/default/lib/exemplar"]
 	path = _build/default/lib/exemplar
 	url = git@github.com:yurrriq/exemplar.git
-[submodule "_site"]
-	path = _site
+[submodule "doc"]
+	path = doc
 	url = git@github.com:quasiquoting/lodox.git
 	branch = gh-pages

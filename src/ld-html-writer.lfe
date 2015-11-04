@@ -6,7 +6,7 @@
 (include-lib "lodox/include/lodox-macros.lfe")
 
 (defun write-docs ()
-  (write-docs (ld-parse:docs) (map 'output-path "_site/doc")))
+  (write-docs (ld-parse:docs) (map 'output-path "doc")))
 
 (defun write-docs
   "Take raw documentation info and turn it into formatted HTML."
