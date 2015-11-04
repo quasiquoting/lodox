@@ -25,3 +25,6 @@
 [submodule "lutil"]
 	path = _build/default/lib/lutil
 	url = git@github.com:lfex/lutil.git
+[submodule "_build/default/lib/exemplar"]
+	path = _build/default/lib/exemplar
+	url = git@github.com:yurrriq/exemplar.git
