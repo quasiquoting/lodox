@@ -88,7 +88,7 @@
 (defun modules-menu (project current-mod)
   (let* ((modules (mref project 'modules))
          (mod-map (index-by 'name modules)))
-    `(,(h3 '(class "no-link") (span '(class "inner") "Namespaces"))
+    `(,(h3 '(class "no-link") (span '(class "inner") "Modules"))
       ,(ul
          (lists:map
            (match-lambda
@@ -153,8 +153,7 @@
       ,(body
          `(,(header* project)
            ,(primary-sidebar project)
-           ;; TODO: s/namespace/module/g in CSS
-           ,(div '(id "content" class "namespace-index")
+           ,(div '(id "content" class "module-index")
               `(,(h1 (project-title project))
                 ,(div '(class "doc") (p (h (mref project 'description))))
                 ;; TODO: package
@@ -168,8 +167,7 @@
                 ,(h2 "Modules")
                 ,(lists:map
                    (lambda (module)
-                     ;; TODO s/namespace/module/g in CSS
-                     (div '(class "namespace")
+                     (div '(class "module")
                        `(,(h3 (link-to (mod-filename module)
                                 (h (mref module 'name))))
                          ;; TODO: module doc
@@ -234,8 +232,7 @@
          `(,(header* project)
            ,(primary-sidebar project module)
            ,(funcs-sidebar module)
-           ;; TODO s/namespace/module/g in CSS
-           ,(div '(id "content" class "namespace-docs")
+           ,(div '(id "content" class "module-docs")
               `(,(h1 '(id "top" class "anchor") (h (mref module 'name)))
                 ;; TODO: added and deprecated (?)
                 ,(div '(class "doc") (format-docstring project '()  module))

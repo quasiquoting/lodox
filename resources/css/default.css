@@ -21,7 +21,7 @@ h2 {
     font-size: 25px;
 }
 
-.document h1, .namespace-index h1 {
+.document h1, .module-index h1 {
     font-size: 30px;
     margin-top: 12px;
 }
@@ -70,11 +70,11 @@ h2 {
    width: 200px;
 }
 
-#content.namespace-index, #content.document {
+#content.module-index, #content.document {
    left: 251px;
 }
 
-#content.namespace-docs {
+#content.module-docs {
    left: 452px;
 }
 
@@ -229,26 +229,26 @@ h2 {
    color: #33a;
 }
 
-.namespace-index h2 {
+.module-index h2 {
     margin: 30px 0 0 0;
 }
 
-.namespace-index h3 {
+.module-index h3 {
     font-size: 16px;
     font-weight: bold;
     margin-bottom: 0;
 }
 
-.namespace-index .topics {
+.module-index .topics {
     padding-left: 30px;
     margin: 11px 0 0 0;
 }
 
-.namespace-index .topics li {
+.module-index .topics li {
     padding: 5px 0;
 }
 
-.namespace-docs h3 {
+.module-docs h3 {
    font-size: 18px;
    font-weight: bold;
 }
@@ -353,11 +353,11 @@ h4.deprecated {
     color: #880000;
 }
 
-.namespace {
+.module {
     margin-bottom: 30px;
 }
 
-.namespace:last-child {
+.module:last-child {
     margin-bottom: 10%;
 }
 
@@ -411,11 +411,11 @@ p {
     margin: 0;
 }
 
-.namespace-index .doc {
+.module-index .doc {
     margin-bottom: 20px;
 }
 
-.namespace-index .namespace .doc {
+.module-index .module .doc {
     margin-bottom: 10px;
 }
 
@@ -436,7 +436,7 @@ p {
     font-size: 15px;
 }
 
-.doc, .public, .namespace .index {
+.doc, .public, .module .index {
     max-width: 680px;
     overflow-x: visible;
 }
