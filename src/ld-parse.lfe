@@ -38,8 +38,8 @@ return a map... TODO: rewrite docstring."
       (case (filelib:is_file file-or-dir)
         ('true
          (let* ((`#(ok ,forms)          (lfe_io:read_file file-or-dir))
-                (`#(ok ,mod-form)       (find-first forms #'defmodule?/1))
-                (`#(ok (,_ . ,exports)) (find-first mod-form #'export?/1))
+                (`#(ok ,mod-form)       (ld-seq:find-first forms #'defmodule?/1))
+                (`#(ok (,_ . ,exports)) (ld-seq:find-first mod-form #'export?/1))
                 (all? (=:= '(all) exports))
                 (f    (lambda (form acc)
                         (case (doc form)
@@ -174,11 +174,3 @@ otherwise false."
 (defun export?
   ([`(export . ,_)] 'true)
   ([_]              'false))
-
-(defun find-first
-  "Ported from http://joearms.github.io/2015/01/08/Some_Performance-Measurements-On-Maps.html"
-  ([`(,h . ,t) pred]
-   (case (funcall pred h)
-     ('true  `#(ok ,h))
-     ('false (find-first t pred))))
-  (['() _] 'not-found))
