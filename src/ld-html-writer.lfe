@@ -72,30 +72,30 @@
   ([(= project `#m(documents ,docs)) current-doc] (when (is_list docs))
    `(,(h3 '(class "no-link") (span '(class "inner") "Topics"))
      ,(ul
-       (lists:map
-         (lambda (doc)
-           (li `(class ,(++ "depth-1" (if (=:= doc current-doc)
-                                        " current"
-                                        "")))
-               (link-to (doc-filename doc)
-                 (div '(class "inner")
-                   (span (h (mref doc 'title)))))))
-         (lists:sort (lambda (a b) (=< (mref a 'name) (mref b 'name))) docs))))))
+        (lists:map
+          (lambda (doc)
+            (li `(class ,(++ "depth-1" (if (=:= doc current-doc)
+                                         " current"
+                                         "")))
+                (link-to (doc-filename doc)
+                  (div '(class "inner")
+                    (span (h (mref doc 'title)))))))
+          (lists:sort (lambda (a b) (=< (mref a 'name) (mref b 'name))) docs))))))
 
 (defun modules-menu (project current-mod)
   (let* ((modules (mref project 'modules))
          (mod-map (index-by 'name modules)))
     `(,(h3 '(class "no-link") (span '(class "inner") "Namespaces"))
       ,(ul
-        (lists:map
-          (match-lambda
-            ([`#(,mod-name ,mod)]
-             (let ((class (++ "depth-1" (if (=:= mod current-mod)
-                                          " current"
-                                          "")))
-                   (inner (div '(class "inner") (h mod-name))))
-               (li `(class ,class) (link-to (mod-filename mod) inner)))))
-          (maps:to_list mod-map))))))
+         (lists:map
+           (match-lambda
+             ([`#(,mod-name ,mod)]
+              (let ((class (++ "depth-1" (if (=:= mod current-mod)
+                                           " current"
+                                           "")))
+                    (inner (div '(class "inner") (h mod-name))))
+                (li `(class ,class) (link-to (mod-filename mod) inner)))))
+           (maps:to_list mod-map))))))
 
 (defun primary-sidebar (project) (primary-sidebar project '()))
 
