@@ -31,7 +31,7 @@
 (defun link-to (uri content) (a `(href ,uri) content))
 
 (defun func-id (func)
-  (++ "func-" (re:replace (http_uri:encode (mref func 'name))
+  (++ "func-" (re:replace (http_uri:encode (func-name func))
                           "%" "."
                           '(global #(return list)))))
 
@@ -164,8 +164,7 @@
                                   (lambda (func)
                                     `(" "
                                       ,(link-to (func-uri module func)
-                                         (++ (h (mref func 'name)) "/"
-                                             (integer_to_list (mref func 'arity))))
+                                         (func-name func))
                                       " "))
                                   (sorted-exported-funcs module))))))))
                    (lists:sort
@@ -200,7 +199,7 @@
 
 (defun func-docs (project module func)
   (div `(class "public anchor" id ,(h (func-id func)))
-    `(,(h3 (h (mref func 'name)))
+    `(,(h3 (h (func-name func)))
       ;; TODO: added and deprecated docs (?)
       ,(div '(class "usage")
          (lists:map (lambda (form) (code (h form))) (func-usage func)))
@@ -250,6 +249,9 @@
                           (file:write_file (doc-filepath output-dir document)
                                            (document-page project document)))))
     (lists:foreach write-document (mref project 'documents))))
+
+(defun func-name (func)
+  (++ (h (mref func 'name)) "/" (integer_to_list (mref func 'arity))))
 
 (defun h (text)
   "Convenient alias for escape-html/1."
