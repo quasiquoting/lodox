@@ -188,7 +188,7 @@
     (body
       `(,(header project)
         ,(primary-sidebar project doc)
-        ,(div '(id "content.document")
+        ,(div '(id "content" class "document")
            (div '(id "doc") (format-document project doc)))))))
 
 (defun func-usage (func)
