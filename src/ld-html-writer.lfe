@@ -108,8 +108,8 @@
 (defun sorted-exported-funcs (module)
   (lists:sort
     (lambda (a b)
-      (=< (string:to_lower (mref a 'name))
-          (string:to_lower (mref b 'name))))
+      (=< (string:to_lower (func-name a))
+          (string:to_lower (func-name b))))
     (mref module 'exports)))
 
 (defun funcs-sidebar (module)
