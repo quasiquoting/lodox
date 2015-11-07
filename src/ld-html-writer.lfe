@@ -2,6 +2,7 @@
   ;; (export (write-docs 1))
   (export all))
 
+(include-lib "clj/include/compose.lfe")
 (include-lib "exemplar/include/html-macros.lfe")
 (include-lib "lodox/include/lodox-macros.lfe")
 
