@@ -1,4 +1,4 @@
-(defmodule lfe-doc
+(defmodule lodox
   (behaviour provider)
   (export all))
 
