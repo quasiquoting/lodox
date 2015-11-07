@@ -149,6 +149,10 @@
              ,(link-to "https://github.com/quasiquoting/lodox" "Lodox")))
       ,(h1 (link-to "index.html" (project-title project))))))
 
+;; TODO: package in ld-parse
+(defun package (project)
+  (maps:get 'package project ""))
+
 (defun index-page (project)
   (html
     `(,(head
@@ -161,13 +165,13 @@
            ,(div '(id "content" class "module-index")
               `(,(h1 (project-title project))
                 ,(div '(class "doc") (p (h (mref project 'description))))
-                ;; TODO: package
-                ;; ,(case (=:= '() (package project))
-                ;;    ('true
-                ;;     `(,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps") (h (++ "[" package " " (mref project 'version) "]")))))
-                ;;    ('false '()))
+                ,(case (package project)
+                   ("" '())
+                   (pkg
+                    `(,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (++ "[" pkg " " (mref project 'version) "]"))))))
                 ;; TODO: topics
                 ,(h2 "Modules")
                 ,(lists:map
