@@ -40,15 +40,15 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 {deps,
  [{lfe, ".*",
-   {git, "git://github.com/rvirding/lfe.git",     {tag, "v0.10.0"}}},
+   {git, "git://github.com/rvirding/lfe.git",       {tag, "v0.10.0"}}},
   {lutil, ".*",
-   {git, "git://github.com/lfex/lutil.git",       {tag, "0.7.0"}}},
+   {git, "git://github.com/lfex/lutil.git",         {tag, "0.7.0"}}},
   {ltest, ".*",
-   {git, "git://github.com/lfex/ltest.git",       {tag, "0.7.0"}}},
+   {git, "git://github.com/lfex/ltest.git",         {tag, "0.7.0"}}},
   {clj, ".*",
-   {git, "git://github.com/lfex/clj.git",         {tag, "0.3.0"}}},
+   {git, "git://github.com/lfex/clj.git",           {tag, "0.3.0"}}},
   {exemplar, ".*",
-   {git, "git://github.com/yurrriq/exemplar.git", {tag, "0.3.0"}}}]}.
+   {git, "git://github.com/yurrriq/exemplar.git",   {tag, "0.3.0"}}}]}.
 {plugins,
  [{'lfe-compile', ".*",
    {git, "git://github.com/lfe-rebar3/compile.git", {tag, "0.2.0"}}}]}.
