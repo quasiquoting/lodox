@@ -112,6 +112,18 @@
           (string:to_lower (mref b 'name))))
     (mref module 'exports)))
 
+(defun funcs-sidebar (module)
+  (div '(class "sidebar secondary")
+    `(,(h3 (link-to "#top" (span '(class "inner") "Exported Functions")))
+      ,(ul
+         (lists:map
+           (lambda (func)
+             `(,(li '(class "depth-1")
+                    (link-to (func-uri module func)
+                      (div '(class "inner")
+                        (span (h (func-name func)))))))) ; TODO: members?
+           (sorted-exported-funcs module))))))
+
 (defun default-includes ()
   `(,(meta '(charset "UTF-8"))
     ,(include-css "css/default.css")
@@ -218,7 +230,7 @@
       ,(body
          `(,(header* project)
            ,(primary-sidebar project module)
-           ;; (funcs-sidebar module)
+           ,(funcs-sidebar module)
            ;; TODO s/namespace/module/g in CSS
            ,(div '(id "content" class "namespace-docs")
               `(,(h1 '(id "top" class "anchor") (h (mref module 'name)))
