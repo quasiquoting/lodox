@@ -1,4 +1,5 @@
 (defmodule ld-parse
+  (doc "Parsing LFE source files (read not eval) for metadata.")
   (export (docs 0) (docs 1) (docs 2)))
 
 ;;;===================================================================

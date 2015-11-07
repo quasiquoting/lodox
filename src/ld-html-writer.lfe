@@ -1,6 +1,6 @@
 (defmodule ld-html-writer
-  ;; (export (write-docs 1))
-  (export all))
+  (doc "Documentation writer that outputs HTML.")
+  (export (write-docs 0) (write-docs 2)))
 
 (include-lib "clj/include/compose.lfe")
 (include-lib "exemplar/include/html-macros.lfe")

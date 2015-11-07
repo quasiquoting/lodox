@@ -1,4 +1,5 @@
 (defmodule ld-org-writer
+  (doc "Documentation writer that outputs Org.")
   (export (to-org 1) (to-org 2)))
 
 (defun to-org (dict)

@@ -1,4 +1,5 @@
 (defmodule ld-seq
+  (doc "Miscellaneous list utility functions, inspired by/stolen from Clojure.")
   (export (distinct 1)
           (find-first 2)
           (reductions 2) (reductions 3)
