@@ -17,9 +17,9 @@
   ([project `#m(output-path ,output-path)]
    (doto output-path
          (mkdirs '("css" "js"))
-         (copy-resource "resources/css/default.css" "css/default.css")
-         (copy-resource "resources/js/jquery.min.js" "js/jquery.min.js")
-         (copy-resource "resources/js/page_effects.js" "js/page_effects.js")
+         (copy-resource "css/default.css")
+         (copy-resource "js/jquery.min.js")
+         (copy-resource "js/page_effects.js")
          (write-index project)
          (write-modules project)
          ;; (write-documents project)
@@ -239,8 +239,12 @@
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 
-(defun copy-resource (output-dir src dest)
-  (file:copy src (filename:join output-dir dest)))
+(defun copy-resource (output-dir resource)
+  (let* ((this  (proplists:get_value 'source
+                  (ld-html-writer:module_info 'compile)))
+         (lodox (filename:dirname (filename:dirname this))))
+    (file:copy (filename:join `(,lodox "resources" ,resource))
+               (filename:join output-dir resource))))
 
 (defun mkdirs (output-dir dirs)
   (file:make_dir output-dir)
