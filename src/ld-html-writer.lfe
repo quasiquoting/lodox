@@ -7,6 +7,9 @@
 (include-lib "lodox/include/lodox-macros.lfe")
 
 (defun write-docs ()
+  (write-docs (ld-parse:docs)))
+
+(defun write-docs (project)
   (write-docs (ld-parse:docs) (map 'output-path "doc")))
 
 (defun write-docs
