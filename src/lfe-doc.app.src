@@ -1,11 +1,10 @@
 %% -*- erlang -*-
-{application,     lodox,
- [{description,   "Like Codox for LFE."},
-  {vsn,           "0.2.0"},
+{application,    'lfe-doc',
+ [{description,  "The LFE rebar3 doc (Lodox) plugin"},
+  {vsn,          "0.0.1"},
   {modules,      ['ld-html-writer','ld-org-writer','ld-parse',
                   'ld-seq','ld-util',
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {mod,          {'ld-app', []}},
   {env,          []}]}.
