@@ -24,7 +24,7 @@
          (write-modules project)
          ;; (write-documents project)
          )
-   (io:fwrite "Generated HTML docs in ~p~n" `(,(filename:absname output-path)))))
+   (io_lib:format "Generated HTML docs in ~s" `(,(filename:absname output-path)))))
 
 (defun include-css (style)
   (link `(type "text/css" href ,style rel "stylesheet")))

@@ -29,7 +29,7 @@
     `#(ok ,(rebar_state:add_provider state provider))))
 
 (defun do (state)
-  (ld-html-writer:write-docs)
+  (lfe_io:format "~s~n" `(,(ld-html-writer:write-docs)))
   `#(ok ,state))
 
 (defun format_error (reason)
