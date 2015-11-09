@@ -27,10 +27,11 @@ return a map... TODO: rewrite docstring."
              (lists:foldl (lambda (file acc)
                             (case (docs file dir)
                               ('()     acc)
-                              (exports (cons (map 'name    (mod-name file)
-                                                  'doc     "MODULE DOC"
-                                                  'exports exports)
-                                             acc))))
+                              (exports (let ((name (mod-name file)))
+                                         (cons (map 'name    name
+                                                    'doc     (mod-doc name)
+                                                    'exports exports)
+                                               acc)))))
                           '() (filelib:wildcard "*.lfe" dir)))))
      ('false
       (case (filelib:is_file file-or-dir)
@@ -100,6 +101,14 @@ return a map... TODO: rewrite docstring."
               doc      ,(car forms))))
     ('true 'not-found)))
   ([_] 'not-found))
+
+(defun mod-doc
+  ([name]   (when (is_list name))
+   (mod-doc (list_to_atom name)))
+  ([module] (when (is_atom module))
+   (orelse (module_loaded module) (code:load_file module))
+   (let ((attributes (call module 'module_info 'attributes)))
+     (proplists:get_value 'doc attributes ""))))
 
 (defun mod-name (file) (filename:basename file ".lfe"))
 
