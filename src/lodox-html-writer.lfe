@@ -1,30 +1,23 @@
-(defmodule ld-html-writer
+(defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 0) (write-docs 2)))
+  (export (write-docs 2)))
 
-(include-lib "clj/include/compose.lfe")
 (include-lib "exemplar/include/html-macros.lfe")
 (include-lib "lodox/include/lodox-macros.lfe")
 
-(defun write-docs ()
-  (write-docs (ld-parse:docs)))
 
-(defun write-docs (project)
-  (write-docs (ld-parse:docs) (map 'output-path "doc")))
-
-(defun write-docs
+(defun write-docs (project opts)
   "Take raw documentation info and turn it into formatted HTML."
-  ([project `#m(output-path ,output-path)]
-   (doto output-path
-         (mkdirs '("css" "js"))
-         (copy-resource "css/default.css")
-         (copy-resource "js/jquery.min.js")
-         (copy-resource "js/page_effects.js")
-         (write-index project)
-         (write-modules project)
-         ;; (write-documents project)
-         )
-   (io_lib:format "Generated HTML docs in ~s" `(,(filename:absname output-path)))))
+  (let ((`#m(output-path ,output-path) (maps:merge opts #m(output-path "doc"))))
+    (doto output-path
+          (mkdirs '("css" "js"))
+          (copy-resource "css/default.css")
+          (copy-resource "js/jquery.min.js")
+          (copy-resource "js/page_effects.js")
+          (write-index project)
+          (write-modules project)
+          ;; (write-documents project)
+          )))
 
 (defun include-css (style)
   (link `(type "text/css" href ,style rel "stylesheet")))
@@ -51,10 +44,12 @@
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
 (defun mod-filename (mod)
-  (++ (mref mod 'name) ".html"))
+  (++ (mod-name mod) ".html"))
 
 (defun mod-filepath (output-dir module)
   (filename:join output-dir (mod-filename module)))
+
+(defun mod-name (mod) (atom_to_list (mref mod 'name)))
 
 (defun doc-filename (doc)
   (++ (mref doc 'name) ".html"))
@@ -66,7 +61,7 @@
   (++ (mod-filename module) "#" (func-id func)))
 
 (defun index-link (project on-index?)
-  `(,(h3 '(class "no-link") (span '(class "inner") "Project"))
+  `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
     ,(ul '(class "index-link")
          (li `(class ,(++ "depth-1" (if on-index? " current" "")))
              (link-to "index.html" (div '(class "inner") "Index"))))))
@@ -96,7 +91,7 @@
               (let ((class (++ "depth-1" (if (=:= mod current-mod)
                                            " current"
                                            "")))
-                    (inner (div '(class "inner") (h mod-name))))
+                    (inner (div '(class "inner") (h (atom_to_list mod-name)))))
                 (li `(class ,class) (link-to (mod-filename mod) inner)))))
            (maps:to_list mod-map))))))
 
@@ -105,7 +100,7 @@
 (defun primary-sidebar (project current)
   (div '(class "sidebar primary")
     `(,(index-link project (=:= '() current))
-      ,(topics-menu project current)
+      ;; ,(topics-menu project current)
       ,(modules-menu project current))))
 
 (defun sorted-exported-funcs (module)
@@ -169,7 +164,7 @@
                    (lambda (module)
                      (div '(class "module")
                        `(,(h3 (link-to (mod-filename module)
-                                (h (mref module 'name))))
+                                (h (mod-name module))))
                          ;; TODO: module doc
                          ,(div '(class "index")
                             `(,(p "Exported functions")
@@ -182,7 +177,7 @@
                                       " "))
                                   (sorted-exported-funcs module))))))))
                    (lists:sort
-                     (lambda (a b) (=< (mref a 'name) (mref b 'name)))
+                     (lambda (a b) (=< (mod-name a) (mod-name b)))
                      (mref project 'modules))))))))))
 
 ;; TODO: exemplar-ify this
@@ -227,21 +222,20 @@
   (html
     `(,(head
          `(,(default-includes)
-           ,(title (++ (h (mref module 'name)) " documentation"))))
+           ,(title (++ (h (mod-name module)) " documentation"))))
       ,(body
          `(,(header* project)
            ,(primary-sidebar project module)
            ,(funcs-sidebar module)
            ,(div '(id "content" class "module-docs")
-              `(,(h1 '(id "top" class "anchor") (h (mref module 'name)))
+              `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
                 ;; TODO: added and deprecated (?)
                 ,(div '(class "doc") (format-docstring project '()  module))
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 
 (defun copy-resource (output-dir resource)
-  (let* ((this  (proplists:get_value 'source
-                  (ld-html-writer:module_info 'compile)))
+  (let* ((this  (proplists:get_value 'source (module_info 'compile)))
          (lodox (filename:dirname (filename:dirname this))))
     (file:copy (filename:join `(,lodox "resources" ,resource))
                (filename:join output-dir resource))))

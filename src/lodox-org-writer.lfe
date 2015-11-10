@@ -1,4 +1,4 @@
-(defmodule ld-org-writer
+(defmodule lodox-org-writer
   (doc "Documentation writer that outputs Org.")
   (export (to-org 1) (to-org 2)))
 

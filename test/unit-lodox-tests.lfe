@@ -25,9 +25,9 @@
 (defun validate-module (module)
   (is (is_map module))
   (is-equal '(doc exports name) (maps:keys module))
-  (is (non-empty-list? (mref* module 'doc)))
+  (is (is_list (mref* module 'doc)))
   (is (is_list (mref* module 'exports)))
-  (is (non-empty-list? (mref* module 'name))))
+  (is (is_atom (mref* module 'name))))
 
 (deftest exports-shapes
   (lists:foreach #'validate-exports/1 (project-wide 'exports 'modules)))
@@ -41,7 +41,7 @@
   (is (non-empty-list? (mref* export 'doc)))
   (is (non-empty-list? (mref* export 'name))))
 
-(defun all-docs () (lists:map #'ld-parse:docs/1 (src-dirs)))
+(defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
 (defun mref* (m k) (maps:get k m 'error))
 
@@ -51,7 +51,7 @@
   ([_]                        'false))
 
 (defun project-name
-  (["src"] "lodox")
+  (["src"] #"lodox")
   ([dir]   (filename:basename (filename:dirname dir))))
 
 (defun project-wide
@@ -62,4 +62,4 @@
   (project-wide
    (lambda (proj) (lists:flatmap (lambda (m) (mref* m key2)) (mref* proj key1)))))
 
-(defun src-dirs () (cons "src" (filelib:wildcard "_build/default/lib/*/src")))
+(defun src-dirs () '("src"))

@@ -17,10 +17,11 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+END_SRC
 #+BEGIN_SRC erlang
 {application,    'lodox',
- [{description,  "The LFE rebar3 doc (Lodox) plugin"},
-  {vsn,          "0.2.0"},
-  {modules,      ['ld-html-writer','ld-org-writer','ld-parse',
-                  'ld-seq','ld-util',
+ [{description,  "The LFE rebar3 Lodox plugin"},
+  {vsn,          "0.3.0"},
+  {modules,      ['lodox-html-writer','lodox-org-writer',
+                  'lodox-p','lodox-parse','lodox-util',
+                  lodox,
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
@@ -32,26 +33,34 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
    :tangle:   rebar.config
    :END:
 #+BEGIN_SRC erlang :exports none
-{erl_opts,           [debug_info, {src_dirs, ["test"]}]}.
-{lfe_first_files,    []}.
-{eunit_compile_opts, [{src_dirs, ["test"]}]}.
+{erl_opts,
+ [debug_info, {src_dirs, ["test"]}]}.
+
+{eunit_compile_opts,
+ [{src_dirs, ["test"]}]}.
 #+END_SRC
-#+BEGIN_SRC erlang
-{provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
+#+BEGIN_SRC erlang :padline yes
+{provider_hooks,
+ [{pre, [{compile, {lfe, compile}}]}]}.
+
 {deps,
  [{lfe, ".*",
-   {git, "git://github.com/rvirding/lfe.git",       {tag, "v0.10.0"}}},
+   {git, "git://github.com/rvirding/lfe.git",
+    {tag, "v0.10.0"}}},
   {lutil, ".*",
-   {git, "git://github.com/lfex/lutil.git",         {tag, "0.7.0"}}},
+   {git, "git://github.com/lfex/lutil.git",
+    {tag, "0.7.0"}}},
   {ltest, ".*",
-   {git, "git://github.com/lfex/ltest.git",         {tag, "0.7.0"}}},
-  {clj, ".*",
-   {git, "git://github.com/lfex/clj.git",           {tag, "0.3.0"}}},
+   {git, "git://github.com/lfex/ltest.git",
+    {tag, "0.7.0"}}},
   {exemplar, ".*",
-   {git, "git://github.com/yurrriq/exemplar.git",   {tag, "0.3.0"}}}]}.
+   {git, "git://github.com/yurrriq/exemplar.git",
+    {tag, "0.3.0"}}}]}.
+
 {plugins,
  [{'lfe-compile', ".*",
-   {git, "git://github.com/lfe-rebar3/compile.git", {tag, "0.2.0"}}}]}.
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {tag, "0.2.0"}}}]}.
 #+END_SRC
 
 ** Installation
@@ -100,9 +109,9 @@ Coming soon...
 (defun validate-module (module)
   (is (is_map module))
   (is-equal '(doc exports name) (maps:keys module))
-  (is (non-empty-list? (mref* module 'doc)))
+  (is (is_list (mref* module 'doc)))
   (is (is_list (mref* module 'exports)))
-  (is (non-empty-list? (mref* module 'name))))
+  (is (is_atom (mref* module 'name))))
 #+END_SRC
 
 **** ~exports~ Shapes
@@ -120,7 +129,7 @@ Coming soon...
   (is (non-empty-list? (mref* export 'name))))
 #+END_SRC
 #+BEGIN_SRC lfe :exports none
-(defun all-docs () (lists:map #'ld-parse:docs/1 (src-dirs)))
+(defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
 (defun mref* (m k) (maps:get k m 'error))
 
@@ -130,7 +139,7 @@ Coming soon...
   ([_]                        'false))
 
 (defun project-name
-  (["src"] "lodox")
+  (["src"] #"lodox")
   ([dir]   (filename:basename (filename:dirname dir))))
 
 (defun project-wide
@@ -141,7 +150,7 @@ Coming soon...
   (project-wide
    (lambda (proj) (lists:flatmap (lambda (m) (mref* m key2)) (mref* proj key1)))))
 
-(defun src-dirs () (cons "src" (filelib:wildcard "_build/default/lib/*/src")))
+(defun src-dirs () '("src"))
 #+END_SRC
 
 *** [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]

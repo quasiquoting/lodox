@@ -1,5 +1,6 @@
-(defmodule ld-util
-  (export (get-version 0) (get-versions 0)))
+(defmodule lodox-util
+  (doc "Utility functions to inspect the current version of lodox and its dependencies.")
+  (export (get-version 0) (get-versions 0) (when* 2)))
 
 (defun get-version ()
   "Return the current version of Lodox."
@@ -11,3 +12,8 @@
 
 See also: #'get-version/0"
   (++ (lutil:get-versions) `(#(lodox ,(get-version)))))
+
+(defun when* (test then)
+  "Given a test that returns a boolean, if test is true, return then,
+otherwise false."
+  (if test then))
