@@ -8,12 +8,12 @@
 
 (defun get-versions ()
   "Return a proplist with keys, `erlang`, `emulator`, `driver-version`, `lfe`,
-`lutil` and `lodox`, mapped to the respective versions.
+  `lutil` and `lodox`, mapped to the respective versions.
 
-See also: #'get-version/0"
+  See also: [`get-version/0`](#func-get-version.3F.2F0)"
   (++ (lutil:get-versions) `(#(lodox ,(get-version)))))
 
 (defun when* (test then)
   "Given a test that returns a boolean, if test is true, return then,
-otherwise false."
+  otherwise false."
   (if test then))

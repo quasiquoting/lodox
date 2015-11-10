@@ -1,7 +1,7 @@
 (defmodule lodox
   (doc "The Lodox Rebar3 provider.
 
-http://www.rebar3.org/docs/plugins")
+[http://www.rebar3.org/docs/plugins](http://www.rebar3.org/docs/plugins)")
   (behaviour provider)
   (export all))
 

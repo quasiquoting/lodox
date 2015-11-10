@@ -35,11 +35,13 @@
 (defun format-docstring (project m) (format-docstring project '() m))
 
 (defun format-docstring (project module func)
-  (format-docstring project module func (maps:get 'format func 'plaintext)))
+  (format-docstring project module func (maps:get 'format func 'markdown)))
 
 (defun format-docstring
   ([project _ m 'plaintext]
-   (pre '(class "plaintext") (h (mref m 'doc)))))
+   (pre '(class "plaintext") (h (mref m 'doc))))
+  ([project _ m 'markdown]
+   (markdown:conv_utf8 (unicode:characters_to_list (mref m 'doc)))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
