@@ -114,7 +114,7 @@
 
 (defun funcs-sidebar (module)
   (div '(class "sidebar secondary")
-    `(,(h3 (link-to "#top" (span '(class "inner") "Exported Functions")))
+    `(,(h3 (link-to "#top" (span '(class "inner") "Exports")))
       ,(ul
          (lists:map
            (lambda (func)
@@ -169,7 +169,7 @@
                                 (h (mod-name module))))
                          ;; TODO: module doc
                          ,(div '(class "index")
-                            `(,(p "Exported functions")
+                            `(,(p "Exports")
                               ,(unordered-list
                                 (lists:map
                                   (lambda (func)
