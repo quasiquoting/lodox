@@ -2,23 +2,26 @@
   (export (arglist? 1) (arg? 1) (string? 1)))
 
 (defun arglist?
-  "Given a term, return true if it seems like a valid arglist, otherwise false."
+  "Given a term, return `true` if it is either the empty list or a list s.t.
+`∀ x ∈ lst (arg? x)`, otherwise `false`.
+
+See also: [`arglist?/1`](#func-arg.3F.2F1)"
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
 
 (defun arg?
-  "Given a term, return true if it seems like a valid member of an arglist,
-otherwise false.
-
-See also: [[arglist?/1]]"
-  ([x] (when (is_atom x)) 'true)
-  ([x] (when (is_list x))
-   (lists:member (car x) '(= () backquote quote binary list tuple)))
-  ([x] (when (is_map x)) 'true)
-  ([x] (when (is_tuple x)) 'true)
-  ([_] 'false))
+  "Return `true` if `x` seems like a valid element of an arglist,
+otherwise `false`."
+  ([`(,x . ,_t)] (lists:member x '(= () backquote quote binary list tuple)))
+  ([x]           (orelse (is_atom x) (is_map x) (is_tuple x))))
 
 (defun string? (data)
-  "Return true if data is an ISO-latin-1 string, otherwise false."
-  (io_lib:printable_list data))
+  "Return `true` if `data` is a flat list of printable (possibly Unicode)
+characters, otherwise `false`."
+  (andalso (is_list data)
+           (orelse (io_lib:printable_list data)
+                   (io_lib:printable_unicode_list data)
+                   (andalso (lists:all #'is_integer/1 data)
+                            (io_lib:printable_unicode_list
+                             (unicode:characters_to_list (binary:list_to_bin data)))))))

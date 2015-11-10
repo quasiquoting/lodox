@@ -18,7 +18,7 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+BEGIN_SRC erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.3.1"},
+  {vsn,          "0.3.2"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,
