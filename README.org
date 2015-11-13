@@ -28,44 +28,6 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
   {env,          []}]}.
 #+END_SRC
 
-** Dependencies
-   :PROPERTIES:
-   :tangle:   rebar.config
-   :END:
-#+BEGIN_SRC erlang :exports none
-{erl_opts,
- [debug_info, {src_dirs, ["test"]}]}.
-
-{eunit_compile_opts,
- [{src_dirs, ["test"]}]}.
-#+END_SRC
-#+BEGIN_SRC erlang :padline yes
-{provider_hooks,
- [{pre, [{compile, {lfe, compile}}]}]}.
-
-{deps,
- [{lfe, ".*",
-   {git, "git://github.com/rvirding/lfe.git",
-    {tag, "v0.10.0"}}},
-  {lutil, ".*",
-   {git, "git://github.com/lfex/lutil.git",
-    {tag, "0.7.0"}}},
-  {ltest, ".*",
-   {git, "git://github.com/lfex/ltest.git",
-    {tag, "0.7.0"}}},
-  {exemplar, ".*",
-   {git, "git://github.com/yurrriq/exemplar.git",
-    {tag, "0.3.0"}}},
-  {markdown, ".*",
-   {git, "git://github.com/erlware/erlmarkdown.git",
-    {branch, "master"}}}]}.
-
-{plugins,
- [{'lfe-compile', ".*",
-   {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}.
-#+END_SRC
-
 ** Installation
 Coming soon...
 
@@ -182,6 +144,44 @@ notifications:
 otp_release:
   - 18.1
   - 18.0
+#+END_SRC
+
+** Dependencies
+   :PROPERTIES:
+   :tangle:   rebar.config
+   :END:
+#+BEGIN_SRC erlang :exports none
+{erl_opts,
+ [debug_info, {src_dirs, ["test"]}]}.
+
+{eunit_compile_opts,
+ [{src_dirs, ["test"]}]}.
+#+END_SRC
+#+BEGIN_SRC erlang :padline yes
+{provider_hooks,
+ [{pre, [{compile, {lfe, compile}}]}]}.
+
+{deps,
+ [{lfe, ".*",
+   {git, "git://github.com/rvirding/lfe.git",
+    {tag, "v0.10.0"}}},
+  {lutil, ".*",
+   {git, "git://github.com/lfex/lutil.git",
+    {tag, "0.7.0"}}},
+  {ltest, ".*",
+   {git, "git://github.com/lfex/ltest.git",
+    {tag, "0.7.0"}}},
+  {exemplar, ".*",
+   {git, "git://github.com/yurrriq/exemplar.git",
+    {tag, "0.3.0"}}},
+  {markdown, ".*",
+   {git, "git://github.com/erlware/erlmarkdown.git",
+    {branch, "master"}}}]}.
+
+{plugins,
+ [{'lfe-compile', ".*",
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {tag, "0.2.0"}}}]}.
 #+END_SRC
 
 ** License
