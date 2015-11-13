@@ -12,13 +12,12 @@
 (defun docs (app-name)
   "Given an app-name (binary), return a map like:
 
-```
-'#m(name        #\"lodox\"
-    version     \"0.3.0\"
-    description \"The LFE rebar3 Lodox plugin\"
-    documents   ()
-    modules     {{list of maps of module metadata}})
-```"
+
+    '#m(name        #\"lodox\"
+        version     \"0.3.0\"
+        description \"The LFE rebar3 Lodox plugin\"
+        documents   ()
+        modules     {{list of maps of module metadata}})"
   (let* ((app         (doto (binary_to_atom app-name 'latin1)
                             (application:load)))
          (app-info    (let ((`#(ok ,info) (application:get_all_key app)))
