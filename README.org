@@ -208,8 +208,7 @@ otp_release:
 #+END_SRC
 #+BEGIN_SRC erlang :padline yes
 {provider_hooks,
- [{pre, [{compile, {lfe, compile}}]},
-  {post, [{compile, lodox}]}]}.
+ [{pre, [{compile, {lfe, compile}}]}]}.
 
 {deps,
  [{lfe, ".*",
