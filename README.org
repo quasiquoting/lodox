@@ -5,7 +5,7 @@
   :padline:  no
   :END:
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
-[[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
+# [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
 ** Introduction
    :PROPERTIES:
@@ -29,10 +29,59 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+END_SRC
 
 ** Installation
-Coming soon...
+First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
+project's =rebar.config= or, better yet, in the global [[https://github.com/rebar/rebar3][rebar3]] config,
+=~/.config/rebar3/rebar.config=:
+#+BEGIN_SRC erlang
+{plugins,
+ [{'lfe-compile', ".*",
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {tag, "0.2.0"}}}]}
+#+END_SRC
+
+Then in your project's =rebar.config=, include the [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][provider pre-hook]]:
+#+BEGIN_SRC erlang
+{provider_hooks,
+ [{pre, [{compile, {lfe, compile}}]}]}
+#+END_SRC
+
+Finally, add Lodox to your =plugins= list:
+#+BEGIN_SRC erlang
+{plugins,
+ [% ...
+  {lodox, ".*",
+   {git, "git://github.com/quasiquoting/lodox.git",
+    {branch, "master"}}}]}.
+#+END_SRC
+
+The recommended place for the Lodox plugin entry is the global [[https://github.com/rebar/rebar3][rebar3]] config,
+=~/.config/rebar3/rebar.config=, but it works at the project level, too.
 
 ** Usage
-Coming soon...
+In order for Lodox to work, your project must first be compiled:
+#+BEGIN_SRC sh
+rebar3 compile
+#+END_SRC
+
+Then, to invoke Lodox, simply run:
+#+BEGIN_SRC sh
+rebar3 lodox
+#+END_SRC
+
+If all goes well, the output will look something like:
+#+BEGIN_EXAMPLE
+Generated project v3.2.1 docs in /path/to/project/doc
+#+END_EXAMPLE
+
+And the generated documentation will be in the doc subdirectory of your project.
+
+Optionally, you can add Lodox as a =compile= post-hook:
+#+BEGIN_SRC erlang
+{provider_hooks,
+ [{pre,  [{compile, {lfe, compile}}]},
+  {post, [{compile, lodox}]}]}.
+#+END_SRC
+
 
 ** Testing
 *** Unit Tests
@@ -159,7 +208,8 @@ otp_release:
 #+END_SRC
 #+BEGIN_SRC erlang :padline yes
 {provider_hooks,
- [{pre, [{compile, {lfe, compile}}]}]}.
+ [{pre, [{compile, {lfe, compile}}]},
+  {post, [{compile, lodox}]}]}.
 
 {deps,
  [{lfe, ".*",
@@ -177,11 +227,6 @@ otp_release:
   {markdown, ".*",
    {git, "git://github.com/quasiquoting/erlmarkdown.git",
     {branch, "master"}}}]}.
-
-{plugins,
- [{'lfe-compile', ".*",
-   {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}.
 #+END_SRC
 
 ** Auto-tangle this file
