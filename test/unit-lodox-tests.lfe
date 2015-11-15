@@ -24,7 +24,7 @@
 
 (defun validate-module (module)
   (is (is_map module))
-  (is-equal '(doc exports name) (maps:keys module))
+  (is-equal '(behaviour doc exports filepath name) (maps:keys module))
   (is (is_list (mref* module 'doc)))
   (is (is_list (mref* module 'exports)))
   (is (is_atom (mref* module 'name))))
@@ -34,7 +34,7 @@
 
 (defun validate-exports (export)
   (is (is_map export))
-  (is-equal '(arglists arity doc name) (maps:keys export))
+  (is-equal '(arglists arity doc line name) (maps:keys export))
   (let ((arglists (mref* export 'arglists)))
     (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
   (is (is_integer (mref* export 'arity)))
