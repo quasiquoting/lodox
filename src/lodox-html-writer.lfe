@@ -8,14 +8,15 @@
 
 (defun write-docs (project opts)
   "Take raw documentation info and turn it into formatted HTML."
-  (let ((`#m(output-path ,output-path) (maps:merge opts #m(output-path "doc"))))
+  (let ((`#m(output-path ,output-path app-dir ,app-dir)
+            (maps:merge opts #m(output-path "doc"))))
     (doto output-path
           (mkdirs '("css" "js"))
           (copy-resource "css/default.css")
           (copy-resource "js/jquery.min.js")
           (copy-resource "js/page_effects.js")
           (write-index project)
-          (write-modules project)
+          (write-modules (mset project 'app-dir app-dir))
           ;; (write-documents project)
           )))
 
@@ -61,6 +62,13 @@
 
 (defun func-uri (module func)
   (++ (mod-filename module) "#" (func-id func)))
+
+(defun func-source-uri (source-uri project module func)
+  (let* ((filepath1 (mref module 'filepath))
+         (filepath2 (lists:nthtail (+ 1 (length (mref project 'app-dir))) filepath1))
+         (line      (mref func 'line))
+         (uri1 (re:replace source-uri "{filepath}" filepath2 '(#(return list)))))
+    (re:replace uri1 "{line}" (integer_to_list line) '(#(return list)))))
 
 (defun index-link (project on-index?)
   `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
@@ -217,14 +225,18 @@
 (defun func-docs (project module func)
   (div `(class "public anchor" id ,(h (func-id func)))
     `(,(h3 (h (func-name func)))
-      ;; TODO: added and deprecated docs (?)
       ,(div '(class "usage")
          (lists:map (lambda (form) (code (h form))) (func-usage func)))
       ,(div '(class "doc")
          (format-docstring project module func))
       ;; TODO: members?
-      ;; TODO: source links
-      )))
+      ,(let ((app (binary_to_atom (mref project 'name) 'latin1)))
+         (case (application:get_env app 'source-uri)
+           ('undefined '()) ; Log failure to generate link?
+           (`#(ok ,source-uri)
+            (div '(class "src-link")
+              (link-to (func-source-uri source-uri project module func)
+                "view source"))))))))
 
 (defun module-page (project module)
   (html

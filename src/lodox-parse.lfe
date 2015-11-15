@@ -14,7 +14,7 @@
 
 
     '#m(name        #\"lodox\"
-        version     \"0.3.4\"
+        version     \"0.4.0\"
         description \"The LFE rebar3 Lodox plugin\"
         documents   ()
         modules     {{list of maps of module metadata}})"
@@ -66,7 +66,7 @@
               (lists:all (match-lambda
                            ([`(,maybe-arglist . ,_t)]
                             (lodox-p:arglist? maybe-arglist))
-                           ([_]                       'false))
+                           ([_] 'false))
                          forms))
      `#(ok #m(name     ,(atom_to_list name)
               arity    ,(length (caar forms))
@@ -81,16 +81,16 @@
     ('true 'not-found)))
   ([_] 'not-found))
 
-(defun form-doc (form exports)
+(defun form-doc (form line exports)
   (case (form-doc form)
     (`#(ok ,(= doc `#m(name ,f arity ,a)))
      (lodox-util:when* (lists:member `#(,(list_to_atom f) ,a) exports)
-       `#(true ,doc)))
+       `#(true ,(mset doc 'line line))))
     ('not-found 'false)))
 
 (defun mod-behaviour (module)
   (let ((attributes (call module 'module_info 'attributes)))
-     (proplists:get_value 'behaviour attributes '())))
+    (proplists:get_value 'behaviour attributes '())))
 
 (defun mod-docs
   ([mods] (when (is_list mods))
@@ -103,18 +103,21 @@
                  (exports `#(true #m(name      ,(mod-name mod)
                                      behaviour ,(mod-behaviour mod)
                                      doc       ,(mod-doc mod)
-                                     exports   ,exports)))))
+                                     exports   ,exports
+                                     ;; dirty hack
+                                     filepath  ,file)))))
        (_      'false)))))
 
 (defun mod-docs (file exports)
   (if (filelib:is_file file)
-    (let ((`#(ok ,forms) (lfe_io:read_file file)))
-      (lists:filtermap (lambda (form) (form-doc form exports)) forms))
+    (let ((`#(ok ,forms) (lfe_io:parse_file file)))
+      (lists:filtermap
+        (match-lambda ([`#(,form ,line)] (form-doc form line exports)))
+        forms))
     '()))
 
 (defun mod-doc
   ([module] (when (is_atom module))
-   (rebar_api:debug "mod-doc: ~p" `(,(call module 'module_info)))
    (let ((attributes (call module 'module_info 'attributes)))
      (proplists:get_value 'doc attributes ""))))
 

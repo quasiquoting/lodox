@@ -1,11 +1,13 @@
 %% -*- erlang -*-
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.3.4"},
+  {vsn,          "0.4.0"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {env,          []}]}.
+  {env,
+   [{'source-uri',
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.

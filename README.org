@@ -18,14 +18,16 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+BEGIN_SRC erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.3.4"},
+  {vsn,          "0.4.0"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {env,          []}]}.
+  {env,
+   [{'source-uri',
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
 #+END_SRC
 
 ** Installation
@@ -51,7 +53,7 @@ Finally, add Lodox to your =plugins= list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.3.4"}}}]}.
+    {tag, "0.4.0"}}}]}.
 #+END_SRC
 
 The recommended place for the Lodox plugin entry is the global [[https://github.com/rebar/rebar3][rebar3]] config,
