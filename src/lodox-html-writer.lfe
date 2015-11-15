@@ -208,6 +208,12 @@
                   '(global #(return list))))
     (mref func 'arglists)))
 
+(defun mod-behaviour (mod)
+  (lists:map
+    (lambda (behaviour)
+      (h4 '(class "behaviour") (atom_to_list behaviour)))
+    (mref mod 'behaviour)))
+
 (defun func-docs (project module func)
   (div `(class "public anchor" id ,(h (func-id func)))
     `(,(h3 (h (func-name func)))
@@ -231,7 +237,7 @@
            ,(funcs-sidebar module)
            ,(div '(id "content" class "module-docs")
               `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
-                ;; TODO: added and deprecated (?)
+                ,(mod-behaviour module)
                 ,(div '(class "doc") (format-docstring project '()  module))
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))

@@ -88,6 +88,10 @@
        `#(true ,doc)))
     ('not-found 'false)))
 
+(defun mod-behaviour (module)
+  (let ((attributes (call module 'module_info 'attributes)))
+     (proplists:get_value 'behaviour attributes '())))
+
 (defun mod-docs
   ([mods] (when (is_list mods))
    (lists:filtermap #'mod-docs/1 mods))
@@ -96,9 +100,10 @@
      (case (filename:extension file)
        (".lfe" (case (mod-docs file (call mod 'module_info 'exports))
                  ('()     'false)
-                 (exports `#(true #m(name    ,(mod-name mod)
-                                     doc     ,(mod-doc mod)
-                                     exports ,exports)))))
+                 (exports `#(true #m(name      ,(mod-name mod)
+                                     behaviour ,(mod-behaviour mod)
+                                     doc       ,(mod-doc mod)
+                                     exports   ,exports)))))
        (_      'false)))))
 
 (defun mod-docs (file exports)
