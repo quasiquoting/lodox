@@ -204,7 +204,7 @@
       `(,(default-includes)
         ,(title (h (mref doc 'title)))))
     (body
-      `(,(header project)
+      `(,(header* project)
         ,(primary-sidebar project doc)
         ,(div '(id "content" class "document")
            (div '(id "doc") (format-document project doc)))))))
@@ -288,14 +288,17 @@
   "Convenient alias for escape-html/1."
   (escape-html text))
 
-(defun escape-html (text)
+(defun escape-html
   "Change special characters into HTML character entities."
-  (lists:foldl (match-lambda
-                 ([`#(,re ,replacement) text*]
-                  (re:replace text* re replacement '(global #(return list)))))
-               text
-               '(#("\\&"  "\\&amp;")
-                 #("<"  "\\&lt;")
-                 #(">"  "\\&gt;")
-                 #("\"" "\\&quot;")
-                 #("'"  "\\&apos;"))))
+  ([x] (when (is_atom x))
+   (escape-html (atom_to_list x)))
+  ([text]
+   (lists:foldl (match-lambda
+                  ([`#(,re ,replacement) text*]
+                   (re:replace text* re replacement '(global #(return list)))))
+                text
+                '(#("\\&"  "\\&amp;")
+                  #("<"  "\\&lt;")
+                  #(">"  "\\&gt;")
+                  #("\"" "\\&quot;")
+                  #("'"  "\\&apos;")))))

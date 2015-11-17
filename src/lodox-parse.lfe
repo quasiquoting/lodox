@@ -45,12 +45,12 @@
          (is_list body-or-clause))
    (cond
     ((and (lodox-p:string? doc-or-form) (lodox-p:arglist? arglist-or-doc))
-     `#(ok #m(name     ,(atom_to_list name)
+     `#(ok #m(name     ,name
               arity    ,(length arglist-or-doc)
               arglists (,arglist-or-doc)
               doc      ,doc-or-form)))
     ((and (=/= arglist-or-doc '()) (lodox-p:string? arglist-or-doc))
-     `#(ok #m(name     ,(atom_to_list name)
+     `#(ok #m(name     ,name
               arity    ,(length (car doc-or-form))
               arglists ,(lists:map #'pattern/1 `(,doc-or-form ,body-or-clause))
               doc      ,arglist-or-doc)))
@@ -68,13 +68,13 @@
                             (lodox-p:arglist? maybe-arglist))
                            ([_] 'false))
                          forms))
-     `#(ok #m(name     ,(atom_to_list name)
+     `#(ok #m(name     ,name
               arity    ,(length (caar forms))
               arglists ,(lists:map #'pattern/1 forms)
               doc      ,doc-or-arglist)))
     ((andalso (lodox-p:arglist? doc-or-arglist)
               (lodox-p:string? (car forms)))
-     `#(ok #m(name     ,(atom_to_list name)
+     `#(ok #m(name     ,name
               arity    ,(length doc-or-arglist)
               arglists (,doc-or-arglist)
               doc      ,(car forms))))
@@ -84,7 +84,7 @@
 (defun form-doc (form line exports)
   (case (form-doc form)
     (`#(ok ,(= doc `#m(name ,f arity ,a)))
-     (lodox-util:when* (lists:member `#(,(list_to_atom f) ,a) exports)
+     (lodox-util:when* (lists:member `#(,f ,a) exports)
        `#(true ,(mset doc 'line line))))
     ('not-found 'false)))
 
