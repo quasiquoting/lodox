@@ -5,7 +5,7 @@
   "Given a term, return `true` if it is either the empty list or a list s.t.
 `∀ x ∈ lst (arg? x)`, otherwise `false`.
 
-See also: [`arglist?/1`](#func-arg.3F.2F1)"
+See also: [`arg?/1`](#func-arg.3F.2F1)"
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
