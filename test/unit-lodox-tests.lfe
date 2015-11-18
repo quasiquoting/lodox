@@ -39,7 +39,7 @@
     (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
   (is (is_integer (mref* export 'arity)))
   (is (non-empty-list? (mref* export 'doc)))
-  (is (non-empty-list? (mref* export 'name))))
+  (is (is_atom (mref* export 'name))))
 
 (defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
