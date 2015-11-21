@@ -42,7 +42,16 @@
   ([project _ m 'plaintext]
    (pre '(class "plaintext") (h (mref m 'doc))))
   ([project _ m 'markdown]
-   (markdown:conv_utf8 (unicode:characters_to_list (mref m 'doc)))))
+   (case (mref m 'doc)
+     ('() "<br>")
+     (doc
+      (let ((docstring (unicode:characters_to_list doc)))
+        (case (os:find_executable "pandoc")
+          ('false (markdown:conv_utf8 docstring))
+          (pandoc
+           (os:cmd (lists:flatten
+                    (io_lib:format "~s -f markdown_github -t html <<< \"~s\""
+                                   `(,pandoc ,(escape docstring))))))))))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
@@ -309,3 +318,7 @@
                   #(">"  "\\&gt;")
                   #("\"" "\\&quot;")
                   #("'"  "\\&apos;")))))
+
+(defun escape (string)
+  "Given a string, return a copy with backticks and double quotes escaped."
+  (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
