@@ -229,8 +229,11 @@
 (defun func-docs (project module func)
   (div `(class "public anchor" id ,(h (func-id func)))
     `(,(h3 (h (func-name func)))
-      ,(div '(class "usage")
-         (lists:map (lambda (form) (code (h form))) (func-usage func)))
+      ,(case (func-usage func)
+         ('("()") '())
+         (usages
+          (div '(class "usage")
+            (pre (lists:map (lambda (form) (code (h form))) usages)))))
       ,(div '(class "doc")
          (format-docstring project module func))
       ;; TODO: members?
