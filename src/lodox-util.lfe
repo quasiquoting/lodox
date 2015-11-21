@@ -1,7 +1,8 @@
 (defmodule lodox-util
   (doc "Utility functions to inspect the current version of lodox and its dependencies.")
   (export (get-version 0) (get-versions 0)
-          (search-funcs 2) (search-funcs 3)))
+          (search-funcs 2) (search-funcs 3)
+          (when* 2)))
 
 (defun get-version ()
   "Return the current version of Lodox."

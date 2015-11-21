@@ -13,7 +13,7 @@
 
 (defun validate-project (dir project)
   (is (is_map project))
-  (is (non-empty-list? (mref* project 'description)))
+  (is (lodox-p:string? (mref* project 'description)))
   (is (is_list (mref* project 'documents)))
   (is (is_list (mref* project 'modules)))
   (is-equal (project-name dir) (mref* project 'name))
@@ -38,17 +38,12 @@
   (let ((arglists (mref* export 'arglists)))
     (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
   (is (is_integer (mref* export 'arity)))
-  (is (non-empty-list? (mref* export 'doc)))
+  (is (lodox-p:string? (mref* export 'doc)))
   (is (is_atom (mref* export 'name))))
 
 (defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
 (defun mref* (m k) (maps:get k m 'error))
-
-(defun non-empty-list?
-  (['()]                      'false)
-  ([lst] (when (is_list lst)) 'true)
-  ([_]                        'false))
 
 (defun project-name
   (["src"] #"lodox")
