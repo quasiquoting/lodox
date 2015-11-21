@@ -13,10 +13,8 @@
   ([_]          'false))
 
 (defun arglist?
-  "Given a term, return `true` if it is either the empty list or a list s.t.
-`∀ x ∈ lst (arg? x)`, otherwise `false`.
-
-See also: [`arg?/1`](#func-arg.3F.2F1)"
+  "Given a term, return `true` if it is either the empty list or a list
+containing only items that satisfy [`arg?/1`](#func-arg.3F), otherwise `false`."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
@@ -31,14 +29,7 @@ otherwise `false`."
   ([x]
    (orelse (is_atom x) (is_map x) (is_tuple x) (string? x))))
 
-(defun string?
+(defun string? (data)
   "Return `true` if `data` is a flat list of printable (possibly Unicode)
 characters, otherwise `false`."
-  ([data] (when (is_list data))
-   (orelse (io_lib:printable_list data)
-           (io_lib:printable_unicode_list data)
-           (try (io_lib:printable_unicode_list
-                 (unicode:characters_to_list
-                  (list_to_binary data)))
-             (catch (_ 'false)))))
-  ([_] 'false))
+  (io_lib:printable_list data))
