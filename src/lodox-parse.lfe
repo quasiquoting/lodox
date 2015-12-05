@@ -103,7 +103,7 @@
               doc      ""))
      'undefined))
   ;; This pattern matches non-defun forms.
-  ([x] 'undefined))
+  ([_] 'undefined))
 
 (defun form-doc (form line exports)
   (case (form-doc form)

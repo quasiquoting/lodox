@@ -27,7 +27,7 @@ otherwise `false`."
            (lists:member h '(= () backquote quote binary list tuple))
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
-   (orelse (is_atom x) (is_map x) (is_tuple x) (string? x))))
+   (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
 
 (defun string? (data)
   "Return `true` if `data` is a flat list of printable (possibly Unicode)

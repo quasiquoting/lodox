@@ -70,4 +70,10 @@ the issue."
           (opts    `#m(output-path ,doc-dir app-dir ,app-dir)))
       (rebar_api:debug "Generating docs for ~p" `(,(mref project 'name)))
       (lodox-html-writer:write-docs project opts))
-    (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
+    (generated name vsn doc-dir)))
+
+(defun generated
+  ([name `#(cmd ,cmd) doc-dir]
+   (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
+  ([name vsn doc-dir]
+   (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
