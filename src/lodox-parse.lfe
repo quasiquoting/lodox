@@ -12,12 +12,13 @@
 (defun docs (app-name)
   "Given an app-name (binary), return a map like:
 
-
-    '#m(name        #\"lodox\"
-        version     \"0.4.0\"
-        description \"The LFE rebar3 Lodox plugin\"
-        documents   ()
-        modules     {{list of maps of module metadata}})"
+```lfe
+'#m(name        #\"lodox\"
+    version     \"0.4.2\"
+    description \"The LFE rebar3 Lodox plugin\"
+    documents   ()
+    modules     {{list of maps of module metadata}})
+```"
   (let* ((app         (doto (binary_to_atom app-name 'latin1)
                             (application:load)))
          (app-info    (let ((`#(ok ,info) (application:get_all_key app)))
@@ -44,49 +45,72 @@
          (is_list doc-or-form)
          (is_list body-or-clause))
    (cond
-    ((and (lodox-p:string? doc-or-form) (lodox-p:arglist? arglist-or-doc))
+    ;; (defun name arglist maybe-doc body)
+    ((lodox-p:arglist? arglist-or-doc)
      `#(ok #m(name     ,name
               arity    ,(length arglist-or-doc)
               arglists (,arglist-or-doc)
-              doc      ,doc-or-form)))
+              doc      ,(if (lodox-p:string? doc-or-form) doc-or-form ""))))
+    ;; (defun name doc clause clause)
     ((and (=/= arglist-or-doc '()) (lodox-p:string? arglist-or-doc))
      `#(ok #m(name     ,name
               arity    ,(length (car doc-or-form))
-              arglists ,(lists:map #'pattern/1 `(,doc-or-form ,body-or-clause))
+              arglists ,(patterns `(,doc-or-form ,body-or-clause))
               doc      ,arglist-or-doc)))
-    ('true 'not-found)))
+    ;; (defun name clause clause clause)
+    ((lodox-p:clauses? `(,arglist-or-doc ,doc-or-form ,body-or-clause))
+     `#(ok #m(name     ,name
+              arity    ,(length (car arglist-or-doc))
+              arglists ,(patterns
+                         `(,arglist-or-doc ,doc-or-form ,body-or-clause))
+              doc      "")))))
   ([`(defun ,name () ,constant)]
-   'not-found)
-  ([`(defun ,name ,doc-or-arglist . ,forms)]
+   `#(ok #m(name     ,name
+            arity    0
+            arglists [()]
+            doc      "")))
+  ([`(defun ,name ,doc-or-arglist . ,(= forms `(,form . ,_)))]
    (when (is_atom name)
          (is_list doc-or-arglist)
          (is_list forms))
    (cond
-    ((andalso (lodox-p:string? doc-or-arglist)
-              (lists:all (match-lambda
-                           ([`(,maybe-arglist . ,_t)]
-                            (lodox-p:arglist? maybe-arglist))
-                           ([_] 'false))
-                         forms))
-     `#(ok #m(name     ,name
-              arity    ,(length (caar forms))
-              arglists ,(lists:map #'pattern/1 forms)
-              doc      ,doc-or-arglist)))
-    ((andalso (lodox-p:arglist? doc-or-arglist)
-              (lodox-p:string? (car forms)))
+    ;; (defun name arglist maybe-doc body)
+    ((lodox-p:arglist? doc-or-arglist)
      `#(ok #m(name     ,name
               arity    ,(length doc-or-arglist)
               arglists (,doc-or-arglist)
-              doc      ,(car forms))))
-    ('true 'not-found)))
-  ([_] 'not-found))
+              doc      ,(if (lodox-p:string? form) form ""))))
+    ;; (defun name doc clauses)
+    ((andalso (lodox-p:string? doc-or-arglist)
+              (lodox-p:clauses? forms))
+     `#(ok #m(name     ,name
+              arity    ,(length (car form))
+              arglists ,(patterns forms)
+              doc      ,doc-or-arglist)))
+    ;; (defun name clauses)
+    ((lodox-p:clauses? `(,doc-or-arglist . ,forms))
+     `#(ok #m(name     ,name
+              arity    ,(length (car doc-or-arglist))
+              arglists ,(patterns `(,doc-or-arglist . ,forms))
+              doc      "")))))
+  ([`(defun ,name ,clause)]
+   (when (is_atom name)
+         (is_list clause))
+   (if (lodox-p:clause? clause)
+     `#(ok #m(name     ,name
+              arity    ,(length (car clause))
+              arglists ,(pattern clause)
+              doc      ""))
+     'undefined))
+  ;; This pattern matches non-defun forms.
+  ([_] 'undefined))
 
 (defun form-doc (form line exports)
   (case (form-doc form)
     (`#(ok ,(= doc `#m(name ,f arity ,a)))
      (lodox-util:when* (lists:member `#(,f ,a) exports)
        `#(true ,(mset doc 'line line))))
-    ('not-found 'false)))
+    ('undefined 'false)))
 
 (defun mod-behaviour (module)
   (let ((attributes (call module 'module_info 'attributes)))
@@ -123,6 +147,8 @@
 
 (defun mod-name (mod) (call mod 'module_info 'module))
 
+(defun patterns (forms) (lists:map #'pattern/1 forms))
+
 (defun pattern
-  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,patt ,guard))
+  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
   ([`(,arglist . ,_)] arglist))

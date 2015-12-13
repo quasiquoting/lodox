@@ -1,11 +1,20 @@
 (defmodule lodox-p
-  (export (arglist? 1) (arg? 1) (string? 1)))
+  (export (clauses? 1) (clause? 1)
+          (arglist? 1) (arg? 1)
+          (string? 1)))
+
+(defun clauses? (forms)
+  "TODO: write docstring"
+  (lists:all #'clause?/1 forms))
+
+(defun clause?
+  "TODO: write docstring"
+  ([`(,h . ,_)] (lodox-p:arglist? h))
+  ([_]          'false))
 
 (defun arglist?
-  "Given a term, return `true` if it is either the empty list or a list s.t.
-`∀ x ∈ lst (arg? x)`, otherwise `false`.
-
-See also: [`arg?/1`](#func-arg.3F.2F1)"
+  "Given a term, return `true` if it is either the empty list or a list
+containing only items that satisfy [`arg?/1`](#func-arg.3F), otherwise `false`."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
@@ -13,15 +22,14 @@ See also: [`arg?/1`](#func-arg.3F.2F1)"
 (defun arg?
   "Return `true` if `x` seems like a valid element of an arglist,
 otherwise `false`."
-  ([`(,x . ,_t)] (lists:member x '(= () backquote quote binary list tuple)))
-  ([x]           (orelse (is_atom x) (is_map x) (is_tuple x))))
+  ([(= x `(,h . ,_t))]
+   (orelse (string? x)
+           (lists:member h '(= () backquote quote binary list tuple))
+           (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
+  ([x]
+   (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
 
 (defun string? (data)
   "Return `true` if `data` is a flat list of printable (possibly Unicode)
 characters, otherwise `false`."
-  (andalso (is_list data)
-           (orelse (io_lib:printable_list data)
-                   (io_lib:printable_unicode_list data)
-                   (andalso (lists:all #'is_integer/1 data)
-                            (io_lib:printable_unicode_list
-                             (unicode:characters_to_list (binary:list_to_bin data)))))))
+  (io_lib:printable_list data))

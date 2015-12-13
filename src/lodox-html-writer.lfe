@@ -42,7 +42,16 @@
   ([project _ m 'plaintext]
    (pre '(class "plaintext") (h (mref m 'doc))))
   ([project _ m 'markdown]
-   (markdown:conv_utf8 (unicode:characters_to_list (mref m 'doc)))))
+   (case (mref m 'doc)
+     ('() "<br>")
+     (doc
+      (let ((docstring (unicode:characters_to_list doc)))
+        (case (os:find_executable "pandoc")
+          ('false (markdown:conv_utf8 docstring))
+          (pandoc
+           (os:cmd (lists:flatten
+                    (io_lib:format "~s -f markdown_github -t html <<< \"~s\""
+                                   `(,pandoc ,(escape docstring))))))))))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
@@ -149,6 +158,10 @@
              ,(link-to "https://github.com/quasiquoting/lodox" "Lodox")))
       ,(h1 (link-to "index.html" (project-title project))))))
 
+;; TODO: package in ld-parse
+(defun package (project)
+  (maps:get 'package project ""))
+
 (defun index-page (project)
   (html
     `(,(head
@@ -161,13 +174,13 @@
            ,(div '(id "content" class "module-index")
               `(,(h1 (project-title project))
                 ,(div '(class "doc") (p (h (mref project 'description))))
-                ;; TODO: package
-                ;; ,(case (=:= '() (package project))
-                ;;    ('true
-                ;;     `(,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps") (h (++ "[" package " " (mref project 'version) "]")))))
-                ;;    ('false '()))
+                ,(case (package project)
+                   ("" '())
+                   (pkg
+                    `(,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (++ "[" pkg " " (mref project 'version) "]"))))))
                 ;; TODO: topics
                 ,(h2 "Modules")
                 ,(lists:map
@@ -225,8 +238,11 @@
 (defun func-docs (project module func)
   (div `(class "public anchor" id ,(h (func-id func)))
     `(,(h3 (h (func-name func)))
-      ,(div '(class "usage")
-         (lists:map (lambda (form) (code (h form))) (func-usage func)))
+      ,(case (func-usage func)
+         ('("()") '())
+         (usages
+          (div '(class "usage")
+            (pre (lists:map (lambda (form) (code (h form))) usages)))))
       ,(div '(class "doc")
          (format-docstring project module func))
       ;; TODO: members?
@@ -302,3 +318,7 @@
                   #(">"  "\\&gt;")
                   #("\"" "\\&quot;")
                   #("'"  "\\&apos;")))))
+
+(defun escape (string)
+  "Given a string, return a copy with backticks and double quotes escaped."
+  (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
