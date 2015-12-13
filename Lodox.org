@@ -1,4 +1,4 @@
-#+OPTIONS: toc:t
+#+OPTIONS: toc:t title:nil
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
 #+DATE:     2015-10-31
