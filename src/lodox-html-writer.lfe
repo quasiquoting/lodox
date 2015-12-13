@@ -43,7 +43,7 @@
    (pre '(class "plaintext") (h (mref m 'doc))))
   ([project _ m 'markdown]
    (case (mref m 'doc)
-     ('() "<br>")
+     ('() (br))
      (doc
       (let ((docstring (unicode:characters_to_list doc)))
         (case (os:find_executable "pandoc")
