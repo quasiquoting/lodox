@@ -1,4 +1,4 @@
-#+OPTIONS: toc:t title:nil
+#+OPTIONS: toc:t
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
 #+DATE:     2015-10-31
@@ -6,20 +6,16 @@
 #+EMAIL:    quasiquoting@gmail.com
 #+LANGUAGE: en
 #+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
+#+BABEL: :noweb yes :padline no
 
 
-* Lodox
-  :PROPERTIES:
-  :noweb:    yes
-  :padline:  no
-  :END:
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
 # [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
-** Introduction
-   :PROPERTIES:
-   :tangle:   src/lodox.app.src
-   :END:
+* Introduction
+  :PROPERTIES:
+  :tangle:   src/lodox.app.src
+  :END:
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
 #+BEGIN_SRC erlang :exports none
 <<generated("erlang")>>
@@ -39,7 +35,7 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
      "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
 #+END_SRC
 
-** Installation
+* Installation
 #+MACRO: global-rebar-config the global [[https://github.com/rebar/rebar3][rebar3]] config, =~/.config/rebar3/rebar.config=
 
 First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
@@ -69,7 +65,7 @@ Finally, add Lodox to your =plugins= list:
 The recommended place for the Lodox plugin entry is {{{global-rebar-config}}},
 but it works at the project level, too.
 
-** Usage
+* Usage
 In order for Lodox to work, your project must first be compiled:
 #+NAME: compile
 #+BEGIN_SRC sh
@@ -124,12 +120,12 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
   {post, [{compile, lodox}]}]}.
 #+END_SRC
 
-** Rebar3 Configuration
-   :PROPERTIES:
-   :exports:  none
-   :tangle:   no
-   :noweb:    yes
-   :END:
+* Rebar3 Configuration
+  :PROPERTIES:
+  :exports:  none
+  :tangle:   no
+  :noweb:    yes
+  :END:
 *Describe =rebar.config= here.*
 
 #+BEGIN_SRC erlang :tangle rebar.config
@@ -202,12 +198,12 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
    <<markdown>>]}.
 #+END_SRC
 
-** Modules
-*** [[file:src/lodox.lfe][lodox]]
-    :PROPERTIES:
-    :tangle:   src/lodox.lfe
-    :padline:  yes
-    :END:
+* Modules
+** [[file:src/lodox.lfe][lodox]]
+   :PROPERTIES:
+   :tangle:   src/lodox.lfe
+   :padline:  yes
+   :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
 #+END_SRC
@@ -220,7 +216,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   (behaviour provider)
   (export all))
 #+END_SRC
-**** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
+*** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
 - /namespace/: in which the provider is registered.
   In this case, we use ~default~, which is the main namespace.
 #+BEGIN_SRC lfe
@@ -303,7 +299,7 @@ so a string can be formatted explaining the issue."
   (io_lib:format "~p" `(,reason)))
 #+END_SRC
 
-**** Internal Functions
+*** Internal Functions
 #+BEGIN_SRC lfe :exports none :padline no
 #+END_SRC
 #+BEGIN_SRC lfe :exports none
@@ -340,7 +336,7 @@ describing the docs that were generated.
    (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
 #+END_SRC
 
-*** [[file:src/lodox-p.lfe][lodox-p]]
+** [[file:src/lodox-p.lfe][lodox-p]]
    :PROPERTIES:
    :tangle:   src/lodox-p.lfe
    :END:
@@ -384,7 +380,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (io_lib:printable_list data))
 #+END_SRC
 
-*** [[file:src/lodox-util.lfe][lodox-util]]
+** [[file:src/lodox-util.lfe][lodox-util]]
    :PROPERTIES:
    :tangle:   src/lodox-util.lfe
    :padline:  yes
@@ -461,11 +457,11 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 (defun module (func-name)
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 #+END_SRC
-** Unit Tests
-   :PROPERTIES:
-   :tangle:   test/unit-lodox-tests.lfe
-   :padline:  yes
-   :END:
+* Unit Tests
+  :PROPERTIES:
+  :tangle:   test/unit-lodox-tests.lfe
+  :padline:  yes
+  :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
 #+END_SRC
@@ -478,7 +474,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 (include-lib "ltest/include/ltest-macros.lfe")
 #+END_SRC
 
-*** ~project~ Shapes
+** ~project~ Shapes
 #+BEGIN_SRC lfe
 (deftest projects-shapes
   (lists:zipwith #'validate-project/2 (src-dirs) (all-docs)))
@@ -492,7 +488,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (is (is_list (mref* project 'version))))
 #+END_SRC
 
-*** ~modules~ Shapes
+** ~modules~ Shapes
 #+BEGIN_SRC lfe
 (deftest modules-shapes
   (lists:foreach #'validate-module/1 (project-wide 'modules)))
@@ -505,7 +501,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (is (is_atom (mref* module 'name))))
 #+END_SRC
 
-*** ~exports~ Shapes
+** ~exports~ Shapes
 #+BEGIN_SRC lfe
 (deftest exports-shapes
   (lists:foreach #'validate-exports/1 (project-wide 'exports 'modules)))
@@ -539,10 +535,10 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 (defun src-dirs () '("src"))
 #+END_SRC
 
-** [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
-   :PROPERTIES:
-   :tangle:   .travis.yml
-   :END:
+* [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
+  :PROPERTIES:
+  :tangle:   .travis.yml
+  :END:
 #+BEGIN_SRC yaml :exports none
 <<generated("yaml")>>
 #+END_SRC
@@ -569,40 +565,6 @@ otp_release:
   - 18.1
   - 18.0
 #+END_SRC
-
-** License
-   :PROPERTIES:
-   :tangle:   LICENSE
-   :END:
-Lodox is licensed under [[http://yurrriq.mit-license.org][the MIT License]].
-
-#+BEGIN_SRC text
-The MIT License (MIT)
-Copyright © 2015 Eric Bailey <eric@ericb.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-#+END_SRC
-
-
-Significant code and inspiration from [[https://github.com/weavejester/codox][Codox]]. Copyright © 2015 James Revees
-
-Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
 
 * Literate Programming Setup
 Define an Emacs Lisp code block called =generated= that takes a ~lang~-uage
@@ -653,3 +615,37 @@ Set [[http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconf
 
 # (add-hook 'after-save-hook 'yurrriq/auto-tangle-lodox-readme)
 # #+END_SRC
+
+* License
+  :PROPERTIES:
+  :tangle:   LICENSE
+  :END:
+Lodox is licensed under [[http://yurrriq.mit-license.org][the MIT License]].
+
+#+BEGIN_SRC text
+The MIT License (MIT)
+Copyright © 2015 Eric Bailey <eric@ericb.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+#+END_SRC
+
+
+Significant code and inspiration from [[https://github.com/weavejester/codox][Codox]]. Copyright © 2015 James Revees
+
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
