@@ -6,7 +6,6 @@
 #+EMAIL:    quasiquoting@gmail.com
 #+LANGUAGE: en
 #+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
-#+BABEL: :noweb yes :padline no
 
 
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
@@ -15,6 +14,7 @@
 * Introduction
   :PROPERTIES:
   :tangle:   src/lodox.app.src
+  :noweb:    yes
   :END:
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
 #+BEGIN_SRC erlang :exports none
@@ -125,6 +125,7 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
   :exports:  none
   :tangle:   no
   :noweb:    yes
+  :padline:  no
   :END:
 *Describe =rebar.config= here.*
 
@@ -199,6 +200,9 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 #+END_SRC
 
 * Modules
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
 ** [[file:src/lodox.lfe][lodox]]
    :PROPERTIES:
    :tangle:   src/lodox.lfe
@@ -461,6 +465,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   :PROPERTIES:
   :tangle:   test/unit-lodox-tests.lfe
   :padline:  yes
+  :noweb:    yes
   :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
@@ -538,6 +543,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 * [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
   :PROPERTIES:
   :tangle:   .travis.yml
+  :noweb:    yes
   :END:
 #+BEGIN_SRC yaml :exports none
 <<generated("yaml")>>
