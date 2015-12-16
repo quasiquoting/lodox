@@ -11,6 +11,10 @@
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
 # [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
+Current version:
+#+NAME: lodox-version
+: 0.4.4
+
 * Introduction
   :PROPERTIES:
   :tangle:   src/lodox.app.src
@@ -23,7 +27,7 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+BEGIN_SRC erlang :padline yes
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.4.3"},
+  {vsn,          "<<lodox-version()>>"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,
@@ -36,6 +40,9 @@ Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rv
 #+END_SRC
 
 * Installation
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
 #+MACRO: global-rebar-config the global [[https://github.com/rebar/rebar3][rebar3]] config, =~/.config/rebar3/rebar.config=
 
 First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
@@ -59,13 +66,16 @@ Finally, add Lodox to your =plugins= list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.4.3"}}}]}.
+    {tag, "<<lodox-version()>>"}}}]}.
 #+END_SRC
 
 The recommended place for the Lodox plugin entry is {{{global-rebar-config}}},
 but it works at the project level, too.
 
 * Usage
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
 In order for Lodox to work, your project must first be compiled:
 #+NAME: compile
 #+BEGIN_SRC sh
@@ -100,7 +110,7 @@ If all goes well, the output will look something like:
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.4.3 docs in /path/to/lodox/doc
+: Generated lodox v0.4.4 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
@@ -374,7 +384,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   "Return `true` iff `x` seems like a valid item in an arglist."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list tuple))
+           (lists:member h '(= () backquote quote binary list tuple when))
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
    (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
@@ -481,44 +491,69 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 
 ** ~project~ Shapes
 #+BEGIN_SRC lfe
-(deftest projects-shapes
-  (lists:zipwith #'validate-project/2 (src-dirs) (all-docs)))
+(deftestgen projects-shapes
+  (lists:zipwith #'validate_project/2 (src-dirs) (all-docs)))
 
-(defun validate-project (dir project)
-  (is (is_map project))
-  (is (lodox-p:string? (mref* project 'description)))
-  (is (is_list (mref* project 'documents)))
-  (is (is_list (mref* project 'modules)))
-  (is-equal (project-name dir) (mref* project 'name))
-  (is (is_list (mref* project 'version))))
+;; For some reason EUnit gets very upset if the follow _ is a -...
+(defun validate_project (dir project)
+  `[#(#"project is a map"
+      ,(_assert (is_map project)))
+    #(#"description is a string"
+      ,(_assert (lodox-p:string? (mref* project 'description))))
+    #(#"documents is a list"
+      ,(_assert (is_list (mref* project 'documents))))
+    #(#"modules is a list"
+      ,(_assert (is_list (mref* project 'modules))))
+    #(#"name matches directory"
+      ,(_assertEqual (project-name dir) (mref* project 'name)))
+    #(#"version is a list"
+      ,(_assert (is_list (mref* project 'version))))])
 #+END_SRC
 
 ** ~modules~ Shapes
 #+BEGIN_SRC lfe
-(deftest modules-shapes
-  (lists:foreach #'validate-module/1 (project-wide 'modules)))
+(deftestgen modules-shapes
+  (lists:map #'validate_module/1 (project-wide 'modules)))
 
-(defun validate-module (module)
-  (is (is_map module))
-  (is-equal '(behaviour doc exports filepath name) (maps:keys module))
-  (is (is_list (mref* module 'doc)))
-  (is (is_list (mref* module 'exports)))
-  (is (is_atom (mref* module 'name))))
+(defun validate_module (module)
+  `[#(#"module is a map"
+      ,(_assert (is_map module)))
+    #(#"module has correct keys"
+      ,(_assertEqual '(behaviour doc exports filepath name) (maps:keys module)))
+    #(#"behaviour is a list ot atoms"
+      ,(_assert (lists:all #'is_atom/1 (mref* module 'behaviour))))
+    #(#"doc is a list"
+      ,(_assert (is_list (mref* module 'doc))))
+    #(#"exports is a list"
+      ,(_assert (is_list (mref* module 'exports))))
+    #(#"filepath refers to a regular file"
+      ,(_assert (filelib:is_regular (mref* module 'filepath))))
+    #(#"name is an atom"
+      ,(_assert (is_atom (mref* module 'name))))])
 #+END_SRC
 
 ** ~exports~ Shapes
 #+BEGIN_SRC lfe
-(deftest exports-shapes
-  (lists:foreach #'validate-exports/1 (project-wide 'exports 'modules)))
+(deftestgen exports-shapes
+  (lists:map #'validate_exports/1 (project-wide 'exports 'modules)))
 
-(defun validate-exports (export)
-  (is (is_map export))
-  (is-equal '(arglists arity doc line name) (maps:keys export))
-  (let ((arglists (mref* export 'arglists)))
-    (is (andalso (is_list arglists) (lists:all #'is_list/1 arglists))))
-  (is (is_integer (mref* export 'arity)))
-  (is (lodox-p:string? (mref* export 'doc)))
-  (is (is_atom (mref* export 'name))))
+(defun validate_exports (exports)
+  `[#(#"exports is a map"
+      ,(_assert (is_map exports)))
+    #(#"exports has correct keys"
+      ,(_assertEqual '(arglists arity doc line name) (maps:keys exports)))
+    #(#"arglists is a list of arglists"
+      ,(let ((arglists (mref* exports 'arglists)))
+         (_assert (andalso (is_list arglists)
+                           (lists:all #'lodox-p:arglist?/1 arglists)))))
+    #(#"artity is an integer"
+      ,(_assert (is_integer (mref* exports 'arity))))
+    #(#"doc is a string"
+      ,(_assert (lodox-p:string? (mref* exports 'doc))))
+    #(#"line is an integer"
+      ,(_assert (is_integer (mref* exports 'line))))
+    #(#"name is an atom"
+      ,(_assert (is_atom (mref* exports 'name))))])
 #+END_SRC
 #+BEGIN_SRC lfe :exports none
 (defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
@@ -573,6 +608,16 @@ otp_release:
 #+END_SRC
 
 * Literate Programming Setup
+Set [[http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148][~org-confirm-babel-evaluate~]] to a ~lambda~ expression that takes the
+~lang~-uage and ~body~ of a code block and returns ~nil~ if ~lang~ is
+=​"emacs-lisp"​=, otherwise ~t~.
+#+NAME: auto-eval-elisp
+#+BEGIN_SRC emacs-lisp :results silent
+(setq-local org-confirm-babel-evaluate
+            (lambda (lang body)
+              (not (string= lang "emacs-lisp"))))
+#+END_SRC
+
 Define an Emacs Lisp code block called =generated= that takes a ~lang~-uage
 (default: ~​""​~) and produces a commented notice that source code in this project
 is generated by this Org file.
@@ -595,17 +640,6 @@ is generated by this Org file.
 For example, ~<<generated("lfe")>>~ produces:
 #+BEGIN_SRC text :noweb yes
 <<generated("lfe")>>
-#+END_SRC
-
-Set [[http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148][~org-confirm-babel-evaluate~]] to a ~lambda~ expression that takes the
-~lang~-uage and ~body~ of a code block and returns ~nil~ if ~lang~ is
-=​"emacs-lisp"​=, otherwise ~t~.
-
-#+NAME: auto-eval-elisp
-#+BEGIN_SRC emacs-lisp :results silent
-(setq-local org-confirm-babel-evaluate
-            (lambda (lang body)
-              (not (string= lang "emacs-lisp"))))
 #+END_SRC
 
 # ** Auto-tangle this file

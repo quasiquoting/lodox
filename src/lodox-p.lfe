@@ -28,7 +28,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   "Return `true` iff `x` seems like a valid item in an arglist."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list tuple))
+           (lists:member h '(= () backquote quote binary list tuple when))
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
    (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
