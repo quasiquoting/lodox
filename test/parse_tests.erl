@@ -6,13 +6,24 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-define(TIMEOUT, 60).
+
+-define(OPTIONS, [{to_file, user}]).
+
+
+%%%===================================================================
+%%% EUnit tests
+%%%===================================================================
+
 parse_test_() ->
-  {timeout, 300,
-   [ {"A function without a docstring produces an empty docstring.",
-      ?_assert(proper:quickcheck(prop_defun_simple(), [{to_file, user}]))}
-   , {"A simple function with a docstring is correctly parsed.",
-      ?_assert(proper:quickcheck(prop_defun_simple_doc(), [{to_file, user}]))}
-   ]}.
+  Properties =
+    [ {"A function without a docstring produces an empty docstring.",
+       prop_defun_simple()}
+    , {"A simple function with a docstring is correctly parsed.",
+       prop_defun_simple_doc()}
+    ],
+  [{timeout, ?TIMEOUT, {Title, ?_assert(proper:quickcheck(Property, ?OPTIONS))}}
+   || {Title, Property} <- Properties].
 
 
 %%%===================================================================
