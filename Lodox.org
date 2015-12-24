@@ -200,13 +200,21 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 {markdown, {git, "git://github.com/erlware/erlmarkdown.git"}}
 #+END_SRC
 
+#+NAME: proper
+#+BEGIN_SRC erlang
+{proper,
+ {git, "git://github.com/quasiquoting/proper.git",
+  {branch, "master"}}}
+#+END_SRC
+
 #+BEGIN_SRC erlang :exports code :padline yes :tangle rebar.config
 {deps,
-  [<<lfe>>,
-   <<lutil>>,
-   <<ltest>>,
-   <<exemplar>>,
-   <<markdown>>]}.
+ [<<lfe>>,
+  <<lutil>>,
+  <<ltest>>,
+  <<exemplar>>,
+  <<markdown>>,
+  <<proper>>]}.
 #+END_SRC
 
 * Modules
