@@ -46,7 +46,9 @@
          (is_list body-or-clause))
    (cond
     ;; (defun name arglist maybe-doc body)
-    ((lodox-p:arglist? arglist-or-doc)
+    ((andalso (lodox-p:arglist? arglist-or-doc)
+              (or (=:= '() arglist-or-doc)
+                  (not (lodox-p:string? arglist-or-doc))))
      `#(ok #m(name     ,name
               arity    ,(length arglist-or-doc)
               arglists (,arglist-or-doc)
