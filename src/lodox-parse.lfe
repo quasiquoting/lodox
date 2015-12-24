@@ -1,6 +1,7 @@
 (defmodule lodox-parse
   (doc "Parsing LFE source files for metadata.")
-  (export (docs 1)))
+  (export (docs 1)
+          (form-doc 1)))
 
 (include-lib "lodox/include/lodox-macros.lfe")
 
