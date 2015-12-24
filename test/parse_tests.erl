@@ -37,8 +37,6 @@ prop_defun_simple() ->
             "" =:= Doc
           end).
 
-
-
 prop_defun_simple_doc() ->
   ?FORALL(Defun, defun_simple_doc(),
           begin
