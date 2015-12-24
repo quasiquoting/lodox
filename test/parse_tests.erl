@@ -7,7 +7,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 parse_test_() ->
-  {timeout, 60,
+  {timeout, 300,
    [ {"A function without a docstring produces an empty docstring.",
       ?_assert(proper:quickcheck(prop_defun_simple(), [{to_file, user}]))}
    , {"A simple function with a docstring is correctly parsed.",
