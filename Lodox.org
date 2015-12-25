@@ -625,8 +625,9 @@ notifications:
   recipients:
     - quasiquoting@gmail.com
 otp_release:
-  - 18.1
+  - 18.2.1
   - 18.0
+  - 17.5
 #+END_SRC
 
 * Literate Programming Setup
