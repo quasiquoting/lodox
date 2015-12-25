@@ -35,7 +35,7 @@
       ,(_assert (is_map module)))
     #(#"module has correct keys"
       ,(_assertEqual '(behaviour doc exports filepath name) (maps:keys module)))
-    #(#"behaviour is a list ot atoms"
+    #(#"behaviour is a list of atoms"
       ,(_assert (lists:all #'is_atom/1 (mref* module 'behaviour))))
     #(#"doc is a list"
       ,(_assert (is_list (mref* module 'doc))))
@@ -54,10 +54,16 @@
       ,(_assert (is_map exports)))
     #(#"exports has correct keys"
       ,(_assertEqual '(arglists arity doc line name) (maps:keys exports)))
-    #(#"arglists is a list of arglists"
-      ,(let ((arglists (mref* exports 'arglists)))
-         (_assert (andalso (is_list arglists)
-                           (lists:all #'lodox-p:arglist?/1 arglists)))))
+    #(#"arglists is a list of arglists (which may end with a guard)"
+      ,(let ((arglists (lists:map
+                         (lambda (arglist)
+                           (lists:filter
+                             (match-lambda
+                               ([`(when . ,_t)] 'false)
+                               ([_]             'true))
+                             arglist))
+                         (mref* exports 'arglists))))
+         (_assert (lists:all #'lodox-p:arglist?/1 arglists))))
     #(#"artity is an integer"
       ,(_assert (is_integer (mref* exports 'arity))))
     #(#"doc is a string"

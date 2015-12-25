@@ -29,23 +29,22 @@
   "TODO: write docstring"
   (search-funcs modules partial-func 'undefined))
 
-(defun search-funcs
+(defun search-funcs (modules partial-func starting-mod)
   "TODO: write docstring"
-  ([modules partial-func starting-mod]
-   (let* ((suffix  (if (lists:member #\/ partial-func)
-                     partial-func
-                     (++ "/" partial-func)))
-          (matches (lists:filter
-                     (lambda (func-name) (lists:suffix suffix func-name))
-                     (exported-funcs modules))))
-     (case (lists:dropwhile
-            (lambda (func-name)
-              (=/= (atom_to_list starting-mod) (module func-name)))
-            matches)
-       (`(,func . ,_) func)
-       ('()           (case matches
-                        (`(,func . ,_) func)
-                        ('()           'undefined)))))))
+  (let* ((suffix  (if (lists:member #\/ partial-func)
+                    partial-func
+                    `(#\/ . ,partial-func)))
+         (matches (lists:filter
+                    (lambda (func-name) (lists:suffix suffix func-name))
+                    (exported-funcs modules))))
+    (case (lists:dropwhile
+           (lambda (func-name)
+             (=/= (atom_to_list starting-mod) (module func-name)))
+           matches)
+      (`(,func . ,_) func)
+      ('()           (case matches
+                       (`(,func . ,_) func)
+                       ('()           'undefined))))))
 
 
 ;;;===================================================================

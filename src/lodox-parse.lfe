@@ -1,6 +1,7 @@
 (defmodule lodox-parse
   (doc "Parsing LFE source files for metadata.")
-  (export (docs 1)))
+  (export (docs 1)
+          (form-doc 1)))
 
 (include-lib "lodox/include/lodox-macros.lfe")
 
@@ -77,11 +78,15 @@
          (is_list forms))
    (cond
     ;; (defun name arglist maybe-doc body)
-    ((lodox-p:arglist? doc-or-arglist)
+    ((andalso (lodox-p:arglist? doc-or-arglist)
+              (not (lists:all #'lodox-p:clause?/1 forms)))
      `#(ok #m(name     ,name
               arity    ,(length doc-or-arglist)
               arglists (,doc-or-arglist)
-              doc      ,(if (lodox-p:string? form) form ""))))
+              doc      ,(if (andalso (lodox-p:string? form)
+                                     (> (length forms) 1))
+                          form
+                          ""))))
     ;; (defun name doc clauses)
     ((andalso (lodox-p:string? doc-or-arglist)
               (lodox-p:clauses? forms))

@@ -200,13 +200,21 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 {markdown, {git, "git://github.com/erlware/erlmarkdown.git"}}
 #+END_SRC
 
+#+NAME: proper
+#+BEGIN_SRC erlang
+{proper,
+ {git, "git://github.com/quasiquoting/proper.git",
+  {branch, "master"}}}
+#+END_SRC
+
 #+BEGIN_SRC erlang :exports code :padline yes :tangle rebar.config
 {deps,
-  [<<lfe>>,
-   <<lutil>>,
-   <<ltest>>,
-   <<exemplar>>,
-   <<markdown>>]}.
+ [<<lfe>>,
+  <<lutil>>,
+  <<ltest>>,
+  <<exemplar>>,
+  <<markdown>>,
+  <<proper>>]}.
 #+END_SRC
 
 * Modules
@@ -370,6 +378,8 @@ describing the docs that were generated.
 
 (defun clause?
   "Given a term, return `true` iff the it is a list whose head satisfies [[arglist?/1]]."
+  ([`(,_)]      'false)
+  ([`([] . ,_)] 'false)
   ([`(,h . ,_)] (lodox-p:arglist? h))
   ([_]          'false))
 
@@ -384,10 +394,17 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   "Return `true` iff `x` seems like a valid item in an arglist."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list tuple when))
+           (lists:member h '(= () backquote quote binary list map tuple))
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
-   (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
+   (lists:any (lambda (p) (funcall p x))
+              (list #'is_atom/1
+                    #'is_binary/1
+                    #'is_bitstring/1
+                    #'is_number/1
+                    #'is_map/1
+                    #'is_tuple/1
+                    #'string?/1))))
 
 (defun string? (data)
   "Return `true` iff `data` is a flat list of printable characters."
@@ -430,23 +447,22 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   "TODO: write docstring"
   (search-funcs modules partial-func 'undefined))
 
-(defun search-funcs
+(defun search-funcs (modules partial-func starting-mod)
   "TODO: write docstring"
-  ([modules partial-func starting-mod]
-   (let* ((suffix  (if (lists:member #\/ partial-func)
-                     partial-func
-                     (++ "/" partial-func)))
-          (matches (lists:filter
-                     (lambda (func-name) (lists:suffix suffix func-name))
-                     (exported-funcs modules))))
-     (case (lists:dropwhile
-            (lambda (func-name)
-              (=/= (atom_to_list starting-mod) (module func-name)))
-            matches)
-       (`(,func . ,_) func)
-       ('()           (case matches
-                        (`(,func . ,_) func)
-                        ('()           'undefined)))))))
+  (let* ((suffix  (if (lists:member #\/ partial-func)
+                    partial-func
+                    `(#\/ . ,partial-func)))
+         (matches (lists:filter
+                    (lambda (func-name) (lists:suffix suffix func-name))
+                    (exported-funcs modules))))
+    (case (lists:dropwhile
+           (lambda (func-name)
+             (=/= (atom_to_list starting-mod) (module func-name)))
+           matches)
+      (`(,func . ,_) func)
+      ('()           (case matches
+                       (`(,func . ,_) func)
+                       ('()           'undefined))))))
 #+END_SRC
 #+BEGIN_SRC lfe :exports none :padline no
 #+END_SRC
@@ -520,7 +536,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assert (is_map module)))
     #(#"module has correct keys"
       ,(_assertEqual '(behaviour doc exports filepath name) (maps:keys module)))
-    #(#"behaviour is a list ot atoms"
+    #(#"behaviour is a list of atoms"
       ,(_assert (lists:all #'is_atom/1 (mref* module 'behaviour))))
     #(#"doc is a list"
       ,(_assert (is_list (mref* module 'doc))))
@@ -542,10 +558,16 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assert (is_map exports)))
     #(#"exports has correct keys"
       ,(_assertEqual '(arglists arity doc line name) (maps:keys exports)))
-    #(#"arglists is a list of arglists"
-      ,(let ((arglists (mref* exports 'arglists)))
-         (_assert (andalso (is_list arglists)
-                           (lists:all #'lodox-p:arglist?/1 arglists)))))
+    #(#"arglists is a list of arglists (which may end with a guard)"
+      ,(let ((arglists (lists:map
+                         (lambda (arglist)
+                           (lists:filter
+                             (match-lambda
+                               ([`(when . ,_t)] 'false)
+                               ([_]             'true))
+                             arglist))
+                         (mref* exports 'arglists))))
+         (_assert (lists:all #'lodox-p:arglist?/1 arglists))))
     #(#"artity is an integer"
       ,(_assert (is_integer (mref* exports 'arity))))
     #(#"doc is a string"
