@@ -14,6 +14,8 @@
 
 (defun clause?
   "Given a term, return `true` iff the it is a list whose head satisfies [[arglist?/1]]."
+  ([`(,_)]      'false)
+  ([`([] . ,_)] 'false)
   ([`(,h . ,_)] (lodox-p:arglist? h))
   ([_]          'false))
 
@@ -28,10 +30,17 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   "Return `true` iff `x` seems like a valid item in an arglist."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list map tuple when))
+           (lists:member h '(= () backquote quote binary list map tuple))
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
-   (orelse (is_atom x) (is_integer x) (is_map x) (is_tuple x) (string? x))))
+   (lists:any (lambda (p) (funcall p x))
+              (list #'is_atom/1
+                    #'is_binary/1
+                    #'is_bitstring/1
+                    #'is_number/1
+                    #'is_map/1
+                    #'is_tuple/1
+                    #'string?/1))))
 
 (defun string? (data)
   "Return `true` iff `data` is a flat list of printable characters."
