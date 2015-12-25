@@ -8,7 +8,7 @@
 
 -define(TIMEOUT, 60).
 
--define(OPTIONS, [{to_file, user}]).
+-define(OPTIONS(N), [{on_output, fun pprint/2}, {numtests, N}]).
 
 
 %%%===================================================================
@@ -18,12 +18,13 @@
 parse_test_() ->
   Properties =
     [ {"A function without a docstring produces an empty docstring.",
-       prop_defun_simple()}
+       prop_defun_simple(), 100}
     , {"A simple function with a docstring is correctly parsed.",
-       prop_defun_simple_doc()}
+       prop_defun_simple_doc(), 100}
     ],
-  [{timeout, ?TIMEOUT, {Title, ?_assert(proper:quickcheck(Property, ?OPTIONS))}}
-   || {Title, Property} <- Properties].
+  [{timeout, ?TIMEOUT,
+    {Title, ?_assert(proper:quickcheck(Property, ?OPTIONS(NumTests)))}}
+   || {Title, Property, NumTests} <- Properties].
 
 
 %%%===================================================================
@@ -41,7 +42,7 @@ prop_defun_simple_doc() ->
   ?FORALL(Defun, defun_simple_doc(),
           begin
             {ok, #{doc := Doc}} = 'lodox-parse':'form-doc'(Defun),
-            'lodox-p':'string?'(Doc)
+            lists:nth(4, Defun) =:=  Doc
           end).
 
 
@@ -70,3 +71,16 @@ docstring() -> non_empty(list(printable_char())).
 form() -> non_empty(list()).
 
 printable_char() -> union([integer(32, 126), integer(160, 255)]).
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+pprint(_Format, [Defun]) when defun =:= hd(Defun) ->
+  io:format(user, "~s~n", [pprint(Defun)]);
+pprint(Format, Data) ->
+  io:format(user, Format, Data).
+
+pprint(Term) ->
+  re:replace(lfe_io_pretty:term(Term), "comma ", ". ,",
+             [global, {return, list}]).
