@@ -5,7 +5,7 @@
 
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.4.4"},
+  {vsn,          "0.4.5"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,

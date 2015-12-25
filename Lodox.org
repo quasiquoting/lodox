@@ -13,7 +13,7 @@
 
 Current version:
 #+NAME: lodox-version
-: 0.4.4
+: 0.4.5
 
 * Introduction
   :PROPERTIES:
@@ -110,7 +110,7 @@ If all goes well, the output will look something like:
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.4.4 docs in /path/to/lodox/doc
+: Generated lodox v0.4.5 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
