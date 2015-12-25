@@ -51,26 +51,33 @@ prop_defun_simple_doc() ->
 %%%===================================================================
 
 defun_simple() ->
-  [defun, atom(), simple_arglist()
-   | non_empty(list(form()))].
+  [defun, atom(), arglist_simple()
+   | body()].
 
 defun_simple_doc() ->
-  [defun, atom(), simple_arglist(),
+  [defun, atom(), arglist_simple(),
    docstring()
-   | non_empty(list(form()))].
+   | body()].
 
 
 %%%===================================================================
 %%% Custom types
 %%%===================================================================
 
-simple_arglist() -> list(atom()).
+arglist_simple() -> list(atom()).
 
-docstring() -> non_empty(list(printable_char())).
+body() -> union([[printable_string()], [non_string_term() | list(form())]]).
 
-form() -> non_empty(list()).
+docstring() -> printable_string().
+
+form() -> union([non_string_term(), printable_string(), [ atom() | list()]]).
+
+non_string_term() ->
+  union([atom(), number(), [], bitstring(), binary(), boolean(), tuple()]).
 
 printable_char() -> union([integer(32, 126), integer(160, 255)]).
+
+printable_string() -> list(printable_char()).
 
 %%%===================================================================
 %%% Internal functions
