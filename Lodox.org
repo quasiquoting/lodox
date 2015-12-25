@@ -9,6 +9,7 @@
 
 
 [[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
+[[https://github.com/quasiquoting/lodox/releases/latest][file:https://badge.fury.io/gh/quasiquoting%2Flodox.svg)}(https://badge.fury.io/gh/quasiquoting%2Flodox]]
 # [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
 Current version:
