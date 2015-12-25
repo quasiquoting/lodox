@@ -536,7 +536,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assert (is_map module)))
     #(#"module has correct keys"
       ,(_assertEqual '(behaviour doc exports filepath name) (maps:keys module)))
-    #(#"behaviour is a list ot atoms"
+    #(#"behaviour is a list of atoms"
       ,(_assert (lists:all #'is_atom/1 (mref* module 'behaviour))))
     #(#"doc is a list"
       ,(_assert (is_list (mref* module 'doc))))
