@@ -622,12 +622,11 @@ before_script:
 script:
   - ./rebar3 eunit -v
 notifications:
-  recipients:
+  email:
     - quasiquoting@gmail.com
 otp_release:
-  - 18.2.1
+  - 18.2
   - 18.0
-  - 17.5
 #+END_SRC
 
 * Literate Programming Setup
