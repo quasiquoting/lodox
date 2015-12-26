@@ -1,14 +1,22 @@
-[![img](https://travis-ci.org/quasiquoting/lodox.svg)](https://travis-ci.org/quasiquoting/lodox)
-[![img](https://badge.fury.io/gh/quasiquoting%2Flodox.svg)](https:/github.com/quasiquoting/lodox/releases/latest)
-[![img](https://img.shields.io/github/license/quasiquoting/lodox.svg)](LICENSE)
+- [Application Resource File](#application-resource-file)
+- [Rebar3 Configuration](#rebar3-configuration)
+- [Modules](#modules)
+  - [[lodox](src/lodox.lfe)](#[lodox](src/lodox.lfe))
+    - [[Provider Interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)](#[provider-interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface))
+    - [Internal Functions](#internal-functions)
+  - [[lodox-p](src/lodox-p.lfe)](#[lodox-p](src/lodox-p.lfe))
+  - [[lodox-util](src/lodox-util.lfe)](#[lodox-util](src/lodox-util.lfe))
+- [Macros](#macros)
+- [Unit Tests](#unit-tests)
+  - [`project` Shapes](#`project`-shapes)
+  - [`modules` Shapes](#`modules`-shapes)
+  - [`exports` Shapes](#`exports`-shapes)
+- [[Travis CI](https://travis-ci.org/quasiquoting/lodox)](#[travis-ci](https://travis-ci.org/quasiquoting/lodox))
+- [Literate Programming Setup](#literate-programming-setup)
+  - [License](#license)
 
-Current version:
 
-    0.5.0
-
-# Introduction
-
-Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://quasiquoting.org/lodox/).
+# Application Resource File<a id="orgheadline1"></a>
 
 ```erlang
 {application,    'lodox',
@@ -25,74 +33,7 @@ Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/
      "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
 ```
 
-# Installation
-
-First, make sure you have the [lfe-compile](https://github.com/lfe-rebar3/compile) plugin as a dependency in your
-project's `rebar.config` or, better yet, in the the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`:
-
-```erlang
-{plugins,
- [{'lfe-compile', ".*",
-   {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}
-```
-
-Then in your project's `rebar.config`, include the [provider pre-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
-
-```erlang
-{provider_hooks,
- [{pre, [{compile, {lfe, compile}}]}]}
-```
-
-Finally, add Lodox to your `plugins` list:
-
-```erlang
-{plugins,
- [% ...
-  {lodox, ".*",
-   {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.5.0"}}}]}.
-```
-
-The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
-but it works at the project level, too.
-
-# Usage
-
-In order for Lodox to work, your project must first be compiled:
-
-```sh
-rebar3 compile
-```
-
-Then, to invoke Lodox, simply run:
-
-```sh
-rebar3 lodox
-```
-
-Alternatively, you can `do` both at once:
-
-```sh
-rebar3 do compile, lodox
-```
-
-If all goes well, the output will look something like:
-
-    Generated lodox v0.5.0 docs in /path/to/lodox/doc
-
-And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
-your project.
-
-Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
-
-```erlang
-{provider_hooks,
- [{pre,  [{compile, {lfe, compile}}]},
-  {post, [{compile, lodox}]}]}.
-```
-
-# Rebar3 Configuration
+# Rebar3 Configuration<a id="orgheadline2"></a>
 
 **Describe `rebar.config` here.**
 
@@ -133,9 +74,9 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
     {branch, "master"}}}]}.
 ```
 
-# Modules
+# Modules<a id="orgheadline8"></a>
 
-## [lodox](src/lodox.lfe)
+## [lodox](src/lodox.lfe)<a id="orgheadline5"></a>
 
 ```lfe
 (defmodule lodox
@@ -147,7 +88,7 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
   (export all))
 ```
 
-### [Provider Interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)
+### [Provider Interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)<a id="orgheadline3"></a>
 
 -   *namespace*: in which the provider is registered.
     In this case, use `default`, which is the main namespace.
@@ -231,7 +172,7 @@ so a string can be formatted explaining the issue."
   (io_lib:format "~p" `(,reason)))
 ```
 
-### Internal Functions
+### Internal Functions<a id="orgheadline4"></a>
 
 `write-docs/1` takes an `app_info_t` (see: [rebar​\_app​\_info.erl](https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl)) and generates
 documentation for it.
@@ -263,7 +204,7 @@ describing the docs that were generated.
    (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
 ```
 
-## [lodox-p](src/lodox-p.lfe)
+## [lodox-p](src/lodox-p.lfe)<a id="orgheadline6"></a>
 
 ```lfe
 (defmodule lodox-p
@@ -310,7 +251,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (io_lib:printable_list data))
 ```
 
-## [lodox-util](src/lodox-util.lfe)
+## [lodox-util](src/lodox-util.lfe)<a id="orgheadline7"></a>
 
 ```lfe
 (defmodule lodox-util
@@ -356,7 +297,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
-# Macros
+# Macros<a id="orgheadline9"></a>
 
 Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
 s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
@@ -385,7 +326,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (defmacro iff (test then) `(if ,test ,then))
 ```
 
-# Unit Tests
+# Unit Tests<a id="orgheadline13"></a>
 
 ```lfe
 (defmodule unit-lodox-tests
@@ -395,7 +336,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (include-lib "ltest/include/ltest-macros.lfe")
 ```
 
-## `project` Shapes
+## `project` Shapes<a id="orgheadline10"></a>
 
 ```lfe
 (deftestgen projects-shapes
@@ -417,7 +358,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_list (mref* project 'version))))])
 ```
 
-## `modules` Shapes
+## `modules` Shapes<a id="orgheadline11"></a>
 
 ```lfe
 (deftestgen modules-shapes
@@ -440,7 +381,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_atom (mref* module 'name))))])
 ```
 
-## `exports` Shapes
+## `exports` Shapes<a id="orgheadline12"></a>
 
 ```lfe
 (deftestgen exports-shapes
@@ -471,7 +412,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_atom (mref* exports 'name))))])
 ```
 
-# [Travis CI](https://travis-ci.org/quasiquoting/lodox)
+# [Travis CI](https://travis-ci.org/quasiquoting/lodox)<a id="orgheadline14"></a>
 
 ```yaml
 language: erlang
@@ -497,7 +438,7 @@ otp_release:
   - 18.0
 ```
 
-# Literate Programming Setup
+# Literate Programming Setup<a id="orgheadline16"></a>
 
 Set [`org-confirm-babel-evaluate`](http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148) to a `lambda` expression that takes the
 `lang`-uage and `body` of a code block and returns `nil` if `lang` is
@@ -537,7 +478,7 @@ For example, `<<generated("lfe")>>` produces:
 ;;;===================================================================
 ```
 
-## License
+## License<a id="orgheadline15"></a>
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 

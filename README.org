@@ -12,33 +12,13 @@
 [[https:/github.com/quasiquoting/lodox/releases/latest][file:https://badge.fury.io/gh/quasiquoting%2Flodox.svg]]
 [[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
 
-Current version:
 #+NAME: lodox-version
-: 0.5.0
+#+BEGIN_SRC sh :exports none
+cat VERSION
+#+END_SRC
 
 * Introduction
-  :PROPERTIES:
-  :tangle:   src/lodox.app.src
-  :noweb:    yes
-  :END:
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
-#+BEGIN_SRC erlang :exports none
-<<generated("erlang")>>
-#+END_SRC
-#+BEGIN_SRC erlang :padline yes
-{application,    'lodox',
- [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "<<lodox-version()>>"},
-  {modules,      ['lodox-html-writer','lodox-org-writer',
-                  'lodox-p','lodox-parse','lodox-util',
-                  lodox,
-                  'unit-lodox-tests']},
-  {registered,   []},
-  {applications, [kernel, stdlib]},
-  {env,
-   [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
-#+END_SRC
 
 * Installation
   :PROPERTIES:

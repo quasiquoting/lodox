@@ -7,7 +7,33 @@
 #+LANGUAGE: en
 #+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
 
-#+INCLUDE: README.org
+#+NAME: lodox-version
+#+BEGIN_SRC sh :exports none
+cat VERSION
+#+END_SRC
+
+* Application Resource File
+  :PROPERTIES:
+  :tangle:   src/lodox.app.src
+  :noweb:    yes
+  :END:
+#+BEGIN_SRC erlang :exports none
+<<generated("erlang")>>
+#+END_SRC
+#+BEGIN_SRC erlang :padline yes :tangle src/lodox.app.src
+{application,    'lodox',
+ [{description,  "The LFE rebar3 Lodox plugin"},
+  {vsn,          "<<lodox-version()>>"},
+  {modules,      ['lodox-html-writer','lodox-org-writer',
+                  'lodox-p','lodox-parse','lodox-util',
+                  lodox,
+                  'unit-lodox-tests']},
+  {registered,   []},
+  {applications, [kernel, stdlib]},
+  {env,
+   [{'source-uri',
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
+#+END_SRC
 
 * Rebar3 Configuration
   :PROPERTIES:

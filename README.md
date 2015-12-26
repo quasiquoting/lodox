@@ -2,28 +2,9 @@
 [![img](https://badge.fury.io/gh/quasiquoting%2Flodox.svg)](https:/github.com/quasiquoting/lodox/releases/latest)
 [![img](https://img.shields.io/github/license/quasiquoting/lodox.svg)](LICENSE)
 
-Current version:
-
-    0.5.0
-
 # Introduction
 
 Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://quasiquoting.org/lodox/).
-
-```erlang
-{application,    'lodox',
- [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.5.0"},
-  {modules,      ['lodox-html-writer','lodox-org-writer',
-                  'lodox-p','lodox-parse','lodox-util',
-                  lodox,
-                  'unit-lodox-tests']},
-  {registered,   []},
-  {applications, [kernel, stdlib]},
-  {env,
-   [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
-```
 
 # Installation
 
