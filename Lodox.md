@@ -5,13 +5,18 @@
   - [[lodox](src/lodox.lfe)](#[lodox](src/lodox.lfe))
     - [[Provider Interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)](#[provider-interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface))
     - [Internal Functions](#internal-functions)
+  - [lodox-html-writer](#lodox-html-writer)
+  - [[lodox-org-writer](src/lodox-org-writer.lfe)](#[lodox-org-writer](src/lodox-org-writer.lfe))
+  - [[lodox-parse](src/lodox-parse.lfe)](#[lodox-parse](src/lodox-parse.lfe))
   - [[lodox-p](src/lodox-p.lfe)](#[lodox-p](src/lodox-p.lfe))
   - [[lodox-util](src/lodox-util.lfe)](#[lodox-util](src/lodox-util.lfe))
 - [Macros](#macros)
-- [Unit Tests](#unit-tests)
-  - [`project` Shapes](#`project`-shapes)
-  - [`modules` Shapes](#`modules`-shapes)
-  - [`exports` Shapes](#`exports`-shapes)
+- [Tests](#tests)
+  - [Property Tests](#property-tests)
+  - [Unit Tests](#unit-tests)
+    - [`project` Shapes](#`project`-shapes)
+    - [`modules` Shapes](#`modules`-shapes)
+    - [`exports` Shapes](#`exports`-shapes)
 - [[Travis CI](https://travis-ci.org/quasiquoting/lodox)](#[travis-ci](https://travis-ci.org/quasiquoting/lodox))
 - [License](#license)
 
@@ -114,7 +119,7 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
     {branch, "master"}}}]}.
 ```
 
-# Modules<a id="orgheadline9"></a>
+# Modules<a id="orgheadline12"></a>
 
 ## [lodox](src/lodox.lfe)<a id="orgheadline6"></a>
 
@@ -244,7 +249,552 @@ describing the docs that were generated.
    (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
 ```
 
-## [lodox-p](src/lodox-p.lfe)<a id="orgheadline7"></a>
+## lodox-html-writer<a id="orgheadline7"></a>
+
+```lfe
+(defmodule lodox-html-writer
+  (doc "Documentation writer that outputs HTML.")
+  (export (write-docs 2)))
+
+(include-lib "exemplar/include/html-macros.lfe")
+(include-lib "lodox/include/lodox-macros.lfe")
+
+
+(defun write-docs (project opts)
+  "Take raw documentation info and turn it into formatted HTML."
+  (let ((`#m(output-path ,output-path app-dir ,app-dir)
+            (maps:merge opts #m(output-path "doc"))))
+    (doto output-path
+          (mkdirs '("css" "js"))
+          (copy-resource "css/default.css")
+          (copy-resource "js/jquery.min.js")
+          (copy-resource "js/page_effects.js")
+          (write-index project)
+          (write-modules (mset project 'app-dir app-dir))
+          ;; (write-documents project)
+          )))
+
+(defun include-css (style)
+  (link `(type "text/css" href ,style rel "stylesheet")))
+
+(defun include-js (script)
+  (script `(type "text/javascript" src ,script)))
+
+(defun link-to (uri content) (a `(href ,uri) content))
+
+(defun func-id (func)
+  (++ "func-" (re:replace (http_uri:encode (func-name func))
+                          "%" "."
+                          '(global #(return list)))))
+
+(defun format-docstring (project m) (format-docstring project '() m))
+
+(defun format-docstring (project module func)
+  (format-docstring project module func (maps:get 'format func 'markdown)))
+
+(defun format-docstring
+  ([project _ m 'plaintext]
+   (pre '(class "plaintext") (h (mref m 'doc))))
+  ([project _ m 'markdown]
+   (case (mref m 'doc)
+     ('() (br))
+     (doc
+      (let ((docstring (unicode:characters_to_list doc)))
+        (case (os:find_executable "pandoc")
+          ('false (markdown:conv_utf8 docstring))
+          (pandoc
+           (os:cmd (lists:flatten
+                    (io_lib:format "~s -f markdown_github -t html <<< \"~s\""
+                                   `(,pandoc ,(escape docstring))))))))))))
+
+(defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
+
+(defun mod-filename (mod)
+  (++ (mod-name mod) ".html"))
+
+(defun mod-filepath (output-dir module)
+  (filename:join output-dir (mod-filename module)))
+
+(defun mod-name (mod) (atom_to_list (mref mod 'name)))
+
+(defun doc-filename (doc)
+  (++ (mref doc 'name) ".html"))
+
+(defun doc-filepath (output-dir doc)
+  (filename:join output-dir (doc-filename doc)))
+
+(defun func-uri (module func)
+  (++ (mod-filename module) "#" (func-id func)))
+
+(defun func-source-uri (source-uri project module func)
+  (let* ((filepath1 (mref module 'filepath))
+         (filepath2 (lists:nthtail (+ 1 (length (mref project 'app-dir))) filepath1))
+         (line      (mref func 'line))
+         (uri1 (re:replace source-uri "{filepath}" filepath2 '(#(return list)))))
+    (re:replace uri1 "{line}" (integer_to_list line) '(#(return list)))))
+
+(defun index-link (project on-index?)
+  `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
+    ,(ul '(class "index-link")
+         (li `(class ,(++ "depth-1" (if on-index? " current" "")))
+             (link-to "index.html" (div '(class "inner") "Index"))))))
+
+(defun topics-menu
+  ([(= project `#m(documents ,docs)) current-doc] (when (is_list docs))
+   `(,(h3 '(class "no-link") (span '(class "inner") "Topics"))
+     ,(ul
+        (lists:map
+          (lambda (doc)
+            (li `(class ,(++ "depth-1" (if (=:= doc current-doc)
+                                         " current"
+                                         "")))
+                (link-to (doc-filename doc)
+                  (div '(class "inner")
+                    (span (h (mref doc 'title)))))))
+          (lists:sort (lambda (a b) (=< (mref a 'name) (mref b 'name))) docs))))))
+
+(defun modules-menu (project current-mod)
+  (let* ((modules (mref project 'modules))
+         (mod-map (index-by 'name modules)))
+    `(,(h3 '(class "no-link") (span '(class "inner") "Modules"))
+      ,(ul
+         (lists:map
+           (match-lambda
+             ([`#(,mod-name ,mod)]
+              (let ((class (++ "depth-1" (if (=:= mod current-mod)
+                                           " current"
+                                           "")))
+                    (inner (div '(class "inner") (h (atom_to_list mod-name)))))
+                (li `(class ,class) (link-to (mod-filename mod) inner)))))
+           (maps:to_list mod-map))))))
+
+(defun primary-sidebar (project) (primary-sidebar project '()))
+
+(defun primary-sidebar (project current)
+  (div '(class "sidebar primary")
+    `(,(index-link project (=:= '() current))
+      ;; ,(topics-menu project current)
+      ,(modules-menu project current))))
+
+(defun sorted-exported-funcs (module)
+  (lists:sort
+    (lambda (a b)
+      (=< (string:to_lower (func-name a))
+          (string:to_lower (func-name b))))
+    (mref module 'exports)))
+
+(defun funcs-sidebar (module)
+  (div '(class "sidebar secondary")
+    `(,(h3 (link-to "#top" (span '(class "inner") "Exports")))
+      ,(ul
+         (lists:map
+           (lambda (func)
+             `(,(li '(class "depth-1")
+                    (link-to (func-uri module func)
+                      (div '(class "inner")
+                        (span (h (func-name func)))))))) ; TODO: members?
+           (sorted-exported-funcs module))))))
+
+(defun default-includes ()
+  `(,(meta '(charset "UTF-8"))
+    ,(include-css "css/default.css")
+    ,(include-js "js/jquery.min.js")
+    ,(include-js "js/page_effects.js")))
+
+(defun project-title (project)
+  (span '(class "project-title")
+        `(,(span '(class "project-name")    (h (mref project 'name))) " "
+          ,(span '(class "project-version") (h (mref project 'version))))))
+
+(defun header* (project)
+  (div '(id "header")
+    `(,(h2 `("Generated by "
+             ,(link-to "https://github.com/quasiquoting/lodox" "Lodox")))
+      ,(h1 (link-to "index.html" (project-title project))))))
+
+;; TODO: package in ld-parse
+(defun package (project)
+  (maps:get 'package project ""))
+
+(defun index-page (project)
+  (html
+    `(,(head
+         `(,(default-includes)
+           ,(title (++ (h (mref project 'name)) " "
+                       (h (mref project 'version))))))
+      ,(body
+         `(,(header* project)
+           ,(primary-sidebar project)
+           ,(div '(id "content" class "module-index")
+              `(,(h1 (project-title project))
+                ,(div '(class "doc") (p (h (mref project 'description))))
+                ,(case (package project)
+                   ("" '())
+                   (pkg
+                    `(,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (++ "[" pkg " " (mref project 'version) "]"))))))
+                ;; TODO: topics
+                ,(h2 "Modules")
+                ,(lists:map
+                   (lambda (module)
+                     (div '(class "module")
+                       `(,(h3 (link-to (mod-filename module)
+                                (h (mod-name module))))
+                         ;; TODO: module doc
+                         ,(div '(class "index")
+                            `(,(p "Exports")
+                              ,(unordered-list
+                                (lists:map
+                                  (lambda (func)
+                                    `(" "
+                                      ,(link-to (func-uri module func)
+                                         (func-name func))
+                                      " "))
+                                  (sorted-exported-funcs module))))))))
+                   (lists:sort
+                     (lambda (a b) (=< (mod-name a) (mod-name b)))
+                     (mref project 'modules))))))))))
+
+;; TODO: exemplar-ify this
+(defun unordered-list (lst) (ul (lists:map #'li/1 lst)))
+
+(defun format-document
+  ([project (= doc `#m(format ,format))] (when (=:= format 'markdown))
+   ;; TODO: render markdown
+   `(div (class "markdown") ,(mref doc 'content))))
+
+(defun document-page (project doc)
+  (html
+    (head
+      `(,(default-includes)
+        ,(title (h (mref doc 'title)))))
+    (body
+      `(,(header* project)
+        ,(primary-sidebar project doc)
+        ,(div '(id "content" class "document")
+           (div '(id "doc") (format-document project doc)))))))
+
+(defun func-usage (func)
+  (lists:map
+    (lambda (arglist)
+      (re:replace (lfe_io_pretty:term arglist) "comma " ". ,"
+                  '(global #(return list))))
+    (mref func 'arglists)))
+
+(defun mod-behaviour (mod)
+  (lists:map
+    (lambda (behaviour)
+      (h4 '(class "behaviour") (atom_to_list behaviour)))
+    (mref mod 'behaviour)))
+
+(defun func-docs (project module func)
+  (div `(class "public anchor" id ,(h (func-id func)))
+    `(,(h3 (h (func-name func)))
+      ,(case (func-usage func)
+         ('("()") '())
+         (usages
+          (div '(class "usage")
+            (pre (lists:map (lambda (form) (code (h form))) usages)))))
+      ,(div '(class "doc")
+         (format-docstring project module func))
+      ;; TODO: members?
+      ,(let ((app (binary_to_atom (mref project 'name) 'latin1)))
+         (case (application:get_env app 'source-uri)
+           ('undefined '()) ; Log failure to generate link?
+           (`#(ok ,source-uri)
+            (div '(class "src-link")
+              (link-to (func-source-uri source-uri project module func)
+                "view source"))))))))
+
+(defun module-page (project module)
+  (html
+    `(,(head
+         `(,(default-includes)
+           ,(title (++ (h (mod-name module)) " documentation"))))
+      ,(body
+         `(,(header* project)
+           ,(primary-sidebar project module)
+           ,(funcs-sidebar module)
+           ,(div '(id "content" class "module-docs")
+              `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
+                ,(mod-behaviour module)
+                ,(div '(class "doc") (format-docstring project '()  module))
+                ,(lists:map (lambda (func) (func-docs project module func))
+                            (sorted-exported-funcs module)))))))))
+
+(defun copy-resource (output-dir resource)
+  (let* ((this  (proplists:get_value 'source (module_info 'compile)))
+         (lodox (filename:dirname (filename:dirname this))))
+    (file:copy (filename:join `(,lodox "resources" ,resource))
+               (filename:join output-dir resource))))
+
+(defun mkdirs (output-dir dirs)
+  (file:make_dir output-dir)
+  (let ((mkdir (lambda (dir) (file:make_dir (filename:join output-dir dir)))))
+    (lists:foreach mkdir dirs)))
+
+(defun write-index (output-dir project)
+  (file:write_file (filename:join output-dir "index.html")
+                   (index-page project)))
+
+(defun write-modules (output-dir project)
+  (let ((write-module (lambda (module)
+                        (file:write_file (mod-filepath output-dir module)
+                                         (module-page project module)))))
+    (lists:foreach write-module (mref project 'modules))))
+
+(defun write-documents (output-dir project)
+  (let ((write-document (lambda (document)
+                          (file:write_file (doc-filepath output-dir document)
+                                           (document-page project document)))))
+    (lists:foreach write-document (mref project 'documents))))
+
+(defun func-name (func)
+  (++ (h (mref func 'name)) "/" (integer_to_list (mref func 'arity))))
+
+(defun h (text)
+  "Convenient alias for escape-html/1."
+  (escape-html text))
+
+(defun escape-html
+  "Change special characters into HTML character entities."
+  ([x] (when (is_atom x))
+   (escape-html (atom_to_list x)))
+  ([text]
+   (lists:foldl (match-lambda
+                  ([`#(,re ,replacement) text*]
+                   (re:replace text* re replacement '(global #(return list)))))
+                text
+                '(#("\\&"  "\\&amp;")
+                  #("<"  "\\&lt;")
+                  ;; #(">"  "\\&gt;")
+                  #("\"" "\\&quot;")
+                  #("'"  "\\&apos;")))))
+
+(defun escape (string)
+  "Given a string, return a copy with backticks and double quotes escaped."
+  (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
+```
+
+## [lodox-org-writer](src/lodox-org-writer.lfe)<a id="orgheadline8"></a>
+
+```lfe
+(defmodule lodox-org-writer
+  (doc "Documentation writer that outputs Org.")
+  (export (to-org 1) (to-org 2)))
+
+(defun to-org (dict)
+  "TODO: write docstring
+
+Project level."
+  (lists:foreach
+   (match-lambda
+     ([`#(,mod-name ,mod-dict)]
+      (to-org mod-dict (filename:join "doc" (++ (atom_to_list mod-name) ".org")))))
+   (orddict:to_list dict)))
+
+(defun to-org (dict filename)
+  "TODO: write docstring
+
+Module level."
+  (let ((f (match-lambda
+             ([sig
+               `#m(name     ,name
+                   arity    ,arity
+                   arglists ,arglists
+                   doc      ,doc)
+               output]
+              (let ((parts `(,(++ "** " (atom_to_list sig))
+                             "#+BEGIN_SRC lfe"
+                             ,(string:join
+                               (lists:map (lambda (arglist)
+                                            (re:replace
+                                             (lfe_io_pretty:term arglist)
+                                             "comma " ". ,"
+                                             '(global #(return list))))
+                                          arglists)
+                               "\n")
+                             "#+END_SRC"
+                             "#+BEGIN_EXAMPLE"
+                             ,doc
+                             "#+END_EXAMPLE\n")))
+                (case output
+                  ("" (string:join parts "\n"))
+                  (_  (string:join `(,output ,(string:join parts "\n")) "\n")))))
+             ([_ _ _] 'bad-dict))))
+    (file:write_file filename (++ "* " (filename:basename filename ".org") "\n"
+                                  (orddict:fold f "" dict)))))
+```
+
+## [lodox-parse](src/lodox-parse.lfe)<a id="orgheadline9"></a>
+
+```lfe
+(defmodule lodox-parse
+  (doc "Parsing LFE source files for metadata.")
+  (export (docs 1)
+          (form-doc 1)))
+
+(include-lib "lodox/include/lodox-macros.lfe")
+
+;;;===================================================================
+;;; API
+;;;===================================================================
+
+;; TODO: write a better docstring
+(defun docs (app-name)
+  "Given an app-name (binary), return a map like:
+
+```lfe
+'#m(name        #\"lodox\"
+    version     \"0.4.2\"
+    description \"The LFE rebar3 Lodox plugin\"
+    documents   ()
+    modules     {{list of maps of module metadata}})
+```"
+  (let* ((app         (doto (binary_to_atom app-name 'latin1)
+                            (application:load)))
+         (app-info    (let ((`#(ok ,info) (application:get_all_key app)))
+                        (maps:from_list info)))
+         (modules     (mod-docs (mref app-info 'modules)))
+         (version     (maps:get 'vsn         app-info ""))
+         (description (maps:get 'description app-info "")))
+    `#m(name        ,app-name
+        version     ,version
+        description ,description
+        documents   '()
+        modules     ,modules)))
+
+
+;;;===================================================================
+;;; Internal functions
+;;;===================================================================
+
+(defun form-doc
+  "TODO: write docstring"
+  ([`(defun ,name ,arglist-or-doc ,doc-or-form ,body-or-clause)]
+   (when (is_atom name)
+         (is_list arglist-or-doc)
+         (is_list doc-or-form)
+         (is_list body-or-clause))
+   (cond
+    ;; (defun name arglist maybe-doc body)
+    ((andalso (lodox-p:arglist? arglist-or-doc)
+              (or (=:= '() arglist-or-doc)
+                  (not (lodox-p:string? arglist-or-doc))))
+     `#(ok #m(name     ,name
+              arity    ,(length arglist-or-doc)
+              arglists (,arglist-or-doc)
+              doc      ,(if (lodox-p:string? doc-or-form) doc-or-form ""))))
+    ;; (defun name doc clause clause)
+    ((and (=/= arglist-or-doc '()) (lodox-p:string? arglist-or-doc))
+     `#(ok #m(name     ,name
+              arity    ,(length (car doc-or-form))
+              arglists ,(patterns `(,doc-or-form ,body-or-clause))
+              doc      ,arglist-or-doc)))
+    ;; (defun name clause clause clause)
+    ((lodox-p:clauses? `(,arglist-or-doc ,doc-or-form ,body-or-clause))
+     `#(ok #m(name     ,name
+              arity    ,(length (car arglist-or-doc))
+              arglists ,(patterns
+                         `(,arglist-or-doc ,doc-or-form ,body-or-clause))
+              doc      "")))))
+  ([`(defun ,name () ,constant)]
+   `#(ok #m(name     ,name
+            arity    0
+            arglists [()]
+            doc      "")))
+  ([`(defun ,name ,doc-or-arglist . ,(= forms `(,form . ,_)))]
+   (when (is_atom name)
+         (is_list doc-or-arglist)
+         (is_list forms))
+   (cond
+    ;; (defun name arglist maybe-doc body)
+    ((andalso (lodox-p:arglist? doc-or-arglist)
+              (not (lists:all #'lodox-p:clause?/1 forms)))
+     `#(ok #m(name     ,name
+              arity    ,(length doc-or-arglist)
+              arglists (,doc-or-arglist)
+              doc      ,(if (andalso (lodox-p:string? form)
+                                     (> (length forms) 1))
+                          form
+                          ""))))
+    ;; (defun name doc clauses)
+    ((andalso (lodox-p:string? doc-or-arglist)
+              (lodox-p:clauses? forms))
+     `#(ok #m(name     ,name
+              arity    ,(length (car form))
+              arglists ,(patterns forms)
+              doc      ,doc-or-arglist)))
+    ;; (defun name clauses)
+    ((lodox-p:clauses? `(,doc-or-arglist . ,forms))
+     `#(ok #m(name     ,name
+              arity    ,(length (car doc-or-arglist))
+              arglists ,(patterns `(,doc-or-arglist . ,forms))
+              doc      "")))))
+  ([`(defun ,name ,clause)]
+   (when (is_atom name)
+         (is_list clause))
+   (if (lodox-p:clause? clause)
+     `#(ok #m(name     ,name
+              arity    ,(length (car clause))
+              arglists ,(pattern clause)
+              doc      ""))
+     'undefined))
+  ;; This pattern matches non-defun forms.
+  ([_] 'undefined))
+
+(defun form-doc (form line exports)
+  (case (form-doc form)
+    (`#(ok ,(= doc `#m(name ,f arity ,a)))
+     (iff (lists:member `#(,f ,a) exports)
+       `#(true ,(mset doc 'line line))))
+    ('undefined 'false)))
+
+(defun mod-behaviour (module)
+  (let ((attributes (call module 'module_info 'attributes)))
+    (proplists:get_value 'behaviour attributes '())))
+
+(defun mod-docs
+  ([mods] (when (is_list mods))
+   (lists:filtermap #'mod-docs/1 mods))
+  ([mod]  (when (is_atom mod))
+   (let ((file (proplists:get_value 'source (call mod 'module_info 'compile))))
+     (case (filename:extension file)
+       (".lfe" (case (mod-docs file (call mod 'module_info 'exports))
+                 ('()     'false)
+                 (exports `#(true #m(name      ,(mod-name mod)
+                                     behaviour ,(mod-behaviour mod)
+                                     doc       ,(mod-doc mod)
+                                     exports   ,exports
+                                     ;; dirty hack
+                                     filepath  ,file)))))
+       (_      'false)))))
+
+(defun mod-docs (file exports)
+  (if (filelib:is_file file)
+    (let ((`#(ok ,forms) (lfe_io:parse_file file)))
+      (lists:filtermap
+        (match-lambda ([`#(,form ,line)] (form-doc form line exports)))
+        forms))
+    '()))
+
+(defun mod-doc
+  ([module] (when (is_atom module))
+   (let ((attributes (call module 'module_info 'attributes)))
+     (proplists:get_value 'doc attributes ""))))
+
+(defun mod-name (mod) (call mod 'module_info 'module))
+
+(defun patterns (forms) (lists:map #'pattern/1 forms))
+
+(defun pattern
+  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
+  ([`(,arglist . ,_)] arglist))
+```
+
+## [lodox-p](src/lodox-p.lfe)<a id="orgheadline10"></a>
 
 ```lfe
 (defmodule lodox-p
@@ -291,7 +841,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (io_lib:printable_list data))
 ```
 
-## [lodox-util](src/lodox-util.lfe)<a id="orgheadline8"></a>
+## [lodox-util](src/lodox-util.lfe)<a id="orgheadline11"></a>
 
 ```lfe
 (defmodule lodox-util
@@ -337,7 +887,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
-# Macros<a id="orgheadline10"></a>
+# Macros<a id="orgheadline13"></a>
 
 Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
 s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
@@ -366,7 +916,173 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (defmacro iff (test then) `(if ,test ,then))
 ```
 
-# Unit Tests<a id="orgheadline14"></a>
+# Tests<a id="orgheadline19"></a>
+
+## Property Tests<a id="orgheadline14"></a>
+
+```erlang
+-module(lodox_parse_tests).
+
+-compile(export_all).
+
+-include_lib("proper/include/proper.hrl").
+
+-include_lib("eunit/include/eunit.hrl").
+
+-define(TIMEOUT, 60).
+
+-define(OPTIONS(N), [{on_output, fun pprint/2}, {numtests, N}]).
+
+
+%%%===================================================================
+%%% EUnit tests
+%%%===================================================================
+
+parse_test_() ->
+  Properties =
+    [ {"A function without a docstring produces an empty docstring.",
+       prop_defun_simple(), 100}
+    , {"A simple function with a docstring is correctly parsed.",
+       prop_defun_simple_doc(), 100}
+    , {"A function with pattern clauses produces an empty docstring.",
+       prop_defun_match(), 30}
+    , {"A function with pattern clauses and a docstring is correctly parsed.",
+       prop_defun_match_doc(), 30}
+    ],
+  [{timeout, ?TIMEOUT,
+    {Title, ?_assert(proper:quickcheck(Property, ?OPTIONS(NumTests)))}}
+   || {Title, Property, NumTests} <- Properties].
+
+
+%%%===================================================================
+%%% Properties
+%%%===================================================================
+
+prop_defun_simple() ->
+  ?FORALL(D, defun_simple(),
+          begin
+            {ok, #{doc := Doc}} = 'lodox-parse':'form-doc'(D),
+            "" =:= Doc
+          end).
+
+prop_defun_simple_doc() ->
+  ?FORALL(Defun, defun_simple_doc(),
+          begin
+            {ok, #{doc := Doc}} = 'lodox-parse':'form-doc'(Defun),
+            lists:nth(4, Defun) =:=  Doc
+          end).
+
+prop_defun_match() ->
+  ?FORALL(Defun, defun_match(),
+          begin
+            {ok, #{doc := Doc}} = 'lodox-parse':'form-doc'(Defun),
+            "" =:= Doc
+          end).
+
+prop_defun_match_doc() ->
+  ?FORALL(Defun, defun_match_doc(),
+          begin
+            {ok, #{doc := Doc}} = 'lodox-parse':'form-doc'(Defun),
+            lists:nth(3, Defun) =:=  Doc
+          end).
+
+
+%%%===================================================================
+%%% defun shapes
+%%%===================================================================
+
+defun_simple() ->
+  [defun, atom(), arglist_simple()
+   | body()].
+
+defun_simple_doc() ->
+  [defun, atom(), arglist_simple(),
+   docstring()
+   | body()].
+
+defun_match() ->
+  [defun, atom()
+   | non_empty(list(pattern_clause()))].
+
+defun_match_doc() ->
+  [defun, atom(),
+   docstring()
+   | non_empty(list(pattern_clause()))].
+
+
+%%%===================================================================
+%%% Custom types
+%%%===================================================================
+
+%%% Functions
+
+arglist_simple() -> list(atom()).
+
+body() -> union([[printable_string()], [non_string_term() | list(form())]]).
+
+form() -> union([non_string_term(), printable_string(), [ atom() | list()]]).
+
+docstring() -> printable_string().
+
+arglist_patterns() -> non_empty(list(pattern())).
+
+
+%%% Patterns
+
+pattern() -> union([non_string_term(), printable_string(), pattern_form()]).
+
+pattern_form() ->
+  [oneof([backquote, quote, binary, list, map, tuple, match_fun()])
+   | non_empty(list())].
+
+match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).
+
+pattern_clause() -> [arglist_patterns() | [oneof([guard(), form()]) | body()]].
+
+guard() -> ['when' | non_empty(list(union([logical_clause(), comparison()])))].
+
+
+%%% Logical clauses
+
+logical_clause() ->
+  X = union([atom(), comparison()]),
+  [logical_operator(), X | non_empty(list(X))].
+
+logical_operator() -> oneof(['and', 'andalso', 'or', 'orelse']).
+
+
+%%% Comparisons
+
+comparison() -> [comparison_operator(), atom() | list(atom())].
+
+comparison_operator() -> oneof(['==', '=:=', '=/=', '<', '>', '=<', '>=']).
+
+
+%%% Strings and non-strings
+
+non_string_term() ->
+  union([atom(), number(), [], bitstring(), binary(), boolean(), tuple()]).
+
+printable_char() -> union([integer(32, 126), integer(160, 255)]).
+
+printable_string() -> list(printable_char()).
+
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+pprint(_Format, [Defun]) when defun =:= hd(Defun) ->
+  io:format(user, "~s~n", [pprint(Defun)]);
+pprint(Format, Data) ->
+  io:format(user, Format, Data).
+
+pprint(Term) ->
+  re:replace(lfe_io_pretty:term(Term), "comma ", ". ,",
+             [global, {return, list}]).
+```
+
+## Unit Tests<a id="orgheadline18"></a>
 
 ```lfe
 (defmodule unit-lodox-tests
@@ -376,7 +1092,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (include-lib "ltest/include/ltest-macros.lfe")
 ```
 
-## `project` Shapes<a id="orgheadline11"></a>
+### `project` Shapes<a id="orgheadline15"></a>
 
 ```lfe
 (deftestgen projects-shapes
@@ -398,7 +1114,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_list (mref* project 'version))))])
 ```
 
-## `modules` Shapes<a id="orgheadline12"></a>
+### `modules` Shapes<a id="orgheadline16"></a>
 
 ```lfe
 (deftestgen modules-shapes
@@ -421,7 +1137,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_atom (mref* module 'name))))])
 ```
 
-## `exports` Shapes<a id="orgheadline13"></a>
+### `exports` Shapes<a id="orgheadline17"></a>
 
 ```lfe
 (deftestgen exports-shapes
@@ -452,7 +1168,7 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
       ,(_assert (is_atom (mref* exports 'name))))])
 ```
 
-# [Travis CI](https://travis-ci.org/quasiquoting/lodox)<a id="orgheadline15"></a>
+# [Travis CI](https://travis-ci.org/quasiquoting/lodox)<a id="orgheadline20"></a>
 
 ```yaml
 language: erlang
@@ -478,7 +1194,7 @@ otp_release:
   - 18.0
 ```
 
-# License<a id="orgheadline16"></a>
+# License<a id="orgheadline21"></a>
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 
