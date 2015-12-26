@@ -12,7 +12,7 @@
 (deftestgen projects-shapes
   (lists:zipwith #'validate_project/2 (src-dirs) (all-docs)))
 
-;; For some reason EUnit gets very upset if the follow _ is a -...
+;; EUnit gets very upset if the following _ is a -.
 (defun validate_project (dir project)
   `[#(#"project is a map"
       ,(_assert (is_map project)))
