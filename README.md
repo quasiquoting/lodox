@@ -73,7 +73,7 @@ Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/
   {post, [{compile, lodox}]}]}.
 ```
 
-## License
+# License
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 
