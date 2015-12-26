@@ -152,7 +152,7 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
 #+END_SRC
 
 The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
-As of this writing, we use version:
+Use the latest version, which as of this writing, is:
 #+NAME: lfe-version
 : 0.10.1
 
@@ -161,7 +161,7 @@ As of this writing, we use version:
 {lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
 #+END_SRC
 
-To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier: [[https://github.com/lfex/ltest][ltest]].
+To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
 
 #+NAME: ltest-version
 : 0.7.0
@@ -171,7 +171,7 @@ To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tes
 {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
 #+END_SRC
 
-To handle HTML rendering, we use [[https://github.com/lfex/exemplar][exemplar]].
+To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 
 N.B. I'm only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or something similar
 gets merged into the [[https://github.com/lfex][lfex]] repo.
@@ -230,7 +230,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 #+END_SRC
 *** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
 - /namespace/: in which the provider is registered.
-  In this case, we use ~default~, which is the main namespace.
+  In this case, use ~default~, which is the main namespace.
 #+BEGIN_SRC lfe
 (defun namespace     () 'default)
 #+END_SRC
