@@ -110,3 +110,5 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
  [{pre,  [{compile, {lfe, compile}}]},
   {post, [{compile, lodox}]}]}.
 #+END_SRC
+
+#+INCLUDE: LICENSE.org
