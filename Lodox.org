@@ -14,7 +14,7 @@
 
 Current version:
 #+NAME: lodox-version
-: 0.4.5
+: 0.5.0
 
 * Introduction
   :PROPERTIES:
@@ -111,7 +111,7 @@ If all goes well, the output will look something like:
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.4.5 docs in /path/to/lodox/doc
+: Generated lodox v0.5.0 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
@@ -161,16 +161,6 @@ As of this writing, we use version:
 {lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
 #+END_SRC
 
-For a couple helpful functions used in [[lodox-util][lodox-util]], we pull in [[https://github.com/lfex/lutil][lutil]].
-
-#+NAME: lutil-version
-: 0.7.0
-
-#+NAME: lutil
-#+BEGIN_SRC erlang
-{lutil,    {git, "git://github.com/lfex/lutil.git", {tag, "<<lutil-version()>>"}}}
-#+END_SRC
-
 To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier: [[https://github.com/lfex/ltest][ltest]].
 
 #+NAME: ltest-version
@@ -211,7 +201,6 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 #+BEGIN_SRC erlang :exports code :padline yes :tangle rebar.config
 {deps,
  [<<lfe>>,
-  <<lutil>>,
   <<ltest>>,
   <<exemplar>>,
   <<markdown>>,
@@ -424,25 +413,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 #+BEGIN_SRC lfe :padline yes
 (defmodule lodox-util
   (doc "Utility functions to inspect the current version of lodox and its dependencies.")
-  (export (get-version 0) (get-versions 0)
-          (search-funcs 2) (search-funcs 3)
-          (when* 2)))
-
-(defun get-version ()
-  "Return the current version of Lodox."
-  (lutil:get-app-version 'lodox))
-
-(defun get-versions ()
-  "Return a proplist with keys, `erlang`, `emulator`, `driver-version`, `lfe`,
-  `lutil` and `lodox`, mapped to their respective versions.
-
-  See also: [[get-version/0]]"
-  (++ (lutil:get-versions) `(#(lodox ,(get-version)))))
-
-(defun when* (test then)
-  "Given a `test` that returns a boolean, if `test` is `true`, return `then`,
-  otherwise `false`."
-  (if test then))
+  (export (search-funcs 2) (search-funcs 3)))
 
 (defun search-funcs (modules partial-func)
   "TODO: write docstring"
