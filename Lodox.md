@@ -1,5 +1,5 @@
 [![img](https://travis-ci.org/quasiquoting/lodox.svg)](https://travis-ci.org/quasiquoting/lodox)
-[![img](//badge.fury.io/gh/quasiquoting%2Flodox.svg)](https://github.com/quasiquoting/lodox/releases/latest)
+[![img](https://badge.fury.io/gh/quasiquoting%2Flodox.svg)](https:/github.com/quasiquoting/lodox/releases/latest)
 [![img](https://img.shields.io/github/license/quasiquoting/lodox.svg)](LICENSE)
 
 Current version:
