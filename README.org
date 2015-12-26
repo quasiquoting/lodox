@@ -1,0 +1,132 @@
+#+OPTIONS: toc:nil
+#+TITLE:    Lodox
+#+SUBTITLE: Like Codox for LFE.
+#+DATE:     2015-10-31
+#+AUTHOR:   Eric Bailey
+#+EMAIL:    quasiquoting@gmail.com
+#+LANGUAGE: en
+#+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
+
+
+[[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
+[[https://github.com/quasiquoting/lodox/releases/latest][https://badge.fury.io/gh/quasiquoting%2Flodox.svg]]
+[[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
+
+Current version:
+#+NAME: lodox-version
+: 0.5.0
+
+* Introduction
+  :PROPERTIES:
+  :tangle:   src/lodox.app.src
+  :noweb:    yes
+  :END:
+Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
+#+BEGIN_SRC erlang :exports none
+<<generated("erlang")>>
+#+END_SRC
+#+BEGIN_SRC erlang :padline yes
+{application,    'lodox',
+ [{description,  "The LFE rebar3 Lodox plugin"},
+  {vsn,          "<<lodox-version()>>"},
+  {modules,      ['lodox-html-writer','lodox-org-writer',
+                  'lodox-p','lodox-parse','lodox-util',
+                  lodox,
+                  'unit-lodox-tests']},
+  {registered,   []},
+  {applications, [kernel, stdlib]},
+  {env,
+   [{'source-uri',
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
+#+END_SRC
+
+* Installation
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
+#+MACRO: global-rebar-config the global [[https://github.com/rebar/rebar3][rebar3]] config, =~/.config/rebar3/rebar.config=
+
+First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
+project's =rebar.config= or, better yet, in the {{{global-rebar-config}}}:
+#+BEGIN_SRC erlang
+{plugins,
+ [{'lfe-compile', ".*",
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {tag, "0.2.0"}}}]}
+#+END_SRC
+
+Then in your project's =rebar.config=, include the [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][provider pre-hook]]:
+#+BEGIN_SRC erlang
+{provider_hooks,
+ [{pre, [{compile, {lfe, compile}}]}]}
+#+END_SRC
+
+Finally, add Lodox to your =plugins= list:
+#+BEGIN_SRC erlang
+{plugins,
+ [% ...
+  {lodox, ".*",
+   {git, "git://github.com/quasiquoting/lodox.git",
+    {tag, "<<lodox-version()>>"}}}]}.
+#+END_SRC
+
+The recommended place for the Lodox plugin entry is {{{global-rebar-config}}},
+but it works at the project level, too.
+
+* Usage
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
+In order for Lodox to work, your project must first be compiled:
+#+NAME: compile
+#+BEGIN_SRC sh
+rebar3 compile
+#+END_SRC
+
+Then, to invoke Lodox, simply run:
+#+NAME: lodox
+#+BEGIN_SRC sh
+rebar3 lodox
+#+END_SRC
+
+Alternatively, you can ~do~ both at once:
+#+BEGIN_SRC sh
+rebar3 do compile, lodox
+#+END_SRC
+
+#+NAME: last-line-only
+#+BEGIN_SRC sh :exports none
+tail -n 1
+#+END_SRC
+
+#+NAME: obfuscate-path
+#+BEGIN_SRC sh :exports none
+sed 's/[^ ]*\/\(lodox\)/\/path\/to\/\1/'
+#+END_SRC
+
+If all goes well, the output will look something like:
+#+NAME: generate-docs
+#+BEGIN_SRC sh :exports results :results output
+<<lodox>> | <<last-line-only>> | <<obfuscate-path>>
+#+END_SRC
+
+#+RESULTS: generate-docs
+: Generated lodox v0.5.0 docs in /path/to/lodox/doc
+
+#+NAME: but-actually-though
+#+BEGIN_SRC sh :exports results :results output silent
+<<compile>> && \
+lfe -pa _build/default/lib/*/ebin \
+    -eval '(lodox-html-writer:write-docs
+             (lodox-parse:docs #"lodox") #m(app-dir "'$(pwd)'"))'
+#+END_SRC
+
+And, as promised, [[http://quasiquoting.org/lodox/][generated documentation]] will be in the =doc= subdirectory of
+your project.
+
+Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][post-hook]]:
+#+BEGIN_SRC erlang
+{provider_hooks,
+ [{pre,  [{compile, {lfe, compile}}]},
+  {post, [{compile, lodox}]}]}.
+#+END_SRC

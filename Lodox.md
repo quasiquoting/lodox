@@ -1,103 +1,143 @@
-#+OPTIONS: toc:t
-#+TITLE:    Lodox
-#+SUBTITLE: Like Codox for LFE.
-#+DATE:     2015-10-31
-#+AUTHOR:   Eric Bailey
-#+EMAIL:    quasiquoting@gmail.com
-#+LANGUAGE: en
-#+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
+[![img](https://travis-ci.org/quasiquoting/lodox.svg)](https://travis-ci.org/quasiquoting/lodox)
+[![img](//badge.fury.io/gh/quasiquoting%2Flodox.svg)](https://github.com/quasiquoting/lodox/releases/latest)
+[![img](https://img.shields.io/github/license/quasiquoting/lodox.svg)](LICENSE)
 
-#+INCLUDE: README.org
+Current version:
 
-* Rebar3 Configuration
-  :PROPERTIES:
-  :exports:  none
-  :tangle:   no
-  :noweb:    yes
-  :padline:  no
-  :END:
-*Describe =rebar.config= here.*
+    0.5.0
 
-#+BEGIN_SRC erlang :tangle rebar.config
-<<generated("erlang")>>
-#+END_SRC
-#+BEGIN_SRC erlang :exports code :tangle rebar.config
+# Introduction
+
+Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://quasiquoting.org/lodox/).
+
+```erlang
+{application,    'lodox',
+ [{description,  "The LFE rebar3 Lodox plugin"},
+  {vsn,          "0.5.0"},
+  {modules,      ['lodox-html-writer','lodox-org-writer',
+                  'lodox-p','lodox-parse','lodox-util',
+                  lodox,
+                  'unit-lodox-tests']},
+  {registered,   []},
+  {applications, [kernel, stdlib]},
+  {env,
+   [{'source-uri',
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
+```
+
+# Installation
+
+First, make sure you have the [lfe-compile](https://github.com/lfe-rebar3/compile) plugin as a dependency in your
+project's `rebar.config` or, better yet, in the the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`:
+
+```erlang
+{plugins,
+ [{'lfe-compile', ".*",
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {tag, "0.2.0"}}}]}
+```
+
+Then in your project's `rebar.config`, include the [provider pre-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
+
+```erlang
+{provider_hooks,
+ [{pre, [{compile, {lfe, compile}}]}]}
+```
+
+Finally, add Lodox to your `plugins` list:
+
+```erlang
+{plugins,
+ [% ...
+  {lodox, ".*",
+   {git, "git://github.com/quasiquoting/lodox.git",
+    {tag, "0.5.0"}}}]}.
+```
+
+The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
+but it works at the project level, too.
+
+# Usage
+
+In order for Lodox to work, your project must first be compiled:
+
+```sh
+rebar3 compile
+```
+
+Then, to invoke Lodox, simply run:
+
+```sh
+rebar3 lodox
+```
+
+Alternatively, you can `do` both at once:
+
+```sh
+rebar3 do compile, lodox
+```
+
+If all goes well, the output will look something like:
+
+    Generated lodox v0.5.0 docs in /path/to/lodox/doc
+
+And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
+your project.
+
+Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
+
+```erlang
+{provider_hooks,
+ [{pre,  [{compile, {lfe, compile}}]},
+  {post, [{compile, lodox}]}]}.
+```
+
+# Rebar3 Configuration
+
+**Describe `rebar.config` here.**
+
+```erlang
 {erl_opts, [debug_info, {src_dirs, ["test"]}]}.
 
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
-#+END_SRC
+```
 
-The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
+The first and foremost dependency is, of course, [LFE](https://github.com/rvirding/lfe) itself.
 Use the latest version, which as of this writing, is:
-#+NAME: lfe-version
-: 0.10.1
 
-#+NAME: lfe
-#+BEGIN_SRC erlang
-{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
-#+END_SRC
+    0.10.1
 
-To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
+To make writing [EUnit](http://www.erlang.org/doc/apps/eunit/chapter.html) tests easier, use [ltest](https://github.com/lfex/ltest).
 
-#+NAME: ltest-version
-: 0.7.0
+    0.7.0
 
-#+NAME: ltest
-#+BEGIN_SRC erlang
-{ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
-#+END_SRC
+To handle HTML rendering, use [exemplar](https://github.com/lfex/exemplar).
 
-To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
+N.B. I'm only using [my fork](https://github.com/yurrriq/exemplar) until [this pull request](https://github.com/lfex/exemplar/pull/15) or something similar
+gets merged into the [lfex](https://github.com/lfex) repo.
 
-N.B. I'm only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or something similar
-gets merged into the [[https://github.com/lfex][lfex]] repo.
+    0.3.0
 
-#+NAME: exemplar-version
-: 0.3.0
+For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
 
-#+NAME: exemplar
-#+BEGIN_SRC erlang
-{exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "<<exemplar-version()>>"}}}
-#+END_SRC
-
-For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
-
-#+NAME: markdown
-#+BEGIN_SRC erlang
-{markdown, {git, "git://github.com/erlware/erlmarkdown.git"}}
-#+END_SRC
-
-#+NAME: proper
-#+BEGIN_SRC erlang
-{proper,
- {git, "git://github.com/quasiquoting/proper.git",
-  {branch, "master"}}}
-#+END_SRC
-
-#+BEGIN_SRC erlang :exports code :padline yes :tangle rebar.config
+```erlang
 {deps,
- [<<lfe>>,
-  <<ltest>>,
-  <<exemplar>>,
-  <<markdown>>,
-  <<proper>>]}.
-#+END_SRC
+ [{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "0.10.1"}}},
+  {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "0.7.0"}}},
+  {exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "0.3.0"}}},
+  {markdown, {git, "git://github.com/erlware/erlmarkdown.git"}},
+  {proper,
+   {git, "git://github.com/quasiquoting/proper.git",
+    {branch, "master"}}}]}.
+```
 
-* Modules
-  :PROPERTIES:
-  :noweb:    yes
-  :END:
-** [[file:src/lodox.lfe][lodox]]
-   :PROPERTIES:
-   :tangle:   src/lodox.lfe
-   :padline:  yes
-   :END:
-#+BEGIN_SRC lfe :exports none
-<<generated()>>
-#+END_SRC
-#+BEGIN_SRC lfe
+# Modules
+
+## [lodox](src/lodox.lfe)
+
+```lfe
 (defmodule lodox
   (doc "The Lodox [Rebar3][1] [provider][2].
 
@@ -105,47 +145,47 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 [2]: https://github.com/tsloughter/providers ")
   (behaviour provider)
   (export all))
-#+END_SRC
-*** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
-- /namespace/: in which the provider is registered.
-  In this case, use ~default~, which is the main namespace.
-#+BEGIN_SRC lfe
+```
+
+### [Provider Interface](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)
+
+-   *namespace*: in which the provider is registered.
+    In this case, use `default`, which is the main namespace.
+
+```lfe
 (defun namespace     () 'default)
-#+END_SRC
+```
 
-- /name/: The 'user friendly' name of the task.
-#+BEGIN_SRC lfe
+-   *name*: The 'user friendly' name of the task.
+
+```lfe
 (defun provider-name () 'lodox)
-#+END_SRC
+```
 
-- /short​_desc/: A one line short description of the task, used in lists of
-  providers.
-#+BEGIN_SRC lfe
+-   *short​\_desc*: A one line short description of the task, used in lists of
+    providers.
+
+```lfe
 (defun short-desc    () "Generate documentation from LFE source files.")
-#+END_SRC
+```
 
-- /deps/: The list of dependencies, providers, that need to run before this
-  one. You do not need to include the dependencies of your dependencies.
-#+BEGIN_SRC lfe
+-   *deps*: The list of dependencies, providers, that need to run before this
+    one. You do not need to include the dependencies of your dependencies.
+
+```lfe
 (defun deps          () '(#(default app_discovery)))
-#+END_SRC
+```
 
-- /desc/: The description for the task, used by ~rebar3 help~.
-#+BEGIN_SRC lfe
+-   *desc*: The description for the task, used by `rebar3 help`.
+
+```lfe
 (defun desc          () (short-desc))
-#+END_SRC
+```
 
-#+BEGIN_SRC lfe :exports none :padline no
-#+END_SRC
-#+BEGIN_SRC lfe :exports none
-;;;===================================================================
-;;; API
-;;;===================================================================
-#+END_SRC
-
-~init/1~ is called when ~rebar3~ first boots and simply initiates the provider
+`init/1` is called when `rebar3` first boots and simply initiates the provider
 and sets up the state.
-#+BEGIN_SRC lfe
+
+```lfe
 (defun init (state)
   "Initiate the Lodox provider."
   (rebar_api:debug "Initializing {default, lodox}" '())
@@ -162,12 +202,13 @@ and sets up the state.
     (let ((state* (rebar_state:add_provider state provider)))
       (rebar_api:debug "Initialized lodox" '())
       `#(ok ,state*))))
-#+END_SRC
+```
 
-~do/1~ parses the rebar state for the ~current_app~ (as a singleton list) or the
-list of ~project_apps~ and calls ~write-docs/1~ on each one. This is where the
+`do/1` parses the rebar state for the `current_app` (as a singleton list) or the
+list of `project_apps` and calls `write-docs/1` on each one. This is where the
 actual work happens.
-#+BEGIN_SRC lfe
+
+```lfe
 (defun do (state)
   "Generate documentation for each application in the proejct."
   (rebar_api:debug "Starting do/1 for lodox" '())
@@ -176,31 +217,26 @@ actual work happens.
                 (apps-info   `(,apps-info)))))
     (lists:foreach #'write-docs/1 apps))
   `#(ok ,state))
-#+END_SRC
+```
 
-~format_error/1~ prints errors when they happen. The point is to enable
+`format_error/1` prints errors when they happen. The point is to enable
 filtering of sensitive elements from the state, but in this case, it simply
-prints the ~reason~.
-#+BEGIN_SRC lfe
+prints the `reason`.
+
+```lfe
 (defun format_error (reason)
   "When an exception is raised or a value returned as
 `#(error #((MODULE) reason)`, `(format_error reason)` will be called
 so a string can be formatted explaining the issue."
   (io_lib:format "~p" `(,reason)))
-#+END_SRC
+```
 
-*** Internal Functions
-#+BEGIN_SRC lfe :exports none :padline no
-#+END_SRC
-#+BEGIN_SRC lfe :exports none
-;;;===================================================================
-;;; Internal functions
-;;;===================================================================
-#+END_SRC
+### Internal Functions
 
-~write-docs/1~ takes an ~app_info_t~ (see: [[https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl][rebar​_app​_info.erl]]) and generates
+`write-docs/1` takes an `app_info_t` (see: [rebar​\_app​\_info.erl](https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl)) and generates
 documentation for it.
-#+BEGIN_SRC lfe
+
+```lfe
 (defun write-docs (app-info)
   (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
@@ -214,27 +250,22 @@ documentation for it.
       (rebar_api:debug "Generating docs for ~p" `(,(mref project 'name)))
       (lodox-html-writer:write-docs project opts))
     (generated name vsn doc-dir)))
-#+END_SRC
+```
 
-~generated/3~ takes an app ~name~, ~vsn~ and output directory and prints a line
+`generated/3` takes an app `name`, `vsn` and output directory and prints a line
 describing the docs that were generated.
-#+BEGIN_SRC lfe
+
+```lfe
 (defun generated
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
    (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
-#+END_SRC
+```
 
-** [[file:src/lodox-p.lfe][lodox-p]]
-   :PROPERTIES:
-   :tangle:   src/lodox-p.lfe
-   :END:
-#+BEGIN_SRC lfe :exports none
-<<generated()>>
-#+END_SRC
-#+NAME: lodox-p
-#+BEGIN_SRC lfe :padline yes
+## [lodox-p](src/lodox-p.lfe)
+
+```lfe
 (defmodule lodox-p
   (export (clauses? 1) (clause? 1)
           (arglist? 1) (arg? 1)
@@ -277,18 +308,11 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 (defun string? (data)
   "Return `true` iff `data` is a flat list of printable characters."
   (io_lib:printable_list data))
-#+END_SRC
+```
 
-** [[file:src/lodox-util.lfe][lodox-util]]
-   :PROPERTIES:
-   :tangle:   src/lodox-util.lfe
-   :padline:  yes
-   :END:
-#+BEGIN_SRC lfe :exports none
-<<generated()>>
-#+END_SRC
-#+NAME: lodox-util
-#+BEGIN_SRC lfe :padline yes
+## [lodox-util](src/lodox-util.lfe)
+
+```lfe
 (defmodule lodox-util
   (doc "Utility functions to inspect the current version of lodox and its dependencies.")
   (export (search-funcs 2) (search-funcs 3)))
@@ -313,15 +337,9 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ('()           (case matches
                        (`(,func . ,_) func)
                        ('()           'undefined))))))
-#+END_SRC
-#+BEGIN_SRC lfe :exports none :padline no
-#+END_SRC
-#+BEGIN_SRC lfe :exports none
-;;;===================================================================
-;;; Internal functions
-;;;===================================================================
-#+END_SRC
-#+BEGIN_SRC lfe
+```
+
+```lfe
 (defun exported-funcs (modules)
   "TODO: write docstring"
   (lc ((<- mod modules)
@@ -336,27 +354,21 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 
 (defun module (func-name)
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
-#+END_SRC
-* Unit Tests
-  :PROPERTIES:
-  :tangle:   test/unit-lodox-tests.lfe
-  :padline:  yes
-  :noweb:    yes
-  :END:
-#+BEGIN_SRC lfe :exports none
-<<generated()>>
-#+END_SRC
+```
 
-#+BEGIN_SRC lfe
+# Unit Tests
+
+```lfe
 (defmodule unit-lodox-tests
   (behaviour ltest-unit)
   (export all))
 
 (include-lib "ltest/include/ltest-macros.lfe")
-#+END_SRC
+```
 
-** ~project~ Shapes
-#+BEGIN_SRC lfe
+## `project` Shapes
+
+```lfe
 (deftestgen projects-shapes
   (lists:zipwith #'validate_project/2 (src-dirs) (all-docs)))
 
@@ -374,10 +386,11 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assertEqual (project-name dir) (mref* project 'name)))
     #(#"version is a list"
       ,(_assert (is_list (mref* project 'version))))])
-#+END_SRC
+```
 
-** ~modules~ Shapes
-#+BEGIN_SRC lfe
+## `modules` Shapes
+
+```lfe
 (deftestgen modules-shapes
   (lists:map #'validate_module/1 (project-wide 'modules)))
 
@@ -396,10 +409,11 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assert (filelib:is_regular (mref* module 'filepath))))
     #(#"name is an atom"
       ,(_assert (is_atom (mref* module 'name))))])
-#+END_SRC
+```
 
-** ~exports~ Shapes
-#+BEGIN_SRC lfe
+## `exports` Shapes
+
+```lfe
 (deftestgen exports-shapes
   (lists:map #'validate_exports/1 (project-wide 'exports 'modules)))
 
@@ -426,36 +440,11 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
       ,(_assert (is_integer (mref* exports 'line))))
     #(#"name is an atom"
       ,(_assert (is_atom (mref* exports 'name))))])
-#+END_SRC
-#+BEGIN_SRC lfe :exports none
-(defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
+```
 
-(defun mref* (m k) (maps:get k m 'error))
+# [Travis CI](https://travis-ci.org/quasiquoting/lodox)
 
-(defun project-name
-  (["src"] #"lodox")
-  ([dir]   (filename:basename (filename:dirname dir))))
-
-(defun project-wide
-  ([f]   (when (is_function f)) (lists:flatmap f (all-docs)))
-  ([key]                        (project-wide (lambda (proj) (mref* proj key)))))
-
-(defun project-wide (key2 key1)
-  (project-wide
-   (lambda (proj) (lists:flatmap (lambda (m) (mref* m key2)) (mref* proj key1)))))
-
-(defun src-dirs () '("src"))
-#+END_SRC
-
-* [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
-  :PROPERTIES:
-  :tangle:   .travis.yml
-  :noweb:    yes
-  :END:
-#+BEGIN_SRC yaml :exports none
-<<generated("yaml")>>
-#+END_SRC
-#+BEGIN_SRC yaml :padline yes
+```yaml
 language: erlang
 # http://stackoverflow.com/a/24600210/1793234
 # Handle git submodules yourself
@@ -477,24 +466,25 @@ notifications:
 otp_release:
   - 18.2
   - 18.0
-#+END_SRC
+```
 
-* Literate Programming Setup
-Set [[http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148][~org-confirm-babel-evaluate~]] to a ~lambda~ expression that takes the
-~lang~-uage and ~body~ of a code block and returns ~nil~ if ~lang~ is
-=​"emacs-lisp"​=, otherwise ~t~.
-#+NAME: auto-eval-elisp
-#+BEGIN_SRC emacs-lisp :results silent
+# Literate Programming Setup
+
+Set [`org-confirm-babel-evaluate`](http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148) to a `lambda` expression that takes the
+`lang`-uage and `body` of a code block and returns `nil` if `lang` is
+`​"emacs-lisp"​`, otherwise `t`.
+
+```lisp
 (setq-local org-confirm-babel-evaluate
             (lambda (lang body)
               (not (string= lang "emacs-lisp"))))
-#+END_SRC
+```
 
-Define an Emacs Lisp code block called =generated= that takes a ~lang~-uage
-(default: ~​""​~) and produces a commented notice that source code in this project
+Define an Emacs Lisp code block called `generated` that takes a `lang`-uage
+(default: `​""​`) and produces a commented notice that source code in this project
 is generated by this Org file.
-#+NAME: generated
-#+BEGIN_SRC emacs-lisp :var lang=""
+
+```lisp
 (let ((comment (cond
                 ((string= lang "erlang") "%%%")
                 ((string= lang "yaml")   "###")
@@ -507,25 +497,45 @@ is generated by this Org file.
           comment warning
           comment how-to
           comment line))
-#+END_SRC
+```
 
-For example, ~<<generated("lfe")>>~ produces:
-#+BEGIN_SRC text :noweb yes
-<<generated("lfe")>>
-#+END_SRC
+For example, `<<generated("lfe")>>` produces:
 
-# ** Auto-tangle this file
-# #+BEGIN_SRC emacs-lisp :exports code :results silent
-# (declare-function org-babel-tangle "ob-tangle")
+```text
+;;;===================================================================
+;;; This file was generated by Org. Do not edit it directly.
+;;; Instead, edit Lodox.org in Emacs and call org-babel-tangle.
+;;;===================================================================
+```
 
-# (defconst lodox-readme (buffer-file-name))
+## License
 
-# (defun yurrriq/auto-tangle-lodox-readme ()
-#   "Upon saving the Lodox README.org, tangle it."
-#   (when (file-equal-p buffer-file-name lodox-readme)
-#     (org-babel-tangle)))
+Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 
-# (add-hook 'after-save-hook 'yurrriq/auto-tangle-lodox-readme)
-# #+END_SRC
+```text
+The MIT License (MIT)
+Copyright © 2015 Eric Bailey <quasiquoting@gmail.com>
 
-#+INCLUDE: LICENSE.org
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+Significant code and inspiration from [Codox](https://github.com/weavejester/codox). Copyright © 2015 James Revees
+
+Codox is distributed under the Eclipse Public License either version 1.0 or (at
+your option) any later version.
