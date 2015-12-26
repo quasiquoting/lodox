@@ -115,7 +115,7 @@
 (defun form-doc (form line exports)
   (case (form-doc form)
     (`#(ok ,(= doc `#m(name ,f arity ,a)))
-     (if (lists:member `#(,f ,a) exports)
+     (iff (lists:member `#(,f ,a) exports)
        `#(true ,(mset doc 'line line))))
     ('undefined 'false)))
 

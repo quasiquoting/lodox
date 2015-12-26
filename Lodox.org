@@ -337,6 +337,64 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 (defun module (func-name)
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 #+END_SRC
+
+* Macros
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
+#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+<<generated()>>
+#+END_SRC
+
+Inspired by [[http://clojuredocs.org/clojure.core/doto][Clojure]], ~doto~ takes a term ~x~ and threads it through given
+s-expressions as the first argument, e.g. ~(-> x (f y z))~, or functions,
+e.g. ~(funcall #'g/1 x)~, evaluating them for their side effects, and then
+returns ~x~.
+#+BEGIN_SRC lfe
+(defmacro doto
+  <<doto>>)
+#+END_SRC
+
+Also known as ~when~ in other languages, ~iff~ takes a ~test~ that returns a
+boolean and a ~then~ branch of an ~if~ expression, and returns ~then~ iff
+~test~, otherwise ~false~.
+
+N.B. ~iff~ cannot be called ~when~ in LFE, since ~when~ is reserved for guards.
+
+#+BEGIN_SRC lfe
+(defmacro iff (test then) <<iff>>)
+#+END_SRC
+
+#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+(defmacro doto
+  "Evaluate all given s-expressions and functions in order,
+for their side effects, with the value of `x` as the first argument
+and return `x`."
+  <<doto>>)
+#+END_SRC
+#+NAME: doto
+#+BEGIN_SRC lfe :exports none
+(`(,x . ,sexps)
+ `(progn
+    ,@(lists:map
+        (match-lambda
+          ([`(,f . ,args)] `(,f ,x ,@args))
+          ([f]             `(,f ,x)))
+        sexps)
+    ,x))
+#+END_SRC
+
+#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+(defmacro iff (test then)
+  "Given a `test` that returns a boolean, if `test` is `true`, return `then`,
+  otherwise `false`."
+  <<iff>>)
+#+END_SRC
+#+NAME: iff
+#+BEGIN_SRC lfe :exports none
+`(if ,test ,then)
+#+END_SRC
+
 * Unit Tests
   :PROPERTIES:
   :tangle:   test/unit-lodox-tests.lfe

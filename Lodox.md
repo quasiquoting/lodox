@@ -356,6 +356,35 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
+# Macros
+
+Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
+s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
+e.g. `(funcall #'g/1 x)`, evaluating them for their side effects, and then
+returns `x`.
+
+```lfe
+(defmacro doto
+  (`(,x . ,sexps)
+   `(progn
+      ,@(lists:map
+          (match-lambda
+            ([`(,f . ,args)] `(,f ,x ,@args))
+            ([f]             `(,f ,x)))
+          sexps)
+      ,x)))
+```
+
+Also known as `when` in other languages, `iff` takes a `test` that returns a
+boolean and a `then` branch of an `if` expression, and returns `then` iff
+`test`, otherwise `false`.
+
+N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
+
+```lfe
+(defmacro iff (test then) `(if ,test ,then))
+```
+
 # Unit Tests
 
 ```lfe
