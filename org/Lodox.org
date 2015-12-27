@@ -15,12 +15,13 @@ cat VERSION
 * Literate Programming Setup
 Set [[http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148][~org-confirm-babel-evaluate~]] to a ~lambda~ expression that takes the
 ~lang~-uage and ~body~ of a code block and returns ~nil~ if ~lang~ is
-=​"emacs-lisp"​=, otherwise ~t~.
+=​"emacs-lisp"​= or =​"sh"​=, otherwise ~t~.
 #+NAME: auto-eval-elisp
 #+BEGIN_SRC emacs-lisp :results silent
 (setq-local org-confirm-babel-evaluate
             (lambda (lang body)
-              (not (string= lang "emacs-lisp"))))
+              (not (or (string= lang "emacs-lisp")
+                       (string= lang "sh")))))
 #+END_SRC
 
 Define an Emacs Lisp code block called =generated= that takes a ~lang~-uage
@@ -47,29 +48,31 @@ For example, ~<<generated("lfe")>>~ produces:
 <<generated("lfe")>>
 #+END_SRC
 
-# ** Auto-tangle this file
-# #+BEGIN_SRC emacs-lisp :exports code :results silent
-# (declare-function org-babel-tangle "ob-tangle")
+Tangle the literate Lodox source.
+#+BEGIN_SRC emacs-lisp :exports code :results silent
+(declare-function org-babel-tangle "ob-tangle")
 
-# (defconst lodox-readme (buffer-file-name))
+(defconst lodox-literate-source (buffer-file-name))
 
-# (defun yurrriq/auto-tangle-lodox-readme ()
-#   "Upon saving the Lodox README.org, tangle it."
-#   (when (file-equal-p buffer-file-name lodox-readme)
-#     (org-babel-tangle)))
+(defun quasiquoting/tangle-literate-lodox-source ()
+  "Upon saving the Lodox README.org, tangle it."
+  (when (file-equal-p buffer-file-name lodox-literate-source)
+    (org-babel-tangle-file "LICENSE.org")
+    (org-babel-tangle)))
 
-# (add-hook 'after-save-hook 'yurrriq/auto-tangle-lodox-readme)
-# #+END_SRC
+;; (add-hook 'after-save-hook 'quasiquoting/tangle-literate-lodox-source)
+#+END_SRC
+N.B. The ~after-save-hook~ is disabled for now.
 
 * Application Resource File
   :PROPERTIES:
-  :tangle:   src/lodox.app.src
+  :tangle:   ../src/lodox.app.src
   :noweb:    yes
   :END:
 #+BEGIN_SRC erlang :exports none
 <<generated("erlang")>>
 #+END_SRC
-#+BEGIN_SRC erlang :padline yes :tangle src/lodox.app.src
+#+BEGIN_SRC erlang :padline yes :tangle ../src/lodox.app.src
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
   {vsn,          "<<lodox-version()>>"},
@@ -93,10 +96,10 @@ For example, ~<<generated("lfe")>>~ produces:
   :END:
 *Describe =rebar.config= here.*
 
-#+BEGIN_SRC erlang :tangle rebar.config
+#+BEGIN_SRC erlang :tangle ../rebar.config
 <<generated("erlang")>>
 #+END_SRC
-#+BEGIN_SRC erlang :exports code :tangle rebar.config
+#+BEGIN_SRC erlang :exports code :tangle ../rebar.config
 {erl_opts, [debug_info, {src_dirs, ["test"]}]}.
 
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
@@ -151,7 +154,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   {branch, "master"}}}
 #+END_SRC
 
-#+BEGIN_SRC erlang :exports code :padline yes :tangle rebar.config
+#+BEGIN_SRC erlang :exports code :padline yes :tangle ../rebar.config
 {deps,
  [<<lfe>>,
   <<ltest>>,
@@ -166,7 +169,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   :END:
 ** [[file:src/lodox.lfe][lodox]]
    :PROPERTIES:
-   :tangle:   src/lodox.lfe
+   :tangle:   ../src/lodox.lfe
    :padline:  yes
    :END:
 #+BEGIN_SRC lfe :exports none
@@ -303,7 +306,7 @@ describing the docs that were generated.
 
 ** lodox-html-writer
    :PROPERTIES:
-   :tangle:   src/lodox-html-writer.lfe
+   :tangle:   ../src/lodox-html-writer.lfe
    :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
@@ -637,7 +640,7 @@ describing the docs that were generated.
 
 ** [[file:src/lodox-org-writer.lfe][lodox-org-writer]]
    :PROPERTIES:
-   :tangle:   src/lodox-org-writer.lfe
+   :tangle:   ../src/lodox-org-writer.lfe
    :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
@@ -692,7 +695,7 @@ Module level."
 
 ** [[file:src/lodox-parse.lfe][lodox-parse]]
    :PROPERTIES:
-   :tangle:   src/lodox-parse.lfe
+   :tangle:   ../src/lodox-parse.lfe
    :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
@@ -863,7 +866,7 @@ Module level."
 
 ** [[file:src/lodox-p.lfe][lodox-p]]
    :PROPERTIES:
-   :tangle:   src/lodox-p.lfe
+   :tangle:   ../src/lodox-p.lfe
    :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
@@ -916,7 +919,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
 
 ** [[file:src/lodox-util.lfe][lodox-util]]
    :PROPERTIES:
-   :tangle:   src/lodox-util.lfe
+   :tangle:   ../src/lodox-util.lfe
    :padline:  yes
    :END:
 #+BEGIN_SRC lfe :exports none
@@ -977,7 +980,7 @@ containing only items that satisfy [`arg?/1`](#func-arg.3F)."
   :PROPERTIES:
   :noweb:    yes
   :END:
-#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+#+BEGIN_SRC lfe :exports none :tangle ../include/lodox-macros.lfe
 <<generated()>>
 #+END_SRC
 
@@ -1000,7 +1003,7 @@ N.B. ~iff~ cannot be called ~when~ in LFE, since ~when~ is reserved for guards.
 (defmacro iff (test then) <<iff>>)
 #+END_SRC
 
-#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+#+BEGIN_SRC lfe :exports none :tangle ../include/lodox-macros.lfe
 (defmacro doto
   "Evaluate all given s-expressions and functions in order,
 for their side effects, with the value of `x` as the first argument
@@ -1019,7 +1022,7 @@ and return `x`."
     ,x))
 #+END_SRC
 
-#+BEGIN_SRC lfe :exports none :tangle include/lodox-macros.lfe
+#+BEGIN_SRC lfe :exports none :tangle ../include/lodox-macros.lfe
 (defmacro iff (test then)
   "Given a `test` that returns a boolean, if `test` is `true`, return `then`,
   otherwise `false`."
@@ -1036,7 +1039,7 @@ and return `x`."
   :END:
 ** Property Tests
    :PROPERTIES:
-   :tangle:   test/lodox_parse_tests.erl
+   :tangle:   ../test/lodox_parse_tests.erl
    :END:
 #+BEGIN_SRC erlang :exports none
 <<generated("erlang")>>
@@ -1203,9 +1206,9 @@ pprint(Term) ->
              [global, {return, list}]).
 #+END_SRC
 ** Unit Tests
-  :PROPERTIES:
-  :tangle:   test/unit-lodox-tests.lfe
-  :END:
+   :PROPERTIES:
+   :tangle:   ../test/unit-lodox-tests.lfe
+   :END:
 #+BEGIN_SRC lfe :exports none
 <<generated()>>
 #+END_SRC
@@ -1311,7 +1314,7 @@ pprint(Term) ->
 
 * [[https://travis-ci.org/quasiquoting/lodox][Travis CI]]
   :PROPERTIES:
-  :tangle:   .travis.yml
+  :tangle:   ../.travis.yml
   :noweb:    yes
   :END:
 #+BEGIN_SRC yaml :exports none

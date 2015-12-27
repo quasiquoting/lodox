@@ -1,6 +1,6 @@
 * License
   :PROPERTIES:
-  :tangle:   LICENSE
+  :tangle:   ../LICENSE
   :END:
 Lodox is licensed under [[http://yurrriq.mit-license.org][the MIT License]].
 

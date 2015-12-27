@@ -25,12 +25,13 @@
 
 Set [`org-confirm-babel-evaluate`](http://orgmode.org/manual/Code-evaluation-security.html#index-org_002dconfirm_002dbabel_002devaluate-2148) to a `lambda` expression that takes the
 `lang`-uage and `body` of a code block and returns `nil` if `lang` is
-`​"emacs-lisp"​`, otherwise `t`.
+`​"emacs-lisp"​` or `​"sh"​`, otherwise `t`.
 
 ```lisp
 (setq-local org-confirm-babel-evaluate
             (lambda (lang body)
-              (not (string= lang "emacs-lisp"))))
+              (not (or (string= lang "emacs-lisp")
+                       (string= lang "sh")))))
 ```
 
 Define an Emacs Lisp code block called `generated` that takes a `lang`-uage
@@ -60,6 +61,24 @@ For example, `<<generated("lfe")>>` produces:
 ;;; Instead, edit Lodox.org in Emacs and call org-babel-tangle.
 ;;;===================================================================
 ```
+
+Tangle the literate Lodox source.
+
+```lisp
+(declare-function org-babel-tangle "ob-tangle")
+
+(defconst lodox-literate-source (buffer-file-name))
+
+(defun quasiquoting/tangle-literate-lodox-source ()
+  "Upon saving the Lodox README.org, tangle it."
+  (when (file-equal-p buffer-file-name lodox-literate-source)
+    (org-babel-tangle-file "LICENSE.org")
+    (org-babel-tangle)))
+
+;; (add-hook 'after-save-hook 'quasiquoting/tangle-literate-lodox-source)
+```
+
+N.B. The `after-save-hook` is disabled for now.
 
 # Application Resource File<a id="orgheadline2"></a>
 
