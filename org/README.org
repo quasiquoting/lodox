@@ -87,7 +87,7 @@ sed 's/[^ ]*\/\(lodox\)/\/path\/to\/\1/'
 If all goes well, the output will look something like:
 #+NAME: generate-docs
 #+BEGIN_SRC sh :exports results :results output
-<<lodox>> | <<last-line-only>> | <<obfuscate-path>>
+cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
@@ -95,6 +95,7 @@ If all goes well, the output will look something like:
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
+cd .. && \
 <<compile>> && \
 lfe -pa _build/default/lib/*/ebin \
     -eval '(lodox-html-writer:write-docs
