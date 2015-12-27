@@ -102,7 +102,7 @@ arglist_simple() -> list(atom()).
 
 body() -> union([[printable_string()], [non_string_term() | list(form())]]).
 
-form() -> union([non_string_term(), printable_string(), [ atom() | list()]]).
+form() -> union([non_string_term(), printable_string(), [atom() | list()]]).
 
 docstring() -> printable_string().
 
