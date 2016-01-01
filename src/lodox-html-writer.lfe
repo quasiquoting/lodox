@@ -315,16 +315,23 @@
   ([x] (when (is_atom x))
    (escape-html (atom_to_list x)))
   ([text]
-   (lists:foldl (match-lambda
-                  ([`#(,re ,replacement) text*]
-                   (re:replace text* re replacement '(global #(return list)))))
-                text
-                '(#("\\&"  "\\&amp;")
-                  #("<"  "\\&lt;")
-                  ;; #(">"  "\\&gt;")
-                  #("\"" "\\&quot;")
-                  #("'"  "\\&apos;")))))
+   (fold-replace text '(#("\\&"  "\\&amp;")
+                        #("<"  "\\&lt;")
+                        ;; #(">"  "\\&gt;")
+                        #("\"" "\\&quot;")
+                        #("'"  "\\&apos;")))))
 
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
   (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
+
+(defun fold-replace (string pairs)
+  (-> (match-lambda
+        ([`#(,patt ,replacement) acc]
+         (re:replace acc patt replacement '(global #(return list)))))
+      (lists:foldl string pairs)))
+
+;; Stolen from Elixir
+;; https://github.com/elixir-lang/elixir/blob/944990381f6cadbaf751f2443d485684ba35b6d8/lib/elixir/lib/regex.ex#L601-L619
+(defun re-escape (string)
+  (re:replace string "[.^$*+?()[{\\\|\s#]" "\\\\&" '[global  #(return list)]))
