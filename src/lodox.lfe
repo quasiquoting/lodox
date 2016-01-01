@@ -44,7 +44,9 @@
       `#(ok ,state*))))
 
 (defun do (state)
-  "Generate documentation for each application in the proejct."
+  "Generate documentation for each application in the project.
+
+See: [[lodox-html-writer:write-docs/2]]"
   (rebar_api:debug "Starting do/1 for lodox" '())
   (let ((apps (case (rebar_state:current_app state)
                 ('undefined (rebar_state:project_apps state))

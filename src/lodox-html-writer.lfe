@@ -8,6 +8,7 @@
   (export (write-docs 2)))
 
 (include-lib "exemplar/include/html-macros.lfe")
+
 (include-lib "lodox/include/lodox-macros.lfe")
 
 
@@ -271,7 +272,7 @@
            ,(div '(id "content" class "module-docs")
               `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
                 ,(mod-behaviour module)
-                ,(div '(class "doc") (format-docstring project '()  module))
+                ,(div '(class "doc") (format-docstring project '() module))
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 

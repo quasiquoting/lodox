@@ -296,7 +296,9 @@ list of ~project_apps~ and calls ~write-docs/1~ on each one. This is where the
 actual work happens.
 #+BEGIN_SRC lfe
 (defun do (state)
-  "Generate documentation for each application in the proejct."
+  "Generate documentation for each application in the project.
+
+See: [[lodox-html-writer:write-docs/2]]"
   (rebar_api:debug "Starting do/1 for lodox" '())
   (let ((apps (case (rebar_state:current_app state)
                 ('undefined (rebar_state:project_apps state))
@@ -367,6 +369,7 @@ describing the docs that were generated.
   (export (write-docs 2)))
 
 (include-lib "exemplar/include/html-macros.lfe")
+
 (include-lib "lodox/include/lodox-macros.lfe")
 
 
@@ -630,7 +633,7 @@ describing the docs that were generated.
            ,(div '(id "content" class "module-docs")
               `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
                 ,(mod-behaviour module)
-                ,(div '(class "doc") (format-docstring project '()  module))
+                ,(div '(class "doc") (format-docstring project '() module))
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 
@@ -936,7 +939,7 @@ Module level."
   (lists:all #'clause?/1 forms))
 
 (defun clause?
-  "Given a term, return `true` iff the it is a list whose head satisfies [[arglist?/1]]."
+  "Given a term, return `true` iff it is a list whose head satisfies [[arglist?/1]]."
   ([`(,_)]      'false)
   ([`([] . ,_)] 'false)
   ([`(,h . ,_)] (lodox-p:arglist? h))
@@ -944,7 +947,7 @@ Module level."
 
 (defun arglist?
   "Given a term, return `true` iff it is either the empty list or a list
-containing only items that satisfy [`arg?/1`](#func-arg.3F)."
+containing only items that satisfy [[arg?/1]]."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))

@@ -13,7 +13,7 @@
   (lists:all #'clause?/1 forms))
 
 (defun clause?
-  "Given a term, return `true` iff the it is a list whose head satisfies [[arglist?/1]]."
+  "Given a term, return `true` iff it is a list whose head satisfies [[arglist?/1]]."
   ([`(,_)]      'false)
   ([`([] . ,_)] 'false)
   ([`(,h . ,_)] (lodox-p:arglist? h))
@@ -21,7 +21,7 @@
 
 (defun arglist?
   "Given a term, return `true` iff it is either the empty list or a list
-containing only items that satisfy [`arg?/1`](#func-arg.3F)."
+containing only items that satisfy [[arg?/1]]."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
