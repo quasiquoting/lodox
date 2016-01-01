@@ -163,9 +163,20 @@ To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tes
 {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
 #+END_SRC
 
+For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
+
+#+NAME: clj-version
+: 0.3.0
+
+#+NAME: clj
+#+BEGIN_SRC erlang
+{clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}}
+#+END_SRC
+
+
 To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 
-N.B. I'm only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or something similar
+N.B. Only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or similar
 gets merged into the [[https://github.com/lfex][lfex]] repo.
 
 #+NAME: exemplar-version
@@ -194,6 +205,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 {deps,
  [<<lfe>>,
   <<ltest>>,
+  <<clj>>,
   <<exemplar>>,
   <<markdown>>,
   <<proper>>]}.
