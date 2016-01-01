@@ -110,7 +110,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.5.0"},
+  {vsn,          "0.5.1"},
   {modules,      ['lodox-html-writer','lodox-org-writer',
                   'lodox-p','lodox-parse','lodox-util',
                   lodox,
@@ -143,9 +143,13 @@ To make writing [EUnit](http://www.erlang.org/doc/apps/eunit/chapter.html) tests
 
     0.7.0
 
+For the Clojure-inspired threading macros, use [clj](https://github.com/lfex/clj).
+
+    0.3.0
+
 To handle HTML rendering, use [exemplar](https://github.com/lfex/exemplar).
 
-N.B. I'm only using [my fork](https://github.com/yurrriq/exemplar) until [this pull request](https://github.com/lfex/exemplar/pull/15) or something similar
+N.B. Only using [my fork](https://github.com/yurrriq/exemplar) until [this pull request](https://github.com/lfex/exemplar/pull/15) or similar
 gets merged into the [lfex](https://github.com/lfex) repo.
 
     0.3.0
@@ -156,6 +160,7 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
 {deps,
  [{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "0.10.1"}}},
   {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "0.7.0"}}},
+  {clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}},
   {exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "0.3.0"}}},
   {markdown, {git, "git://github.com/erlware/erlmarkdown.git"}},
   {proper,
@@ -242,7 +247,9 @@ actual work happens.
 
 ```lfe
 (defun do (state)
-  "Generate documentation for each application in the proejct."
+  "Generate documentation for each application in the project.
+
+See: [[lodox-html-writer:write-docs/2]]"
   (rebar_api:debug "Starting do/1 for lodox" '())
   (let ((apps (case (rebar_state:current_app state)
                 ('undefined (rebar_state:project_apps state))
@@ -304,7 +311,10 @@ describing the docs that were generated.
   (doc "Documentation writer that outputs HTML.")
   (export (write-docs 2)))
 
+(include-lib "clj/include/compose.lfe")
+
 (include-lib "exemplar/include/html-macros.lfe")
+
 (include-lib "lodox/include/lodox-macros.lfe")
 
 
@@ -330,10 +340,13 @@ describing the docs that were generated.
 
 (defun link-to (uri content) (a `(href ,uri) content))
 
-(defun func-id (func)
-  (++ "func-" (re:replace (http_uri:encode (func-name func))
-                          "%" "."
-                          '(global #(return list)))))
+(defun func-id
+  ([func] (when (is_map func))
+   (func-id (func-name func)))
+  ([fname] (when (is_list fname))
+   (-> (http_uri:encode (h fname))
+       (re:replace "%" "." '(global #(return list)))
+       (->> (++ "func-")))))
 
 (defun format-docstring (project m) (format-docstring project '() m))
 
@@ -343,22 +356,54 @@ describing the docs that were generated.
 (defun format-docstring
   ([project _ m 'plaintext]
    (pre '(class "plaintext") (h (mref m 'doc))))
-  ([project _ m 'markdown]
+  ([project mod m 'markdown]
    (case (mref m 'doc)
      ('() (br))
      (doc
-      (let ((docstring (unicode:characters_to_list doc)))
-        (case (os:find_executable "pandoc")
-          ('false (markdown:conv_utf8 docstring))
-          (pandoc
-           (os:cmd (lists:flatten
-                    (io_lib:format "~s -f markdown_github -t html <<< \"~s\""
-                                   `(,pandoc ,(escape docstring))))))))))))
+      (format-wikilinks
+       project (markdown->html (unicode:characters_to_list doc))
+       (if (is_map mod)
+         (maps:get 'name mod 'undefined)
+         (mref m 'name)))))))
+
+(defun markdown->html (docstring)
+  (case (os:find_executable "pandoc")
+    ('false (markdown:conv_utf8 docstring))
+    (pandoc (->> `(,pandoc ,(escape docstring))
+                 (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
+                 (lists:flatten)
+                 (os:cmd)))))
+
+(defun format-wikilinks
+  ([`#m(modules ,modules) html starting-mod]
+   (case (re:run html "\\[\\[([^\\[]+/\\d+)\\]\\]"
+                 '[global #(capture all_but_first)])
+     (`#(match [,matches])
+      (-> (match-lambda
+            ([`#(,start ,length)]
+             (let ((match (lists:sublist html (+ 1 start) length)))
+               (case (lodox-util:search-funcs modules match starting-mod)
+                 ('undefined
+                  'false)
+                 (mfa
+                  (let ((`#(,mod [,_ . ,fname])
+                         (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
+                    `#(true #(,(re-escape (++ "[[" match "]]"))
+                              ,(link-to (func-uri mod fname)
+                                 (if (=:= (atom_to_list starting-mod) mod)
+                                   (h fname)
+                                   (h (++ mod ":" fname))))))))))))
+          (lists:filtermap matches)
+          (->> (fold-replace html))))
+     ('nomatch html))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
-(defun mod-filename (mod)
-  (++ (mod-name mod) ".html"))
+(defun mod-filename
+  ([mod] (when (is_map mod))
+   (mod-filename (mod-name mod)))
+  ([mname] (when (is_list mname))
+   (++ mname ".html")))
 
 (defun mod-filepath (output-dir module)
   (filename:join output-dir (mod-filename module)))
@@ -568,7 +613,7 @@ describing the docs that were generated.
            ,(div '(id "content" class "module-docs")
               `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
                 ,(mod-behaviour module)
-                ,(div '(class "doc") (format-docstring project '()  module))
+                ,(div '(class "doc") (format-docstring project '() module))
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 
@@ -611,19 +656,26 @@ describing the docs that were generated.
   ([x] (when (is_atom x))
    (escape-html (atom_to_list x)))
   ([text]
-   (lists:foldl (match-lambda
-                  ([`#(,re ,replacement) text*]
-                   (re:replace text* re replacement '(global #(return list)))))
-                text
-                '(#("\\&"  "\\&amp;")
-                  #("<"  "\\&lt;")
-                  ;; #(">"  "\\&gt;")
-                  #("\"" "\\&quot;")
-                  #("'"  "\\&apos;")))))
+   (fold-replace text '(#("\\&"  "\\&amp;")
+                        #("<"  "\\&lt;")
+                        ;; #(">"  "\\&gt;")
+                        #("\"" "\\&quot;")
+                        #("'"  "\\&apos;")))))
 
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
   (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
+
+(defun fold-replace (string pairs)
+  (-> (match-lambda
+        ([`#(,patt ,replacement) acc]
+         (re:replace acc patt replacement '(global #(return list)))))
+      (lists:foldl string pairs)))
+
+;; Stolen from Elixir
+;; https://github.com/elixir-lang/elixir/blob/944990381f6cadbaf751f2443d485684ba35b6d8/lib/elixir/lib/regex.ex#L601-L619
+(defun re-escape (string)
+  (re:replace string "[.^$*+?()[{\\\|\s#]" "\\\\&" '[global  #(return list)]))
 ```
 
 ## lodox-org-writer<a id="orgheadline11"></a>
@@ -861,7 +913,7 @@ Module level."
   (lists:all #'clause?/1 forms))
 
 (defun clause?
-  "Given a term, return `true` iff the it is a list whose head satisfies [[arglist?/1]]."
+  "Given a term, return `true` iff it is a list whose head satisfies [[arglist?/1]]."
   ([`(,_)]      'false)
   ([`([] . ,_)] 'false)
   ([`(,h . ,_)] (lodox-p:arglist? h))
@@ -869,7 +921,7 @@ Module level."
 
 (defun arglist?
   "Given a term, return `true` iff it is either the empty list or a list
-containing only items that satisfy [`arg?/1`](#func-arg.3F)."
+containing only items that satisfy [[arg?/1]]."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))
@@ -1078,7 +1130,7 @@ arglist_simple() -> list(atom()).
 
 body() -> union([[printable_string()], [non_string_term() | list(form())]]).
 
-form() -> union([non_string_term(), printable_string(), [ atom() | list()]]).
+form() -> union([non_string_term(), printable_string(), [atom() | list()]]).
 
 docstring() -> printable_string().
 
