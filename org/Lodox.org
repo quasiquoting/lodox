@@ -368,6 +368,8 @@ describing the docs that were generated.
   (doc "Documentation writer that outputs HTML.")
   (export (write-docs 2)))
 
+(include-lib "clj/include/compose.lfe")
+
 (include-lib "exemplar/include/html-macros.lfe")
 
 (include-lib "lodox/include/lodox-macros.lfe")
@@ -395,10 +397,13 @@ describing the docs that were generated.
 
 (defun link-to (uri content) (a `(href ,uri) content))
 
-(defun func-id (func)
-  (++ "func-" (re:replace (http_uri:encode (func-name func))
-                          "%" "."
-                          '(global #(return list)))))
+(defun func-id
+  ([func] (when (is_map func))
+   (func-id (func-name func)))
+  ([fname] (when (is_list fname))
+   (-> (http_uri:encode (h fname))
+       (re:replace "%" "." '(global #(return list)))
+       (->> (++ "func-")))))
 
 (defun format-docstring (project m) (format-docstring project '() m))
 
@@ -408,22 +413,54 @@ describing the docs that were generated.
 (defun format-docstring
   ([project _ m 'plaintext]
    (pre '(class "plaintext") (h (mref m 'doc))))
-  ([project _ m 'markdown]
+  ([project mod m 'markdown]
    (case (mref m 'doc)
      ('() (br))
      (doc
-      (let ((docstring (unicode:characters_to_list doc)))
-        (case (os:find_executable "pandoc")
-          ('false (markdown:conv_utf8 docstring))
-          (pandoc
-           (os:cmd (lists:flatten
-                    (io_lib:format "~s -f markdown_github -t html <<< \"~s\""
-                                   `(,pandoc ,(escape docstring))))))))))))
+      (format-wikilinks
+       project (markdown->html (unicode:characters_to_list doc))
+       (if (is_map mod)
+         (maps:get 'name mod 'undefined)
+         (mref m 'name)))))))
+
+(defun markdown->html (docstring)
+  (case (os:find_executable "pandoc")
+    ('false (markdown:conv_utf8 docstring))
+    (pandoc (->> `(,pandoc ,(escape docstring))
+                 (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
+                 (lists:flatten)
+                 (os:cmd)))))
+
+(defun format-wikilinks
+  ([`#m(modules ,modules) html starting-mod]
+   (case (re:run html "\\[\\[([^\\[]+/\\d+)\\]\\]"
+                 '[global #(capture all_but_first)])
+     (`#(match [,matches])
+      (-> (match-lambda
+            ([`#(,start ,length)]
+             (let ((match (lists:sublist html (+ 1 start) length)))
+               (case (lodox-util:search-funcs modules match starting-mod)
+                 ('undefined
+                  'false)
+                 (mfa
+                  (let ((`#(,mod [,_ . ,fname])
+                         (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
+                    `#(true #(,(re-escape (++ "[[" match "]]"))
+                              ,(link-to (func-uri mod fname)
+                                 (if (=:= (atom_to_list starting-mod) mod)
+                                   (h fname)
+                                   (h (++ mod ":" fname))))))))))))
+          (lists:filtermap matches)
+          (->> (fold-replace html))))
+     ('nomatch html))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
-(defun mod-filename (mod)
-  (++ (mod-name mod) ".html"))
+(defun mod-filename
+  ([mod] (when (is_map mod))
+   (mod-filename (mod-name mod)))
+  ([mname] (when (is_list mname))
+   (++ mname ".html")))
 
 (defun mod-filepath (output-dir module)
   (filename:join output-dir (mod-filename module)))
