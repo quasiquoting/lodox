@@ -21,6 +21,7 @@
     (doto output-path
           (mkdirs '("css" "js"))
           (copy-resource "css/default.css")
+          (copy-resource "css/hk-pyg.css")
           (copy-resource "js/jquery.min.js")
           (copy-resource "js/page_effects.js")
           (write-index project)
@@ -187,6 +188,7 @@
 (defun default-includes ()
   `(,(meta '(charset "UTF-8"))
     ,(include-css "css/default.css")
+    ,(include-css "css/hk-pyg.css")
     ,(include-js "js/jquery.min.js")
     ,(include-js "js/page_effects.js")))
 
