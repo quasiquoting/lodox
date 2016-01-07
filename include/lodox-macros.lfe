@@ -8,13 +8,13 @@
 for their side effects, with the value of `x` as the first argument
 and return `x`."
   (`(,x . ,sexps)
-   `(progn
+   `(let ((,'y ,x))
       ,@(lists:map
           (match-lambda
-            ([`(,f . ,args)] `(,f ,x ,@args))
-            ([f]             `(,f ,x)))
+            ([`(,f . ,args)] `(,f ,'y ,@args))
+            ([f]             `(,f ,'y)))
           sexps)
-      ,x)))
+      ,'y)))
 
 (defmacro iff (test then)
   "Given a `test` that returns a boolean, if `test` is `true`, return `then`,
