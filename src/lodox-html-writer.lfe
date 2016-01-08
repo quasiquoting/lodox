@@ -5,7 +5,7 @@
 
 (defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 2)))
+  (export (write-docs 1) (write-docs 2)))
 
 (include-lib "clj/include/compose.lfe")
 
@@ -14,10 +14,15 @@
 (include-lib "lodox/include/lodox-macros.lfe")
 
 
+(defun write-docs (project)
+  "Equivalent to [[write-docs/2]] with `[]` as `opts`."
+  (write-docs project #m()))
+
 (defun write-docs (project opts)
   "Take raw documentation info and turn it into formatted HTML."
-  (let ((`#m(output-path ,output-path app-dir ,app-dir)
-            (maps:merge opts #m(output-path "doc"))))
+  (let* ((`#(ok ,cwd) (file:get_cwd))
+         (`#m(output-path ,output-path app-dir ,app-dir)
+          (maps:merge `#m(output-path "doc" app-dir ,cwd) opts)))
     (doto output-path
           (mkdirs '("css" "js"))
           (copy-resource "css/default.css")
