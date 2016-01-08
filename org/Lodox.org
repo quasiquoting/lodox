@@ -1115,14 +1115,14 @@ and return `x`."
 #+END_SRC
 #+NAME: doto
 #+BEGIN_SRC lfe :exports none
-`(,x . ,sexps)
-`(let ((,'x* ,x))
-   ,@(lists:map
-       (match-lambda
-         ([`(,f . ,args)] `(,f ,'x* ,@args))
-         ([f]             `(,f ,'x*)))
-       sexps)
-   ,'x*)
+(`(,x . ,sexps)
+ `(let ((,'x* ,x))
+    ,@(lists:map
+        (match-lambda
+          ([`(,f . ,args)] `(,f ,'x* ,@args))
+          ([f]             `(,f ,'x*)))
+        sexps)
+    ,'x*))
 #+END_SRC
 
 #+BEGIN_SRC lfe :exports none :tangle ../include/lodox-macros.lfe
