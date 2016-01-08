@@ -111,7 +111,7 @@
    (if (lodox-p:clause? clause)
      `#(ok #m(name     ,name
               arity    ,(length (car clause))
-              arglists ,(pattern clause)
+              arglists [,(pattern clause)]
               doc      ""))
      'undefined))
   ;; This pattern matches non-defun forms.
@@ -119,7 +119,7 @@
 
 (defun form-doc (form line exports)
   (case (form-doc form)
-    (`#(ok ,(= doc `#m(name ,f arity ,a)))
+    (`#(ok ,(= `#m(name ,f arity ,a) doc))
      (iff (lists:member `#(,f ,a) exports)
        `#(true ,(mset doc 'line line))))
     ('undefined 'false)))
