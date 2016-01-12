@@ -80,7 +80,7 @@
   ([`#m(modules ,modules) html starting-mod]
    (case (re:run html "\\[\\[([^\\[]+/\\d+)\\]\\]"
                  '[global #(capture all_but_first)])
-     (`#(match [,matches])
+     (`#(match ,matches)
       (-> (match-lambda
             ([`#(,start ,length)]
              (let ((match (lists:sublist html (+ 1 start) length)))
@@ -95,7 +95,7 @@
                                  (if (=:= (atom_to_list starting-mod) mod)
                                    (h fname)
                                    (h (++ mod ":" fname))))))))))))
-          (lists:filtermap matches)
+          (lists:filtermap (lists:flatten matches))
           (->> (fold-replace html))))
      ('nomatch html))))
 
