@@ -4,10 +4,22 @@
 ;;;===================================================================
 
 (defmodule lodox-p
-  (export (clauses? 1) (clause? 1)
+  (export (macro-clauses? 1) (macro-clause? 1)
+          (clauses? 1) (clause? 1)
           (arglist? 1) (arg? 1)
           (string? 1)
           (null? 1)))
+
+(defun macro-clauses? (forms)
+  "Return `true` iff `forms` is a list of items satisfying [[macro-clause?/1]]."
+  (lists:all #'macro-clause?/1 forms))
+
+(defun macro-clause? (form)
+  "Given a term, return `true` iff it seems like a macro clause.
+A macro clause either satisfies [[clause?/1]] without alteration or when
+its head in encapsulated in a list."
+  (orelse (clause? form)
+          (clause? `([,(car form)] . ,(cdr form)))))
 
 (defun clauses? (forms)
   "Return `true` iff `forms` is a list of items that satisfy [[clause?/1]]."
