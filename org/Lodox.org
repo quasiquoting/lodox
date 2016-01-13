@@ -392,8 +392,7 @@ describing the docs that were generated.
           (copy-resource "js/page_effects.js")
           (write-index project)
           (write-modules (mset project 'app-dir app-dir))
-          ;; (write-documents project)
-          )))
+          (write-libs project))))
 
 (defun include-css (style)
   (link `(type "text/css" href ,style rel "stylesheet")))
@@ -441,7 +440,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (->> `(,pandoc ,(escape markdown))
+    (pandoc (->> `[,pandoc ,(escape markdown)]
                  (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
                  (lists:flatten)
                  (os:cmd)))))
@@ -504,19 +503,20 @@ Use [pandoc] if available, otherwise [erlmarkdown].
          (li `(class ,(++ "depth-1" (if on-index? " current" "")))
              (link-to "index.html" (div '(class "inner") "Index"))))))
 
-(defun topics-menu
-  ([(= project `#m(documents ,docs)) current-doc] (when (is_list docs))
-   `(,(h3 '(class "no-link") (span '(class "inner") "Topics"))
-     ,(ul
-        (lists:map
-          (lambda (doc)
-            (li `(class ,(++ "depth-1" (if (=:= doc current-doc)
-                                         " current"
-                                         "")))
-                (link-to (doc-filename doc)
-                  (div '(class "inner")
-                    (span (h (mref doc 'title)))))))
-          (lists:sort (lambda (a b) (=< (mref a 'name) (mref b 'name))) docs))))))
+(defun includes-menu (project current-lib)
+  (let* ((libs    (mref project 'libs))
+         (lib-map (index-by 'name libs)))
+    `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
+      ,(ul
+         (lists:map
+           (match-lambda
+             ([`#(,lib-name ,lib)]
+              (let ((class (++ "depth-1" (if (=:= lib current-lib)
+                                           " current"
+                                           "")))
+                    (inner (div '(class "inner") (h (atom_to_list lib-name)))))
+                (li `(class ,class) (link-to (mod-filename lib) inner)))))
+           (maps:to_list lib-map))))))
 
 (defun modules-menu (project current-mod)
   (let* ((modules (mref project 'modules))
@@ -538,7 +538,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defun primary-sidebar (project current)
   (div '(class "sidebar primary")
     `(,(index-link project (=:= '() current))
-      ;; ,(topics-menu project current)
+      ,(includes-menu project current)
       ,(modules-menu project current))))
 
 (defun sorted-exported-funcs (module)
@@ -601,7 +601,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                       ,(p "To install, add the following dependency to your rebar.config:")
                       ,(pre '(class "deps")
                          (h (++ "[" pkg " " (mref project 'version) "]"))))))
-                ;; TODO: topics
+                ;; TODO: includes
                 ,(h2 "Modules")
                 ,(lists:map
                    (lambda (module)
@@ -626,6 +626,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 ;; TODO: exemplar-ify this
 (defun unordered-list (lst) (ul (lists:map #'li/1 lst)))
 
+#|
 (defun format-document
   ([project (= doc `#m(format ,format))] (when (=:= format 'markdown))
    ;; TODO: render markdown
@@ -641,6 +642,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
         ,(primary-sidebar project doc)
         ,(div '(id "content" class "document")
            (div '(id "doc") (format-document project doc)))))))
+|#
 
 (defun func-usage (func)
   (lists:map
@@ -694,6 +696,20 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                 ,(lists:map (lambda (func) (func-docs project module func))
                             (sorted-exported-funcs module)))))))))
 
+(defun lib-page (project lib)
+  (html
+    `(,(head
+         `(,(default-includes)
+           ,(title (++ (h (mref lib 'name)) " documentation"))))
+      ,(body
+         `(,(header* project)
+           ,(primary-sidebar project lib)
+           ,(funcs-sidebar lib)
+           ,(div '(id "content" class "module-docs") ; TODO: confirm this
+              `(,(h1 '(id "top" class "anchor") (h (mref lib 'name)))
+                ,(lists:map (lambda (func) (func-docs project lib func))
+                            (sorted-exported-funcs lib)))))))))
+
 (defun copy-resource (output-dir resource)
   (let* ((this  (proplists:get_value 'source (module_info 'compile)))
          (lodox (filename:dirname (filename:dirname this))))
@@ -714,6 +730,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
            (-> (mod-filepath output-dir module)
                (file:write_file (module-page project module)))))
     (lists:foreach #'write-module/1 (mref project 'modules))))
+
+(defun write-libs (output-dir project)
+  (flet ((write-lib (lib)
+           (file:write_file (mod-filepath output-dir lib)
+                            (lib-page project lib))))
+    (lists:foreach #'write-lib/1 (mref project 'libs))))
 
 #|
 (defun write-documents (output-dir project)
