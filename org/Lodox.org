@@ -769,7 +769,9 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defmodule lodox-parse
   (doc "Parsing LFE source files for metadata.")
   (export (docs 1)
-          (form-doc 1))
+          (form-doc 1)
+          (lib-doc 1)
+          (lib-docs 0))
   (import (from lodox-p
             (arglist? 1)
             (macro-clauses? 1) (macro-clause? 1)
@@ -803,11 +805,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                         (maps:from_list info)))
          (modules     (mod-docs (mref app-info 'modules)))
          (version     (maps:get 'vsn         app-info ""))
-         (description (maps:get 'description app-info "")))
+         (description (maps:get 'description app-info ""))
+         (libs        (lib-docs)))
     `#m(name        ,app-name
         version     ,version
         description ,description
-        documents   []
+        libs        ,libs
         modules     ,modules)))
 
 
@@ -970,6 +973,41 @@ Use [pandoc] if available, otherwise [erlmarkdown].
      (proplists:get_value 'doc attributes ""))))
 
 (defun mod-name (mod) (call mod 'module_info 'module))
+
+(defun lib-docs ()
+  "Call [[lib-docs/1]] on each LFE file in `./include`."
+  (lib-docs (filelib:wildcard (filename:absname "include/*.lfe"))))
+
+(defun lib-docs (files)
+  "Call [[lib-doc/1]] on each file in `files` and
+return the list of non-empty results."
+  (lists:filtermap #'lib-doc/1 files))
+
+(defun lib-doc (filename)
+  "Parse `filename` and attempt to return a tuple, `` `#(true ,defsmap) ``
+where `defsmap` is a map representing the definitions in `filename`.
+If [[file-doc/1]] returns the empty list, return `false`."
+  (case (filename:extension filename)
+    (".lfe" (case (file-doc filename)
+              ('()     'false)
+              (exports `#(true #m(name      ,(-> filename
+                                                 (filename:basename ".lfe")
+                                                 (list_to_atom))
+                                  behaviour ""
+                                  doc       ""
+                                  exports   ,exports
+                                  ;; dirty hack
+                                  filepath  ,filename)))))
+    (_      'false)))
+
+(defun file-doc (filename)
+  (if (filelib:is_file filename)
+    (let ((`#(ok ,forms) (lfe_io:parse_file filename)))
+      (lists:filtermap
+        (match-lambda
+          ([`#(,form ,line)] (form-doc form line)))
+        forms))
+    '()))
 
 (defun patterns (forms) (lists:map #'pattern/1 forms))
 
@@ -1373,8 +1411,8 @@ pprint(Term) ->
       ,(_assert (is_map project)))
     #(#"description is a string"
       ,(_assert (lodox-p:string? (mref* project 'description))))
-    #(#"documents is a list"
-      ,(_assert (is_list (mref* project 'documents))))
+    #(#"libs is a list"
+      ,(_assert (is_list (mref* project 'libs))))
     #(#"modules is a list"
       ,(_assert (is_list (mref* project 'modules))))
     #(#"name matches directory"

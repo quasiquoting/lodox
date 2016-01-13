@@ -18,8 +18,8 @@
       ,(_assert (is_map project)))
     #(#"description is a string"
       ,(_assert (lodox-p:string? (mref* project 'description))))
-    #(#"documents is a list"
-      ,(_assert (is_list (mref* project 'documents))))
+    #(#"libs is a list"
+      ,(_assert (is_list (mref* project 'libs))))
     #(#"modules is a list"
       ,(_assert (is_list (mref* project 'modules))))
     #(#"name matches directory"
