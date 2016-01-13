@@ -91,15 +91,14 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.6.0 docs in /path/to/lodox/doc
+: Generated lodox v0.7.0 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
 cd .. && \
 <<compile>> && \
-lfe -pa _build/default/lib/*/ebin \
-    -eval '(lodox-html-writer:write-docs
-             (lodox-parse:docs #"lodox") #m(app-dir "'$(pwd)'"))'
+lfe -pa   _build/default/lib/*/ebin \
+    -eval '(lodox-html-writer:write-docs (lodox-parse:docs #"lodox"))'
 #+END_SRC
 
 And, as promised, [[http://quasiquoting.org/lodox/][generated documentation]] will be in the =doc= subdirectory of
