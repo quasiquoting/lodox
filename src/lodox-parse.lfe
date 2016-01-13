@@ -9,8 +9,8 @@
           (form-doc 1))
   (import (from lodox-p
             (arglist? 1)
-            (clause? 1)
-            (clauses? 1)
+            (macro-clauses? 1) (macro-clause? 1)
+            (clauses? 1) (clause? 1)
             (string? 1)
             (null? 1))))
 
@@ -55,11 +55,11 @@
 (defun form-doc
   "TODO: write docstring"
   ;; (defun name clause)
-  ([`(defun ,name ,(= `[,arglist . ,_body] clause))]
+  ([(= `(defun ,name ,(= `[,arglist . ,_body] clause)) shape)]
    (when (is_atom name) (is_list arglist))
    (if (clause? clause)
      (ok-form-doc name (length arglist) `[,(pattern clause)] "")
-     (error "Unhandled shape!")))
+     (unhandled-shape! shape)))
 
   ;; (defun name () form)
   ([`(defun ,name () ,_form)]
@@ -79,46 +79,26 @@
      (ok-form-doc name (length x) `[,x] ""))))
 
   ;; (defun name doc clause)
-  ([`(defun ,name ,doc-string ,(= `[,arglist . ,_body] clause))]
+  ([(= `(defun ,name ,doc-string ,(= `[,arglist . ,_body] clause)) shape)]
    (when (is_atom name) (is_list doc-string) (is_list arglist))
    (if (andalso (clause? clause) (string? doc-string))
      (ok-form-doc name (length arglist) `[,(pattern clause)] doc-string)
-     (error "Unhandled shape!")))
+     (unhandled-shape! shape)))
 
   ;; (defun name () <doc|form> form)
   ([`(defun ,name () ,maybe-doc ,_form)]
    (when (is_atom name))
    (ok-form-doc name 0 '[()] (if (string? maybe-doc) maybe-doc "")))
 
-  ;; (defun name "" clause clause)
-  ;; (defun name () doc    form)
+  ;; (defun name "" clause clause ...?)
+  ;; (defun name () doc    form   ...?)
   ([`(defun ,name () . ,(= `[,x . ,_] rest))]
    (if (clauses? rest)
      (ok-form-doc name (length (car x)) (patterns rest) "")
      (ok-form-doc name 0 '[()] (if (string? x) x ""))))
 
-  ;; (defun name () clause     clause clause)
-  ;; (defun name () <doc|form> form   form)
-  ([`(defun ,name () . ,(= `[,x ,y ,z] rest))]
-   (when (is_atom name))
-   (if (clauses? rest)
-     (ok-form-doc name (length (car x)) (patterns rest) "")
-     (ok-form-doc name 0 '[()] (if (string? x) x ""))))
-
-  ;; (defun name <doc|clause> clause     clause clause)
-  ;; (defun name arglist      <doc|form> form   form)
-  ([`(defun ,name ,doc-or-arglist . ,(= `[,x ,y ,z] rest))]
-   (when (is_atom name))
-   (cond
-    ((clauses? rest)
-     (ok-form-doc name (length (car x)) (patterns rest)
-                  (if (string? doc-or-arglist) doc-or-arglist "")))
-    ((arglist? doc-or-arglist)
-     (ok-form-doc name (length doc-or-arglist)
-                  `[,doc-or-arglist] (if (string? x) x "")))))
-
-  ;; (defun name <doc|clause> clause ...)
-  ;; (defun name <doc|form>   form   ...)
+  ;; (defun name <doc|clause> clause     ...)
+  ;; (defun name arglist      <doc|form> ...)
   ([`(defun ,name ,doc-or-arglist . ,(= `[,x . ,_] rest))]
    (when (is_atom name))
    (cond
@@ -131,11 +111,13 @@
 
   ;; (defun ...)
   ([(= `(defun . ,_) shape)]
-   (error "Unhandled shape: ~s~n"
-          `[,(re:replace (lfe_io_pretty:term shape) "comma " ". ,"
-                         '[global #(return list)])]))
+   (unhandled-shape! shape))
 
-  ;; This pattern matches non-defun forms.
+  ;; (defmacro ...)
+  ([(= `(defmacro . ,_) form)]
+   (macro-doc form))
+
+  ;; This pattern matches non-def{un,macro} forms.
   ([_] 'undefined))
 
 (defun ok-form-doc (name arity arglists doc)
@@ -151,6 +133,45 @@
      (iff (orelse (null? exports) (lists:member `#(,f ,a) exports))
        `#(true ,(mset doc 'line line))))
     ('undefined 'false)))
+
+(defun macro-doc
+  "TODO: write docstring"
+  ;; (defmacro name clause)
+  ([(= `(defmacro ,name ,clause) shape)]
+   (when (is_atom name))
+   (cond
+    ((clause? clause)
+     (ok-form-doc name (length (car clause)) `[,(pattern clause)] ""))
+    ((macro-clause? clause)
+     (ok-form-doc name 255 '[(...)] ""))
+    ('true
+     (unhandled-shape! shape))))
+  ;; (defmacro name doc clause ...?)
+  ([(= `(defmacro ,name ,x . ,(= `[,y . ,_] rest)) shape)]
+   (when (is_atom name))
+   (cond
+    ((andalso (string? x) (macro-clauses? rest))
+     (if (clause? y)
+       (ok-form-doc name (length (car y)) (patterns rest) x)
+       (ok-form-doc name 255 '[(...)] x)))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] (if (string? y) y "")))
+    ('true
+     (unhandled-shape! shape))))
+
+  ;; (defmacro ...)
+  ([(= `(defmacro . ,_) shape)]
+   (unhandled-shape! shape))
+
+  ;; This pattern matches non-defmacro forms.
+  ([_] 'undefined))
+
+(defun unhandled-shape! (shape)
+  "Throw an error with `shape` pretty printed."
+  (error (lists:flatten
+          (io_lib:format "Unhandled shape: ~s~n"
+            `[,(re:replace (lfe_io_pretty:term shape) "comma " ". ,"
+                           '[global #(return list)])]))))
 
 (defun mod-behaviour (module)
   (let ((attributes (call module 'module_info 'attributes)))
