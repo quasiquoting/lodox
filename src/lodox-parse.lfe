@@ -8,7 +8,8 @@
   (export (docs 1)
           (form-doc 1)
           (lib-doc 1)
-          (lib-docs 0))
+          (lib-docs 0)
+          (script-doc 1))
   (import (from lodox-p
             (arglist? 1)
             (macro-clauses? 1) (macro-clause? 1)
@@ -236,6 +237,24 @@ If [[file-doc/1]] returns the empty list, return `false`."
                                   ;; dirty hack
                                   filepath  ,filename)))))
     (_      'false)))
+
+(defun script-doc (filename)
+  (if (filelib:is_file filename)
+    (let* ((`#(ok ,file) (file:open filename '[read]))
+           (tmp (drop-shebang filename file))
+           (doc (file-doc tmp)))
+      (file:delete tmp)
+      doc)
+    '()))
+
+(defun drop-shebang (filename file)
+  (let ((`#(ok [#\# #\! . ,_]) (file:read_line file))
+        (tmp-file (tmp-filename filename)))
+    (file:copy file tmp-file)
+    tmp-file))
+
+(defun tmp-filename (filename)
+  (string:concat filename ".tmp"))
 
 (defun file-doc (filename)
   (if (filelib:is_file filename)
