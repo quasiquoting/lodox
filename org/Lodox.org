@@ -401,7 +401,11 @@ describing the docs that were generated.
 (defun include-js (script)
   (script `(type "text/javascript" src ,script)))
 
-(defun link-to (uri content) (a `(href ,uri) content))
+(defun link-to (uri content)
+  "```html
+<a href=\"{{uri}}\">{{content}}</a>
+```"
+  (a `(href ,uri) content))
 
 (defun func-id
   ([func] (when (is_map func))
@@ -429,10 +433,15 @@ describing the docs that were generated.
          (maps:get 'name mod 'undefined)
          (mref m 'name)))))))
 
-(defun markdown->html (docstring)
+(defun markdown->html (markdown)
+  "Given a Markdown string, convert it to HTML.
+Use [pandoc] if available, otherwise [erlmarkdown].
+
+[pandoc]: http://pandoc.org
+[erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
-    ('false (markdown:conv_utf8 docstring))
-    (pandoc (->> `(,pandoc ,(escape docstring))
+    ('false (markdown:conv_utf8 markdown))
+    (pandoc (->> `(,pandoc ,(escape markdown))
                  (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
                  (lists:flatten)
                  (os:cmd)))))
@@ -637,7 +646,7 @@ describing the docs that were generated.
   (lists:map
     (lambda (arglist)
       (re:replace (lfe_io_pretty:term arglist) "comma " ". ,"
-                  '(global #(return list))))
+                  '[global #(return list)]))
     (mref func 'arglists)))
 
 (defun mod-behaviour (mod)
@@ -653,13 +662,17 @@ describing the docs that were generated.
          ('("()") '())
          (usages
           (div '(class "usage")
-            (pre (lists:map (lambda (form) (code (h form))) usages)))))
+            (-> `["```commonlisp"
+                  ,@(lists:map #'unicode:characters_to_list/1 usages)
+                  "```"]
+                (string:join "\n")
+                (markdown->html)))))
       ,(div '(class "doc")
          (format-docstring project module func))
       ;; TODO: members?
       ,(let ((app (binary_to_atom (mref project 'name) 'latin1)))
          (case (application:get_env app 'source-uri)
-           ('undefined '()) ; Log failure to generate link?
+           ('undefined '())             ; Log failure to generate link?
            (`#(ok ,source-uri)
             (div '(class "src-link")
               (link-to (func-source-uri source-uri project module func)
@@ -689,24 +702,26 @@ describing the docs that were generated.
 
 (defun mkdirs (output-dir dirs)
   (file:make_dir output-dir)
-  (let ((mkdir (lambda (dir) (file:make_dir (filename:join output-dir dir)))))
-    (lists:foreach mkdir dirs)))
+  (flet ((mkdir (dir) (file:make_dir (filename:join output-dir dir))))
+    (lists:foreach #'mkdir/1 dirs)))
 
 (defun write-index (output-dir project)
   (file:write_file (filename:join output-dir "index.html")
                    (index-page project)))
 
 (defun write-modules (output-dir project)
-  (let ((write-module (lambda (module)
-                        (file:write_file (mod-filepath output-dir module)
-                                         (module-page project module)))))
-    (lists:foreach write-module (mref project 'modules))))
+  (flet ((write-module (module)
+           (-> (mod-filepath output-dir module)
+               (file:write_file (module-page project module)))))
+    (lists:foreach #'write-module/1 (mref project 'modules))))
 
+#|
 (defun write-documents (output-dir project)
-  (let ((write-document (lambda (document)
-                          (file:write_file (doc-filepath output-dir document)
-                                           (document-page project document)))))
-    (lists:foreach write-document (mref project 'documents))))
+  (flet ((write-document (document)
+           (-> (doc-filepath output-dir document)
+               (file:write_file (document-page project document)))))
+    (lists:foreach #'write-document/1 (mref project 'documents))))
+|#
 
 (defun func-name (func)
   (++ (h (mref func 'name)) "/" (integer_to_list (mref func 'arity))))
