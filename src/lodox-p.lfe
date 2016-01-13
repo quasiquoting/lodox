@@ -10,18 +10,20 @@
 
 (defun clauses? (forms)
   "Return `true` iff `forms` is a list of items that satisfy [[clause?/1]]."
-  (lists:all #'clause?/1 forms))
+  (andalso (lists:all #'clause?/1 forms)
+           (let ((arity (length (caar forms))))
+             (lists:all (lambda (form) (=:= (length (car form)) arity)) forms))))
 
 (defun clause?
   "Given a term, return `true` iff it is a list whose head satisfies [[arglist?/1]]."
   ([`(,_)]      'false)
   ([`([] . ,_)] 'false)
-  ([`(,h . ,_)] (lodox-p:arglist? h))
+  ([`(,h . ,_)] (arglist? h))
   ([_]          'false))
 
 (defun arglist?
   "Given a term, return `true` iff it is either the empty list or a list
-containing only items that satisfy [[arg?/1]]."
+such that all elements satisfy [[arg?/1]]."
   (['()]                      'true)
   ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
   ([_]                        'false))

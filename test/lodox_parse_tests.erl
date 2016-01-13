@@ -23,11 +23,11 @@
 parse_test_() ->
   Properties =
     [ {"A function without a docstring produces an empty docstring.",
-       prop_defun_simple(), 100}
+       prop_defun_simple(), 500}
     , {"A simple function with a docstring is correctly parsed.",
-       prop_defun_simple_doc(), 100}
+       prop_defun_simple_doc(), 500}
     , {"A function with pattern clauses produces an empty docstring.",
-       prop_defun_match(), 30}
+       prop_defun_match(), 40}
     , {"A function with pattern clauses and a docstring is correctly parsed.",
        prop_defun_match_doc(), 30}
     ],
@@ -83,13 +83,15 @@ defun_simple_doc() ->
    | body()].
 
 defun_match() ->
+  Arity = random:uniform(10),
   [defun, atom()
-   | non_empty(list(pattern_clause()))].
+   | non_empty(list(pattern_clause(Arity)))].
 
 defun_match_doc() ->
+  Arity = random:uniform(10),
   [defun, atom(),
    docstring()
-   | non_empty(list(pattern_clause()))].
+   | non_empty(list(pattern_clause(Arity)))].
 
 
 %%%===================================================================
@@ -106,7 +108,7 @@ form() -> union([non_string_term(), printable_string(), [atom() | list()]]).
 
 docstring() -> printable_string().
 
-arglist_patterns() -> non_empty(list(pattern())).
+arglist_patterns(Arity) -> vector(Arity, pattern()).
 
 
 %%% Patterns
@@ -119,7 +121,9 @@ pattern_form() ->
 
 match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).
 
-pattern_clause() -> [arglist_patterns() | [oneof([guard(), form()]) | body()]].
+pattern_clause(Arity) ->
+  [arglist_patterns(Arity) |
+   [oneof([guard(), form()]) | body()]].
 
 guard() -> ['when' | non_empty(list(union([logical_clause(), comparison()])))].
 
