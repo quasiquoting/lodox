@@ -11,7 +11,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--define(TIMEOUT, 60).
+-define(TIMEOUT, 90).
 
 -define(OPTIONS(N), [{on_output, fun pprint/2}, {numtests, N}]).
 

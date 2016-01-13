@@ -6,7 +6,8 @@
 (defmodule lodox-p
   (export (clauses? 1) (clause? 1)
           (arglist? 1) (arg? 1)
-          (string? 1)))
+          (string? 1)
+          (null? 1)))
 
 (defun clauses? (forms)
   "Return `true` iff `forms` is a list of items that satisfy [[clause?/1]]."
@@ -47,3 +48,8 @@ such that all elements satisfy [[arg?/1]]."
 (defun string? (data)
   "Return `true` iff `data` is a flat list of printable characters."
   (io_lib:printable_list data))
+
+(defun null?
+  "Return `true` iff `data` is the empty list."
+  (['()] 'true)
+  ([_]   'false))

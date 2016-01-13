@@ -6,9 +6,18 @@
 (defmodule lodox-parse
   (doc "Parsing LFE source files for metadata.")
   (export (docs 1)
-          (form-doc 1)))
+          (form-doc 1))
+  (import (from lodox-p
+            (arglist? 1)
+            (clause? 1)
+            (clauses? 1)
+            (string? 1)
+            (null? 1))))
+
+(include-lib "clj/include/compose.lfe")
 
 (include-lib "lodox/include/lodox-macros.lfe")
+
 
 ;;;===================================================================
 ;;; API
@@ -18,9 +27,9 @@
 (defun docs (app-name)
   "Given an app-name (binary), return a map like:
 
-```lfe
+```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.4.2\"
+    version     \"0.5.5\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}})
@@ -35,7 +44,7 @@
     `#m(name        ,app-name
         version     ,version
         description ,description
-        documents   '()
+        documents   []
         modules     ,modules)))
 
 
@@ -45,82 +54,101 @@
 
 (defun form-doc
   "TODO: write docstring"
-  ([`(defun ,name ,arglist-or-doc ,doc-or-form ,body-or-clause)]
-   (when (is_atom name)
-         (is_list arglist-or-doc)
-         (is_list doc-or-form)
-         (is_list body-or-clause))
+  ;; (defun name clause)
+  ([`(defun ,name ,(= `[,arglist . ,_body] clause))]
+   (when (is_atom name) (is_list arglist))
+   (if (clause? clause)
+     (ok-form-doc name (length arglist) `[,(pattern clause)] "")
+     (error "Unhandled shape!")))
+
+  ;; (defun name () form)
+  ([`(defun ,name () ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] ""))
+
+  ;; (defun name <doc|clause> clause)
+  ;; (defun name arglist      form)
+  ([`(defun ,name . ,(= `[,x ,y] rest))]
+   (when (is_atom name))
    (cond
-    ;; (defun name arglist maybe-doc body)
-    ((andalso (lodox-p:arglist? arglist-or-doc)
-              (or (=:= '() arglist-or-doc)
-                  (not (lodox-p:string? arglist-or-doc))))
-     `#(ok #m(name     ,name
-              arity    ,(length arglist-or-doc)
-              arglists (,arglist-or-doc)
-              doc      ,(if (lodox-p:string? doc-or-form) doc-or-form ""))))
-    ;; (defun name doc clause clause)
-    ((and (=/= arglist-or-doc '()) (lodox-p:string? arglist-or-doc))
-     `#(ok #m(name     ,name
-              arity    ,(length (car doc-or-form))
-              arglists ,(patterns `(,doc-or-form ,body-or-clause))
-              doc      ,arglist-or-doc)))
-    ;; (defun name clause clause clause)
-    ((lodox-p:clauses? `(,arglist-or-doc ,doc-or-form ,body-or-clause))
-     `#(ok #m(name     ,name
-              arity    ,(length (car arglist-or-doc))
-              arglists ,(patterns
-                         `(,arglist-or-doc ,doc-or-form ,body-or-clause))
-              doc      "")))))
-  ([`(defun ,name () ,constant)]
-   `#(ok #m(name     ,name
-            arity    0
-            arglists [()]
-            doc      "")))
-  ([`(defun ,name ,doc-or-arglist . ,(= forms `(,form . ,_)))]
-   (when (is_atom name)
-         (is_list doc-or-arglist)
-         (is_list forms))
+    ((clauses? rest)
+     (ok-form-doc name (length (car x)) (patterns rest) ""))
+    ((andalso (string? x) (clause? y))
+     (ok-form-doc name (length (car y)) `[,(pattern y)] x))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] ""))))
+
+  ;; (defun name doc clause)
+  ([`(defun ,name ,doc-string ,(= `[,arglist . ,_body] clause))]
+   (when (is_atom name) (is_list doc-string) (is_list arglist))
+   (if (andalso (clause? clause) (string? doc-string))
+     (ok-form-doc name (length arglist) `[,(pattern clause)] doc-string)
+     (error "Unhandled shape!")))
+
+  ;; (defun name () <doc|form> form)
+  ([`(defun ,name () ,maybe-doc ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] (if (string? maybe-doc) maybe-doc "")))
+
+  ;; (defun name "" clause clause)
+  ;; (defun name () doc    form)
+  ([`(defun ,name () . ,(= `[,x . ,_] rest))]
+   (if (clauses? rest)
+     (ok-form-doc name (length (car x)) (patterns rest) "")
+     (ok-form-doc name 0 '[()] (if (string? x) x ""))))
+
+  ;; (defun name () clause     clause clause)
+  ;; (defun name () <doc|form> form   form)
+  ([`(defun ,name () . ,(= `[,x ,y ,z] rest))]
+   (when (is_atom name))
+   (if (clauses? rest)
+     (ok-form-doc name (length (car x)) (patterns rest) "")
+     (ok-form-doc name 0 '[()] (if (string? x) x ""))))
+
+  ;; (defun name <doc|clause> clause     clause clause)
+  ;; (defun name arglist      <doc|form> form   form)
+  ([`(defun ,name ,doc-or-arglist . ,(= `[,x ,y ,z] rest))]
+   (when (is_atom name))
    (cond
-    ;; (defun name arglist maybe-doc body)
-    ((andalso (lodox-p:arglist? doc-or-arglist)
-              (not (lists:all #'lodox-p:clause?/1 forms)))
-     `#(ok #m(name     ,name
-              arity    ,(length doc-or-arglist)
-              arglists (,doc-or-arglist)
-              doc      ,(if (andalso (lodox-p:string? form)
-                                     (> (length forms) 1))
-                          form
-                          ""))))
-    ;; (defun name doc clauses)
-    ((andalso (lodox-p:string? doc-or-arglist)
-              (lodox-p:clauses? forms))
-     `#(ok #m(name     ,name
-              arity    ,(length (car form))
-              arglists ,(patterns forms)
-              doc      ,doc-or-arglist)))
-    ;; (defun name clauses)
-    ((lodox-p:clauses? `(,doc-or-arglist . ,forms))
-     `#(ok #m(name     ,name
-              arity    ,(length (car doc-or-arglist))
-              arglists ,(patterns `(,doc-or-arglist . ,forms))
-              doc      "")))))
-  ([`(defun ,name ,clause)]
-   (when (is_atom name)
-         (is_list clause))
-   (if (lodox-p:clause? clause)
-     `#(ok #m(name     ,name
-              arity    ,(length (car clause))
-              arglists [,(pattern clause)]
-              doc      ""))
-     'undefined))
+    ((clauses? rest)
+     (ok-form-doc name (length (car x)) (patterns rest)
+                  (if (string? doc-or-arglist) doc-or-arglist "")))
+    ((arglist? doc-or-arglist)
+     (ok-form-doc name (length doc-or-arglist)
+                  `[,doc-or-arglist] (if (string? x) x "")))))
+
+  ;; (defun name <doc|clause> clause ...)
+  ;; (defun name <doc|form>   form   ...)
+  ([`(defun ,name ,doc-or-arglist . ,(= `[,x . ,_] rest))]
+   (when (is_atom name))
+   (cond
+    ((clauses? rest)
+     (ok-form-doc name (length (car x)) (patterns rest)
+                  (if (string? doc-or-arglist) doc-or-arglist "")))
+    ((arglist? doc-or-arglist)
+     (ok-form-doc name (length doc-or-arglist)
+                  `[,doc-or-arglist] (if (string? x) x "")))))
+
+  ;; (defun ...)
+  ([(= `(defun . ,_) shape)]
+   (error "Unhandled shape: ~s~n"
+          `[,(re:replace (lfe_io_pretty:term shape) "comma " ". ,"
+                         '[global #(return list)])]))
+
   ;; This pattern matches non-defun forms.
   ([_] 'undefined))
+
+(defun ok-form-doc (name arity arglists doc)
+  `#(ok #m(name ,name arity ,arity arglists ,arglists doc ,doc)))
+
+(defun form-doc (form line)
+  "Equivalent to [[form-doc/3]] with `[]` as `exports`."
+  (form-doc form line []))
 
 (defun form-doc (form line exports)
   (case (form-doc form)
     (`#(ok ,(= `#m(name ,f arity ,a) doc))
-     (iff (lists:member `#(,f ,a) exports)
+     (iff (orelse (null? exports) (lists:member `#(,f ,a) exports))
        `#(true ,(mset doc 'line line))))
     ('undefined 'false)))
 
