@@ -383,16 +383,17 @@ describing the docs that were generated.
   "Take raw documentation info and turn it into formatted HTML."
   (let* ((`#(ok ,cwd) (file:get_cwd))
          (`#m(output-path ,output-path app-dir ,app-dir)
-          (maps:merge `#m(output-path "doc" app-dir ,cwd) opts)))
+          (maps:merge `#m(output-path "doc" app-dir ,cwd) opts))
+         (project* (mset project 'app-dir app-dir)))
     (doto output-path
           (mkdirs '("css" "js"))
           (copy-resource "css/default.css")
           (copy-resource "css/hk-pyg.css")
           (copy-resource "js/jquery.min.js")
           (copy-resource "js/page_effects.js")
-          (write-index project)
-          (write-modules (mset project 'app-dir app-dir))
-          (write-libs project))))
+          (write-index project*)
+          (write-modules project*)
+          (write-libs project*))))
 
 (defun include-css (style)
   (link `(type "text/css" href ,style rel "stylesheet")))
