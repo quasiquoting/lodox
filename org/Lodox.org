@@ -191,7 +191,9 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 
 #+NAME: markdown
 #+BEGIN_SRC erlang
-{markdown, {git, "git://github.com/erlware/erlmarkdown.git"}}
+{markdown,
+ {git, "git://github.com/erlware/erlmarkdown.git",
+  {branch, "master"}}}
 #+END_SRC
 
 #+NAME: proper
