@@ -517,19 +517,22 @@ Use [pandoc] if available, otherwise [erlmarkdown].
              (link-to "index.html" (div '(class "inner") "Index"))))))
 
 (defun includes-menu (project current-lib)
-  (let* ((libs    (mref project 'libs))
-         (lib-map (index-by 'name libs)))
-    `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
-      ,(ul
-         (lists:map
-           (match-lambda
-             ([`#(,lib-name ,lib)]
-              (let ((class (++ "depth-1" (if (=:= lib current-lib)
-                                           " current"
-                                           "")))
-                    (inner (div '(class "inner") (h (atom_to_list lib-name)))))
-                (li `(class ,class) (link-to (mod-filename lib) inner)))))
-           (maps:to_list lib-map))))))
+  (case (mref project 'libs)
+    ([] [])
+    (libs
+     (let ((lib-map (index-by 'name libs)))
+       `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
+         ,(ul
+            (lists:map
+              (match-lambda
+                ([`#(,lib-name ,lib)]
+                 (let ((class (++ "depth-1" (if (=:= lib current-lib)
+                                              " current"
+                                              "")))
+                       (inner (div '(class "inner")
+                                (h (atom_to_list lib-name)))))
+                   (li `(class ,class) (link-to (mod-filename lib) inner)))))
+              (maps:to_list lib-map))))))))
 
 (defun modules-menu (project current-mod)
   (let* ((modules (mref project 'modules))
