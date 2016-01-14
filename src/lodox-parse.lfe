@@ -7,9 +7,10 @@
   (doc "Parsing LFE source files for metadata.")
   (export (docs 1)
           (form-doc 1)
-          (lib-doc 1)
-          (lib-docs 0)
-          (script-doc 1))
+          (macro-doc 1)
+          (lib-docs 0) (lib-docs 1) (lib-doc 1)
+          (script-doc 1)
+          (documented 1))
   (import (from lodox-p
             (arglist? 1)
             (macro-clauses? 1) (macro-clause? 1)
@@ -35,7 +36,9 @@
     version     \"0.7.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
-    modules     {{list of maps of module metadata}})
+    modules     {{list of maps of module metadata}}
+    documented  #m(modules    {{map from module name to list of f/a strings}}
+                   percentage {{percent documented (float)}}))
 ```"
   (let* ((app         (doto (binary_to_atom app-name 'latin1)
                             (application:load)))
@@ -43,18 +46,15 @@
                         (maps:from_list info)))
          (modules     (mod-docs (mref app-info 'modules)))
          (version     (maps:get 'vsn         app-info ""))
+         (documented  (documented modules))
          (description (maps:get 'description app-info ""))
          (libs        (lib-docs)))
     `#m(name        ,app-name
         version     ,version
         description ,description
         libs        ,libs
-        modules     ,modules)))
-
-
-;;;===================================================================
-;;; Internal functions
-;;;===================================================================
+        modules     ,modules
+        documented  ,documented)))
 
 (defun form-doc
   "TODO: write docstring"
@@ -177,41 +177,6 @@
             `[,(re:replace (lfe_io_pretty:term shape) "comma " ". ,"
                            '[global #(return list)])]))))
 
-(defun mod-behaviour (module)
-  (let ((attributes (call module 'module_info 'attributes)))
-    (proplists:get_value 'behaviour attributes '())))
-
-(defun mod-docs
-  ([mods] (when (is_list mods))
-   (lists:filtermap #'mod-docs/1 mods))
-  ([mod]  (when (is_atom mod))
-   (let ((file (proplists:get_value 'source (call mod 'module_info 'compile))))
-     (case (filename:extension file)
-       (".lfe" (case (mod-docs file (call mod 'module_info 'exports))
-                 ('()     'false)
-                 (exports `#(true #m(name      ,(mod-name mod)
-                                     behaviour ,(mod-behaviour mod)
-                                     doc       ,(mod-doc mod)
-                                     exports   ,exports
-                                     ;; dirty hack
-                                     filepath  ,file)))))
-       (_      'false)))))
-
-(defun mod-docs (file exports)
-  (if (filelib:is_file file)
-    (let ((`#(ok ,forms) (lfe_io:parse_file file)))
-      (lists:filtermap
-        (match-lambda ([`#(,form ,line)] (form-doc form line exports)))
-        forms))
-    '()))
-
-(defun mod-doc
-  ([module] (when (is_atom module))
-   (let ((attributes (call module 'module_info 'attributes)))
-     (proplists:get_value 'doc attributes ""))))
-
-(defun mod-name (mod) (call mod 'module_info 'module))
-
 (defun lib-docs ()
   "Call [[lib-docs/1]] on each LFE file in `./include`."
   (lib-docs (filelib:wildcard (filename:absname "include/*.lfe"))))
@@ -247,6 +212,69 @@ If [[file-doc/1]] returns the empty list, return `false`."
       doc)
     '()))
 
+(defun documented (modules)
+  (flet ((percentage
+           ([`#(#(,n ,d) ,modules)]
+            (->> `[,(* (/ n d) 100)]
+                 (io_lib:format "~.2f")
+                 (clj-comp:compose #'list_to_float/1 #'hd/1)
+                 (mset `#m(undocumented ,modules) 'percentage)))))
+    (->> modules
+         (lists:foldl #'documented/2 #(#(0 0) #m()))
+         (percentage))))
+
+(defun documented
+  ([`#m(exports ,exports name ,name) acc]
+   (fletrec ((tally
+               ([(= (map 'doc "") export) `#(#(,n ,d) ,m)]
+                `#(#(,n ,(+ d 1))
+                   ,(-> (func-name export)
+                        (cons (maps:get name m []))
+                        (->> (mset m name)))))
+               ([`#m(doc ,_) `#(#(,n ,d) ,m)]
+                `#(#(,(+ n 1) ,(+ d 1)) ,m))))
+     (lists:foldl #'tally/2 acc exports))))
+
+
+;;;===================================================================
+;;; Internal functions
+;;;===================================================================
+
+(defun mod-behaviour (module)
+  (let ((attributes (call module 'module_info 'attributes)))
+    (proplists:get_value 'behaviour attributes '())))
+
+(defun mod-docs
+  ([mods] (when (is_list mods))
+   (lists:filtermap #'mod-docs/1 mods))
+  ([mod]  (when (is_atom mod))
+   (let ((file (proplists:get_value 'source (call mod 'module_info 'compile))))
+     (case (filename:extension file)
+       (".lfe" (case (mod-docs file (call mod 'module_info 'exports))
+                 ('()     'false)
+                 (exports `#(true #m(name      ,(mod-name mod)
+                                     behaviour ,(mod-behaviour mod)
+                                     doc       ,(mod-doc mod)
+                                     exports   ,exports
+                                     ;; dirty hack
+                                     filepath  ,file)))))
+       (_      'false)))))
+
+(defun mod-docs (file exports)
+  (if (filelib:is_file file)
+    (let ((`#(ok ,forms) (lfe_io:parse_file file)))
+      (lists:filtermap
+        (match-lambda ([`#(,form ,line)] (form-doc form line exports)))
+        forms))
+    '()))
+
+(defun mod-doc
+  ([module] (when (is_atom module))
+   (let ((attributes (call module 'module_info 'attributes)))
+     (proplists:get_value 'doc attributes ""))))
+
+(defun mod-name (mod) (call mod 'module_info 'module))
+
 (defun drop-shebang (filename file)
   (let ((`#(ok [#\# #\! . ,_]) (file:read_line file))
         (tmp-file (tmp-filename filename)))
@@ -270,3 +298,8 @@ If [[file-doc/1]] returns the empty list, return `false`."
 (defun pattern
   ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
   ([`(,arglist . ,_)] arglist))
+
+(defun func-name
+  "Given a parsed def{un,macro} form (map), return a string, `\"name/arity\"`."
+  ([`#m(name ,name arity ,arity)]
+   (->> `[,name ,arity] (io_lib:format "~s/~w") (lists:flatten))))
