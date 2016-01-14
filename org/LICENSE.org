@@ -6,7 +6,7 @@ Lodox is licensed under [[http://yurrriq.mit-license.org][the MIT License]].
 
 #+BEGIN_SRC text
 The MIT License (MIT)
-Copyright © 2015 Eric Bailey <quasiquoting@gmail.com>
+Copyright © 2015-2016 Eric Bailey <quasiquoting@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal

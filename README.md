@@ -32,7 +32,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.5.1"}}}]}.
+    {tag, "0.8.0"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
@@ -60,7 +60,7 @@ rebar3 do compile, lodox
 
 If all goes well, the output will look something like:
 
-    Generated lodox v0.5.1 docs in /path/to/lodox/doc
+    Generated lodox v0.8.0 docs in /path/to/lodox/doc
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.
@@ -79,7 +79,7 @@ Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 
 ```text
 The MIT License (MIT)
-Copyright © 2015 Eric Bailey <quasiquoting@gmail.com>
+Copyright © 2015-2016 Eric Bailey <quasiquoting@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal

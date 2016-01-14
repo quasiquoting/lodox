@@ -110,9 +110,8 @@ branch = gh-pages
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
   {vsn,          "0.8.0"},
-  {modules,      ['lodox-html-writer','lodox-org-writer',
-                  'lodox-p','lodox-parse','lodox-util',
-                  lodox,
+  {modules,      [lodox,
+                  'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
@@ -1501,7 +1500,7 @@ Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 
 ```text
 The MIT License (MIT)
-Copyright © 2015 Eric Bailey <quasiquoting@gmail.com>
+Copyright © 2015-2016 Eric Bailey <quasiquoting@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal
