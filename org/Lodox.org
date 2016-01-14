@@ -405,7 +405,8 @@ describing the docs that were generated.
           (copy-resource "js/page_effects.js")
           (write-index project*)
           (write-modules project*)
-          (write-libs project*))))
+          (write-libs project*)
+          (write-undocumented project*))))
 
 (defun include-css (style)
   (link `(type "text/css" href ,style rel "stylesheet")))
@@ -749,6 +750,16 @@ Use [pandoc] if available, otherwise [erlmarkdown].
            (file:write_file (mod-filepath output-dir lib)
                             (lib-page project lib))))
     (lists:foreach #'write-lib/1 (mref project 'libs))))
+
+(defun write-undocumented
+  ([output-dir `#m(documented #m(undocumented ,undocumented))]
+   (-> (maps:fold
+         (lambda (k v acc)
+           (-> (io_lib:format "== ~s ==~n~s~n" `[,k ,(string:join v "\n")])
+               (cons acc)))
+         "" undocumented)
+       (string:join "\n")
+       (->> (file:write_file (filename:join output-dir "undocumented.txt"))))))
 
 #|
 (defun write-documents (output-dir project)
