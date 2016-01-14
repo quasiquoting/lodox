@@ -1447,7 +1447,9 @@ pprint(Term) ->
 #+BEGIN_SRC lfe
 (defmodule unit-lodox-tests
   (behaviour ltest-unit)
-  (export all))
+  (export (projects_shapes_test_ 0)
+          (modules_shapes_test_  0)
+          (exports_shapes_test_  0)))
 
 (include-lib "ltest/include/ltest-macros.lfe")
 #+END_SRC
@@ -1525,6 +1527,12 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* exports 'name))))])
 #+END_SRC
 #+BEGIN_SRC lfe :exports none
+#+END_SRC
+#+BEGIN_SRC lfe :exports none :padline no
+;;;===================================================================
+;;; Internal functions
+;;;===================================================================
+
 (defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
 (defun mref* (m k) (maps:get k m 'error))

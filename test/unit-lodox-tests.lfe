@@ -5,7 +5,9 @@
 
 (defmodule unit-lodox-tests
   (behaviour ltest-unit)
-  (export all))
+  (export (projects_shapes_test_ 0)
+          (modules_shapes_test_  0)
+          (exports_shapes_test_  0)))
 
 (include-lib "ltest/include/ltest-macros.lfe")
 
@@ -72,6 +74,11 @@
       ,(_assert (is_integer (mref* exports 'line))))
     #(#"name is an atom"
       ,(_assert (is_atom (mref* exports 'name))))])
+
+
+;;;===================================================================
+;;; Internal functions
+;;;===================================================================
 
 (defun all-docs () (lists:map #'lodox-parse:docs/1 '(#"lodox")))
 
