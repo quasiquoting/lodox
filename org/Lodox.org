@@ -583,8 +583,8 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 (defun project-title (project)
   (span '(class "project-title")
-        `(,(span '(class "project-name")    (h (mref project 'name))) " "
-          ,(span '(class "project-version") (h (mref project 'version))))))
+    `[,(span '(class "project-name")    (h (mref project 'name))) " "
+      ,(span '(class "project-version") (h (mref project 'version)))]))
 
 (defun header* (project)
   (div '(id "header")
@@ -592,7 +592,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
              ,(link-to "https://github.com/quasiquoting/lodox" "Lodox")))
       ,(h1 (link-to "index.html" (project-title project))))))
 
-;; TODO: package in ld-parse
+;; TODO: package in lodox-parse
 (defun package (project)
   (maps:get 'package project ""))
 
@@ -608,13 +608,14 @@ Use [pandoc] if available, otherwise [erlmarkdown].
            ,(div '(id "content" class "module-index")
               `(,(h1 (project-title project))
                 ,(div '(class "doc") (p (h (mref project 'description))))
-                ,(case (package project)
-                   ("" '())
-                   (pkg
-                    `(,(h2 "Installation")
-                      ,(p "To install, add the following dependency to your rebar.config:")
-                      ,(pre '(class "deps")
-                         (h (++ "[" pkg " " (mref project 'version) "]"))))))
+                ;; TODO: finish this
+                ;; ,(case (package project)
+                ;;    ("" [])
+                ;;    (pkg
+                ;;     `[,(h2 "Installation")
+                ;;       ,(p "To install, add the following dependency to your rebar.config:")
+                ;;       ,(pre '(class "deps")
+                ;;          (h (++ "[" pkg " " (mref project 'version) "]")))]))
                 ;; TODO: includes
                 ,(h2 "Modules")
                 ,(lists:map
