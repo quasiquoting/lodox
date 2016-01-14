@@ -116,7 +116,10 @@ arglist_patterns(Arity) -> vector(Arity, pattern()).
 pattern() -> union([non_string_term(), printable_string(), pattern_form()]).
 
 pattern_form() ->
-  [oneof([backquote, quote, binary, list, map, tuple, match_fun()])
+  [oneof(['=', '++*', [],
+          backquote, quote,
+          binary, cons, list, map, tuple,
+          match_fun()])
    | non_empty(list())].
 
 match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).

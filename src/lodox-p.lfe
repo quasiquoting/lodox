@@ -45,7 +45,8 @@ such that all elements satisfy [[arg?/1]]."
   "Return `true` iff `x` seems like a valid item in an arglist."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list map tuple))
+           (lists:member h
+             '[= ++* () backquote quote binary cons list map tuple])
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
   ([x]
    (lists:any (lambda (p) (funcall p x))
