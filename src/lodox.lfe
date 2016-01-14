@@ -11,15 +11,25 @@
   (behaviour provider)
   (export all))
 
-(defun namespace     () 'default)
+(defun namespace ()
+  "The namespace in which `lodox` is registered, `default`."
+  'default)
 
-(defun provider-name () 'lodox)
+(defun provider-name ()
+  "The 'user friendly' name of the task, `lodox`."
+  'lodox)
 
-(defun short-desc    () "Generate documentation from LFE source files.")
+(defun short-desc ()
+  "A one line, short description of the task, used in lists of providers."
+  "Generate documentation from LFE source files.")
 
-(defun deps          () '(#(default app_discovery)))
+(defun deps ()
+  "The list of dependencies, providers, that need to run before this one."
+  '(#(default app_discovery)))
 
-(defun desc          () (short-desc))
+(defun desc ()
+  "The description for the task, used by `rebar3 help`."
+  (short-desc))
 
 
 ;;;===================================================================

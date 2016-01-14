@@ -237,29 +237,39 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 - /namespace/: in which the provider is registered.
   In this case, use ~default~, which is the main namespace.
 #+BEGIN_SRC lfe
-(defun namespace     () 'default)
+(defun namespace ()
+  "The namespace in which `lodox` is registered, `default`."
+  'default)
 #+END_SRC
 
 - /name/: The 'user friendly' name of the task.
 #+BEGIN_SRC lfe
-(defun provider-name () 'lodox)
+(defun provider-name ()
+  "The 'user friendly' name of the task, `lodox`."
+  'lodox)
 #+END_SRC
 
-- /short​_desc/: A one line short description of the task, used in lists of
+- /short​_desc/: A one line, short description of the task, used in lists of
   providers.
 #+BEGIN_SRC lfe
-(defun short-desc    () "Generate documentation from LFE source files.")
+(defun short-desc ()
+  "A one line, short description of the task, used in lists of providers."
+  "Generate documentation from LFE source files.")
 #+END_SRC
 
 - /deps/: The list of dependencies, providers, that need to run before this
   one. You do not need to include the dependencies of your dependencies.
 #+BEGIN_SRC lfe
-(defun deps          () '(#(default app_discovery)))
+(defun deps ()
+  "The list of dependencies, providers, that need to run before this one."
+  '(#(default app_discovery)))
 #+END_SRC
 
 - /desc/: The description for the task, used by ~rebar3 help~.
 #+BEGIN_SRC lfe
-(defun desc          () (short-desc))
+(defun desc ()
+  "The description for the task, used by `rebar3 help`."
+  (short-desc))
 #+END_SRC
 
 #+BEGIN_SRC lfe :exports none :padline no
