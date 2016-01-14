@@ -48,11 +48,12 @@
          (version     (maps:get 'vsn         app-info ""))
          (documented  (documented modules))
          (description (maps:get 'description app-info ""))
-         (libs        (lib-docs)))
+         ;; (libs        (lib-docs))
+         )
     `#m(name        ,app-name
         version     ,version
         description ,description
-        libs        ,libs
+        libs        [] ; ,libs
         modules     ,modules
         documented  ,documented)))
 
