@@ -103,15 +103,17 @@
 
   ;; (defun name <doc|clause> clause     ...)
   ;; (defun name arglist      <doc|form> ...)
-  ([`(defun ,name ,doc-or-arglist . ,(= `[,x . ,_] rest))]
+  ([`(defun ,name ,x . ,(= `[,y . ,_] rest))]
    (when (is_atom name))
    (cond
     ((clauses? rest)
-     (ok-form-doc name (length (car x)) (patterns rest)
-                  (if (string? doc-or-arglist) doc-or-arglist "")))
-    ((arglist? doc-or-arglist)
-     (ok-form-doc name (length doc-or-arglist)
-                  `[,doc-or-arglist] (if (string? x) x "")))))
+     (if (clause? x)
+       (ok-form-doc name (length (car x)) (patterns `(,x . ,rest)) "")
+       (ok-form-doc name (length (car y))
+                    (patterns rest)
+                    (if (string? x) x ""))))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] (if (string? y) y "")))))
 
   ;; (defun ...)
   ([(= `(defun . ,_) shape)]
