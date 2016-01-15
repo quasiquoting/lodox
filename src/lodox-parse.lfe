@@ -125,8 +125,8 @@
   ;; This pattern matches non-def{un,macro} forms.
   ([_] 'undefined))
 
-(defun ok-form-doc (name arity arglists doc)
-  `#(ok #m(name ,name arity ,arity arglists ,arglists doc ,doc)))
+(defun ok-form-doc (name arity patterns doc)
+  `#(ok #m(name ,name arity ,arity patterns ,patterns doc ,doc)))
 
 (defun form-doc (form line)
   "Equivalent to [[form-doc/3]] with `[]` as `exports`."

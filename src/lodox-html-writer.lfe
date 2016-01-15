@@ -297,10 +297,10 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 (defun func-usage (func)
   (lists:map
-    (lambda (arglist)
-      (re:replace (lfe_io_pretty:term arglist) "comma " ". ,"
+    (lambda (pattern)
+      (re:replace (lfe_io_pretty:term pattern) "comma " ". ,"
                   '[global #(return list)]))
-    (mref func 'arglists)))
+    (mref func 'patterns)))
 
 (defun mod-behaviour (mod)
   (lists:map
