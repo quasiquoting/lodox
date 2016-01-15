@@ -876,7 +876,6 @@ Use [pandoc] if available, otherwise [erlmarkdown].
         documented  ,documented)))
 
 (defun form-doc
-  "TODO: write docstring"
   ;; (defun name clause)
   ([(= `(defun ,name ,(= `[,arglist . ,_body] clause)) shape)]
    (when (is_atom name) (is_list arglist))
@@ -958,7 +957,6 @@ Use [pandoc] if available, otherwise [erlmarkdown].
     ('undefined 'false)))
 
 (defun macro-doc
-  "TODO: write docstring"
   ;; (defmacro name clause)
   ([(= `(defmacro ,name ,clause) shape)]
    (when (is_atom name))
@@ -1233,11 +1231,9 @@ elements satisfying [[pattern?/1]] or a term that satisfies [[pattern?/1]]."
   (export (search-funcs 2) (search-funcs 3)))
 
 (defun search-funcs (modules partial-func)
-  "TODO: write docstring"
   (search-funcs modules partial-func 'undefined))
 
 (defun search-funcs (modules partial-func starting-mod)
-  "TODO: write docstring"
   (let* ((suffix  (if (lists:member #\/ partial-func)
                     partial-func
                     `(#\/ . ,partial-func)))
@@ -1262,13 +1258,11 @@ elements satisfying [[pattern?/1]] or a term that satisfies [[pattern?/1]]."
 #+END_SRC
 #+BEGIN_SRC lfe
 (defun exported-funcs (modules)
-  "TODO: write docstring"
   (lc ((<- mod modules)
        (<- func (mref mod 'exports)))
     (func-name mod func)))
 
 (defun func-name (mod func)
-  "TODO: write docstring"
   (++ (atom_to_list (mref mod 'name))
       ":" (atom_to_list (mref func 'name))
       "/" (integer_to_list (mref func 'arity))))

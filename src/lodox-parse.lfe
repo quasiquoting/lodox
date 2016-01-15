@@ -58,7 +58,6 @@
         documented  ,documented)))
 
 (defun form-doc
-  "TODO: write docstring"
   ;; (defun name clause)
   ([(= `(defun ,name ,(= `[,arglist . ,_body] clause)) shape)]
    (when (is_atom name) (is_list arglist))
@@ -140,7 +139,6 @@
     ('undefined 'false)))
 
 (defun macro-doc
-  "TODO: write docstring"
   ;; (defmacro name clause)
   ([(= `(defmacro ,name ,clause) shape)]
    (when (is_atom name))

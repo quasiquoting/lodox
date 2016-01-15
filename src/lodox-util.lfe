@@ -8,11 +8,9 @@
   (export (search-funcs 2) (search-funcs 3)))
 
 (defun search-funcs (modules partial-func)
-  "TODO: write docstring"
   (search-funcs modules partial-func 'undefined))
 
 (defun search-funcs (modules partial-func starting-mod)
-  "TODO: write docstring"
   (let* ((suffix  (if (lists:member #\/ partial-func)
                     partial-func
                     `(#\/ . ,partial-func)))
@@ -34,13 +32,11 @@
 ;;;===================================================================
 
 (defun exported-funcs (modules)
-  "TODO: write docstring"
   (lc ((<- mod modules)
        (<- func (mref mod 'exports)))
     (func-name mod func)))
 
 (defun func-name (mod func)
-  "TODO: write docstring"
   (++ (atom_to_list (mref mod 'name))
       ":" (atom_to_list (mref func 'name))
       "/" (integer_to_list (mref func 'arity))))
