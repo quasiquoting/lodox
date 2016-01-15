@@ -109,7 +109,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.8.0"},
+  {vsn,          "0.9.0"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -459,19 +459,22 @@ Use [pandoc] if available, otherwise [erlmarkdown].
              (link-to "index.html" (div '(class "inner") "Index"))))))
 
 (defun includes-menu (project current-lib)
-  (let* ((libs    (mref project 'libs))
-         (lib-map (index-by 'name libs)))
-    `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
-      ,(ul
-         (lists:map
-           (match-lambda
-             ([`#(,lib-name ,lib)]
-              (let ((class (++ "depth-1" (if (=:= lib current-lib)
-                                           " current"
-                                           "")))
-                    (inner (div '(class "inner") (h (atom_to_list lib-name)))))
-                (li `(class ,class) (link-to (mod-filename lib) inner)))))
-           (maps:to_list lib-map))))))
+  (case (mref project 'libs)
+    ([] [])
+    (libs
+     (let ((lib-map (index-by 'name libs)))
+       `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
+         ,(ul
+            (lists:map
+              (match-lambda
+                ([`#(,lib-name ,lib)]
+                 (let ((class (++ "depth-1" (if (=:= lib current-lib)
+                                              " current"
+                                              "")))
+                       (inner (div '(class "inner")
+                                (h (atom_to_list lib-name)))))
+                   (li `(class ,class) (link-to (mod-filename lib) inner)))))
+              (maps:to_list lib-map))))))))
 
 (defun modules-menu (project current-mod)
   (let* ((modules (mref project 'modules))
@@ -608,10 +611,10 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 (defun func-usage (func)
   (lists:map
-    (lambda (arglist)
-      (re:replace (lfe_io_pretty:term arglist) "comma " ". ,"
+    (lambda (pattern)
+      (re:replace (lfe_io_pretty:term pattern) "comma " ". ,"
                   '[global #(return list)]))
-    (mref func 'arglists)))
+    (mref func 'patterns)))
 
 (defun mod-behaviour (mod)
   (lists:map
@@ -765,7 +768,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
           (script-doc 1)
           (documented 1))
   (import (from lodox-p
-            (arglist? 1)
+            (arglist? 1) (arg? 1)
             (macro-clauses? 1) (macro-clause? 1)
             (clauses? 1) (clause? 1)
             (string? 1)
@@ -786,7 +789,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.8.0\"
+    version     \"0.9.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -810,7 +813,6 @@ Use [pandoc] if available, otherwise [erlmarkdown].
         documented  ,documented)))
 
 (defun form-doc
-  "TODO: write docstring"
   ;; (defun name clause)
   ([(= `(defun ,name ,(= `[,arglist . ,_body] clause)) shape)]
    (when (is_atom name) (is_list arglist))
@@ -856,15 +858,17 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
   ;; (defun name <doc|clause> clause     ...)
   ;; (defun name arglist      <doc|form> ...)
-  ([`(defun ,name ,doc-or-arglist . ,(= `[,x . ,_] rest))]
+  ([`(defun ,name ,x . ,(= `[,y . ,_] rest))]
    (when (is_atom name))
    (cond
     ((clauses? rest)
-     (ok-form-doc name (length (car x)) (patterns rest)
-                  (if (string? doc-or-arglist) doc-or-arglist "")))
-    ((arglist? doc-or-arglist)
-     (ok-form-doc name (length doc-or-arglist)
-                  `[,doc-or-arglist] (if (string? x) x "")))))
+     (if (clause? x)
+       (ok-form-doc name (length (car x)) (patterns `(,x . ,rest)) "")
+       (ok-form-doc name (length (car y))
+                    (patterns rest)
+                    (if (string? x) x ""))))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] (if (string? y) y "")))))
 
   ;; (defun ...)
   ([(= `(defun . ,_) shape)]
@@ -876,9 +880,6 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
   ;; This pattern matches non-def{un,macro} forms.
   ([_] 'undefined))
-
-(defun ok-form-doc (name arity arglists doc)
-  `#(ok #m(name ,name arity ,arity arglists ,arglists doc ,doc)))
 
 (defun form-doc (form line)
   "Equivalent to [[form-doc/3]] with `[]` as `exports`."
@@ -892,29 +893,79 @@ Use [pandoc] if available, otherwise [erlmarkdown].
     ('undefined 'false)))
 
 (defun macro-doc
-  "TODO: write docstring"
   ;; (defmacro name clause)
   ([(= `(defmacro ,name ,clause) shape)]
    (when (is_atom name))
+   (if (macro-clause? clause)
+     (let ((arity (if (clause? clause) (length (car clause)) 255)))
+       (ok-form-doc name arity `[,(pattern clause)] ""))
+     (unhandled-shape! shape)))
+
+  ;; (defmacro name () form)
+  ([`(defmacro ,name () ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] ""))
+
+  ;; (defmacro name <doc|clause> clause)
+  ;; (defmacro name arglist      form)
+  ;; (defmacro name varargs      form)
+  ([`(defmacro ,name . ,(= `[,x ,y] rest))]
+   (when (is_atom name))
    (cond
-    ((clause? clause)
-     (ok-form-doc name (length (car clause)) `[,(pattern clause)] ""))
-    ((macro-clause? clause)
-     (ok-form-doc name 255 '[(...)] ""))
-    ('true
-     (unhandled-shape! shape))))
-  ;; (defmacro name doc clause ...?)
+    ((andalso (string? x) (macro-clause? y))
+     (if (clause? x)
+       (ok-form-doc name (length (car y)) `[,(pattern y)] x)
+       (ok-form-doc name 255 `[,(pattern y)] x)))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] ""))
+    ((macro-clauses? rest)
+     (if (clause? x)
+       (ok-form-doc name (length (car x)) (patterns rest) "")
+       (ok-form-doc name 255 (patterns rest) "")))
+    ((arg? x)
+     (ok-form-doc name 255 `[(,x ...)] ""))))
+
+  ;; (defmacro name doc clause)
+  ([(= `(defmacro ,name ,doc-string ,(= `[,arglist . ,_body] clause)) shape)]
+   (when (is_atom name) (is_list doc-string) (is_list arglist))
+   (if (andalso (macro-clause? clause) (string? doc-string))
+     (let ((arity (if (clause? clause) (length arglist) 255)))
+       (ok-form-doc name arity `[,(pattern clause)] doc-string))
+     (unhandled-shape! shape)))
+
+  ;; (defmacro name () <doc|form> form)
+  ([`(defmacro ,name () ,maybe-doc ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] (if (string? maybe-doc) maybe-doc "")))
+
+  ;; (defmacro name "" clause clause ...?)
+  ;; (defmacro name () doc    form   ...?)
+  ([(= `(defmacro ,name () . ,(= `[,x . ,_] rest)) shape)]
+   (if (macro-clauses? rest)
+     (let ((arity (if (clause? x) (length x) 255)))
+       (ok-form-doc name arity (patterns rest) ""))
+     (ok-form-doc name 0 '[()] (if (string? x) x ""))))
+
+  ;; (defmacro name <doc|clause> clause ...)
+  ;; (defmacro name arglist      <doc|form> ...)
   ([(= `(defmacro ,name ,x . ,(= `[,y . ,_] rest)) shape)]
    (when (is_atom name))
    (cond
-    ((andalso (string? x) (macro-clauses? rest))
-     (if (clause? y)
-       (ok-form-doc name (length (car y)) (patterns rest) x)
-       (ok-form-doc name 255 '[(...)] x)))
-    ((arglist? x)
+    ((andalso (not (string? x)) (arglist? x))
      (ok-form-doc name (length x) `[,x] (if (string? y) y "")))
-    ('true
-     (unhandled-shape! shape))))
+    ((macro-clauses? rest)
+     (cond
+      ((andalso (not (string? x)) (macro-clause? x))
+       (let ((arity (if (clause? x) (length (car x)) 255)))
+         (ok-form-doc name arity (patterns `(,x . ,rest)) "")))
+      ((macro-clause? x)
+       (let ((arity (if (clause? x) (length (car x)) 255)))
+         (ok-form-doc name arity (patterns rest) (if (string? x) x ""))))
+      ('true
+       (let ((arity (if (clause? y) (length (car y)) 255)))
+         (ok-form-doc name arity (patterns rest) (if (string? x) x ""))))))
+    ((arg? x)
+     (ok-form-doc name 255 `[(,x ...)] ""))))
 
   ;; (defmacro ...)
   ([(= `(defmacro . ,_) shape)]
@@ -922,6 +973,9 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
   ;; This pattern matches non-defmacro forms.
   ([_] 'undefined))
+
+(defun ok-form-doc (name arity patterns doc)
+  `#(ok #m(name ,name arity ,arity patterns ,patterns doc ,doc)))
 
 (defun unhandled-shape! (shape)
   "Throw an error with `shape` pretty printed."
@@ -1064,58 +1118,77 @@ If [[file-doc/1]] returns the empty list, return `false`."
 
 ```lfe
 (defmodule lodox-p
+  (doc "Predicates used by [lodox-parse](lodox-parse.html).")
   (export (macro-clauses? 1) (macro-clause? 1)
           (clauses? 1) (clause? 1)
           (arglist? 1) (arg? 1)
+          (patterns? 1) (pattern? 1)
           (string? 1)
           (null? 1)))
 
-(defun macro-clauses? (forms)
-  "Return `true` iff `forms` is a list of items satisfying [[macro-clause?/1]]."
-  (lists:all #'macro-clause?/1 forms))
+(defun macro-clauses?
+  "Return `true` iff `forms` is a list of elements satisfying [[macro-clause?/1]]."
+  ([forms] (when (is_list forms)) (lists:all #'macro-clause?/1 forms))
+  ([_]                            'false))
 
-(defun macro-clause? (form)
+(defun macro-clause?
   "Given a term, return `true` iff it seems like a macro clause.
 A macro clause either satisfies [[clause?/1]] without alteration or when
 its head in encapsulated in a list."
-  (orelse (clause? form)
-          (clause? `([,(car form)] . ,(cdr form)))))
+  ([(= `(,h . ,t) form)]
+   (orelse (clause? form)
+           (clause? `([,h] . ,t))))
+  ([_] 'false))
 
-(defun clauses? (forms)
-  "Return `true` iff `forms` is a list of items that satisfy [[clause?/1]]."
-  (andalso (lists:all #'clause?/1 forms)
-           (let ((arity (length (caar forms))))
-             (lists:all (lambda (form) (=:= (length (car form)) arity)) forms))))
+(defun clauses?
+  "Return `true` iff `forms` is a list of elements satisfying [[clause?/1]]."
+  ([forms] (when (is_list forms))
+   (andalso (lists:all #'clause?/1 forms)
+            (let ((arity (length (caar forms))))
+              (lists:all (lambda (form) (=:= (length (car form)) arity)) forms))))
+  ([_] 'false))
 
 (defun clause?
   "Given a term, return `true` iff it is a list whose head satisfies [[arglist?/1]]."
   ([`(,_)]      'false)
   ([`([] . ,_)] 'false)
-  ([`(,h . ,_)] (arglist? h))
+  ([`(,h . ,_)] (when (is_list h)) (patterns? h))
   ([_]          'false))
 
 (defun arglist?
-  "Given a term, return `true` iff it is either the empty list or a list
-such that all elements satisfy [[arg?/1]]."
-  (['()]                      'true)
-  ([lst] (when (is_list lst)) (lists:all #'arg?/1 lst))
-  ([_]                        'false))
+  "Given a term, return `true` iff it is either the empty list, a list of
+elements satisfying [[arg?/1]] or a term that satisfies [[arg?/1]]."
+  (['()]        'true)
+  ([`(,h . ,t)] (andalso (arg? h) (if (is_list t) (arglist? t) (arg? t))))
+  ([_]          'false))
 
-(defun arg?
-  "Return `true` iff `x` seems like a valid item in an arglist."
+(defun arg? (x)
+  "Return `true` iff `x` seems like a valid element of an arglist."
+  (lists:any (lambda (p) (funcall p x))
+             (list #'is_atom/1
+                   #'is_binary/1
+                   #'is_bitstring/1
+                   #'is_number/1
+                   #'is_map/1
+                   #'is_tuple/1
+                   #'string?/1)))
+
+(defun patterns?
+    "Given a term, return `true` iff it is either the empty list, a list of
+elements satisfying [[pattern?/1]] or a term that satisfies [[pattern?/1]]."
+  (['()]        'true)
+  ([`(,h . ,t)]
+   (andalso (pattern? h) (if (is_list t) (patterns? t) (pattern? t))))
+  ([_] 'false))
+
+(defun pattern?
+  "Return `true` iff `x` seems like a valid pattern or satisfies [[arg?/1]]."
   ([(= x `(,h . ,_t))]
    (orelse (string? x)
-           (lists:member h '(= () backquote quote binary list map tuple))
+           (lists:member h
+             '[= ++* () backquote quote binary cons list map tuple])
            (andalso (is_atom h) (lists:prefix "match-" (atom_to_list h)))))
-  ([x]
-   (lists:any (lambda (p) (funcall p x))
-              (list #'is_atom/1
-                    #'is_binary/1
-                    #'is_bitstring/1
-                    #'is_number/1
-                    #'is_map/1
-                    #'is_tuple/1
-                    #'string?/1))))
+  ([x] (arg? x)))
 
 (defun string? (data)
   "Return `true` iff `data` is a flat list of printable characters."
@@ -1137,11 +1210,9 @@ such that all elements satisfy [[arg?/1]]."
   (export (search-funcs 2) (search-funcs 3)))
 
 (defun search-funcs (modules partial-func)
-  "TODO: write docstring"
   (search-funcs modules partial-func 'undefined))
 
 (defun search-funcs (modules partial-func starting-mod)
-  "TODO: write docstring"
   (let* ((suffix  (if (lists:member #\/ partial-func)
                     partial-func
                     `(#\/ . ,partial-func)))
@@ -1160,13 +1231,11 @@ such that all elements satisfy [[arg?/1]]."
 
 ```lfe
 (defun exported-funcs (modules)
-  "TODO: write docstring"
   (lc ((<- mod modules)
        (<- func (mref mod 'exports)))
     (func-name mod func)))
 
 (defun func-name (mod func)
-  "TODO: write docstring"
   (++ (atom_to_list (mref mod 'name))
       ":" (atom_to_list (mref func 'name))
       "/" (integer_to_list (mref func 'arity))))
@@ -1324,7 +1393,10 @@ arglist_patterns(Arity) -> vector(Arity, pattern()).
 pattern() -> union([non_string_term(), printable_string(), pattern_form()]).
 
 pattern_form() ->
-  [oneof([backquote, quote, binary, list, map, tuple, match_fun()])
+  [oneof(['=', '++*', [],
+          backquote, quote,
+          binary, cons, list, map, tuple,
+          match_fun()])
    | non_empty(list())].
 
 match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).
@@ -1445,17 +1517,18 @@ pprint(Term) ->
   `[#(#"exports is a map"
       ,(_assert (is_map exports)))
     #(#"exports has correct keys"
-      ,(_assertEqual '(arglists arity doc line name) (maps:keys exports)))
-    #(#"arglists is a list of arglists (which may end with a guard)"
-      ,(let ((arglists (lists:map
-                         (lambda (arglist)
-                           (lists:filter
-                             (match-lambda
-                               ([`(when . ,_t)] 'false)
-                               ([_]             'true))
-                             arglist))
-                         (mref* exports 'arglists))))
-         (_assert (lists:all #'lodox-p:arglist?/1 arglists))))
+      ,(_assertEqual '(arity doc line name patterns) (maps:keys exports)))
+    #(#"patterns is a list of patterns (which may end with a guard)"
+      ,(let ((patterns (lists:map
+                         (lambda (pattern)
+                           (if (is_list pattern)
+                             (lists:filter
+                               (match-lambda
+                                 ([`(when . ,_t)] 'false)
+                                 ([_]             'true))
+                               pattern)))
+                         (mref* exports 'patterns))))
+         (_assert (lists:all #'lodox-p:patterns?/1 patterns))))
     #(#"artity is an integer"
       ,(_assert (is_integer (mref* exports 'arity))))
     #(#"doc is a string"
