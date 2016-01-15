@@ -830,7 +830,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
           (script-doc 1)
           (documented 1))
   (import (from lodox-p
-            (arglist? 1)
+            (arglist? 1) (arg? 1)
             (macro-clauses? 1) (macro-clause? 1)
             (clauses? 1) (clause? 1)
             (string? 1)
@@ -866,12 +866,11 @@ Use [pandoc] if available, otherwise [erlmarkdown].
          (version     (maps:get 'vsn         app-info ""))
          (documented  (documented modules))
          (description (maps:get 'description app-info ""))
-         ;; (libs        (lib-docs))
-         )
+         (libs        (lib-docs)))
     `#m(name        ,app-name
         version     ,version
         description ,description
-        libs        [] ; ,libs
+        libs        ,libs
         modules     ,modules
         documented  ,documented)))
 
@@ -944,9 +943,6 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   ;; This pattern matches non-def{un,macro} forms.
   ([_] 'undefined))
 
-(defun ok-form-doc (name arity patterns doc)
-  `#(ok #m(name ,name arity ,arity patterns ,patterns doc ,doc)))
-
 (defun form-doc (form line)
   "Equivalent to [[form-doc/3]] with `[]` as `exports`."
   (form-doc form line []))
@@ -962,25 +958,76 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   ;; (defmacro name clause)
   ([(= `(defmacro ,name ,clause) shape)]
    (when (is_atom name))
+   (if (macro-clause? clause)
+     (let ((arity (if (clause? clause) (length (car clause)) 255)))
+       (ok-form-doc name arity `[,(pattern clause)] ""))
+     (unhandled-shape! shape)))
+
+  ;; (defmacro name () form)
+  ([`(defmacro ,name () ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] ""))
+
+  ;; (defmacro name <doc|clause> clause)
+  ;; (defmacro name arglist      form)
+  ;; (defmacro name varargs      form)
+  ([`(defmacro ,name . ,(= `[,x ,y] rest))]
+   (when (is_atom name))
    (cond
-    ((clause? clause)
-     (ok-form-doc name (length (car clause)) `[,(pattern clause)] ""))
-    ((macro-clause? clause)
-     (ok-form-doc name 255 '[(...)] ""))
-    ('true
-     (unhandled-shape! shape))))
-  ;; (defmacro name doc clause ...?)
+    ((andalso (string? x) (macro-clause? y))
+     (if (clause? x)
+       (ok-form-doc name (length (car y)) `[,(pattern y)] x)
+       (ok-form-doc name 255 `[,(pattern y)] x)))
+    ((arglist? x)
+     (ok-form-doc name (length x) `[,x] ""))
+    ((macro-clauses? rest)
+     (if (clause? x)
+       (ok-form-doc name (length (car x)) (patterns rest) "")
+       (ok-form-doc name 255 (patterns rest) "")))
+    ((arg? x)
+     (ok-form-doc name 255 `[(,x ...)] ""))))
+
+  ;; (defmacro name doc clause)
+  ([(= `(defmacro ,name ,doc-string ,(= `[,arglist . ,_body] clause)) shape)]
+   (when (is_atom name) (is_list doc-string) (is_list arglist))
+   (if (andalso (macro-clause? clause) (string? doc-string))
+     (let ((arity (if (clause? clause) (length arglist) 255)))
+       (ok-form-doc name arity `[,(pattern clause)] doc-string))
+     (unhandled-shape! shape)))
+
+  ;; (defmacro name () <doc|form> form)
+  ([`(defmacro ,name () ,maybe-doc ,_form)]
+   (when (is_atom name))
+   (ok-form-doc name 0 '[()] (if (string? maybe-doc) maybe-doc "")))
+
+  ;; (defmacro name "" clause clause ...?)
+  ;; (defmacro name () doc    form   ...?)
+  ([(= `(defmacro ,name () . ,(= `[,x . ,_] rest)) shape)]
+   (if (macro-clauses? rest)
+     (let ((arity (if (clause? x) (length x) 255)))
+       (ok-form-doc name arity (patterns rest) ""))
+     (ok-form-doc name 0 '[()] (if (string? x) x ""))))
+
+  ;; (defmacro name <doc|clause> clause ...)
+  ;; (defmacro name arglist      <doc|form> ...)
   ([(= `(defmacro ,name ,x . ,(= `[,y . ,_] rest)) shape)]
    (when (is_atom name))
    (cond
-    ((andalso (string? x) (macro-clauses? rest))
-     (if (clause? y)
-       (ok-form-doc name (length (car y)) (patterns rest) x)
-       (ok-form-doc name 255 '[(...)] x)))
-    ((arglist? x)
+    ((andalso (not (string? x)) (arglist? x))
      (ok-form-doc name (length x) `[,x] (if (string? y) y "")))
-    ('true
-     (unhandled-shape! shape))))
+    ((macro-clauses? rest)
+     (cond
+      ((andalso (not (string? x)) (macro-clause? x))
+       (let ((arity (if (clause? x) (length (car x)) 255)))
+         (ok-form-doc name arity (patterns `(,x . ,rest)) "")))
+      ((macro-clause? x)
+       (let ((arity (if (clause? x) (length (car x)) 255)))
+         (ok-form-doc name arity (patterns rest) (if (string? x) x ""))))
+      ('true
+       (let ((arity (if (clause? y) (length (car y)) 255)))
+         (ok-form-doc name arity (patterns rest) (if (string? x) x ""))))))
+    ((arg? x)
+     (ok-form-doc name 255 `[(,x ...)] ""))))
 
   ;; (defmacro ...)
   ([(= `(defmacro . ,_) shape)]
@@ -988,6 +1035,9 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
   ;; This pattern matches non-defmacro forms.
   ([_] 'undefined))
+
+(defun ok-form-doc (name arity patterns doc)
+  `#(ok #m(name ,name arity ,arity patterns ,patterns doc ,doc)))
 
 (defun unhandled-shape! (shape)
   "Throw an error with `shape` pretty printed."
