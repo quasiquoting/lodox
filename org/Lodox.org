@@ -230,8 +230,9 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   (doc "The Lodox [Rebar3][1] [provider][2].
 
 [1]: http://www.rebar3.org/docs/plugins
-[2]: https://github.com/tsloughter/providers ")
+[2]: https://github.com/tsloughter/providers")
   (behaviour provider)
+  ;; N.B. Export all since LFE doesn't like us defining do/1.
   (export all))
 #+END_SRC
 *** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
@@ -342,6 +343,9 @@ so a string can be formatted explaining the issue."
 documentation for it.
 #+BEGIN_SRC lfe
 (defun write-docs (app-info)
+  "Given an [app_info_t], call [[lodox-html-writer:write-docs/2]] appropriately.
+
+[app_info_t]: https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl"
   (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
                      '(opts dir name original_vsn out_dir)))
@@ -360,6 +364,9 @@ documentation for it.
 describing the docs that were generated.
 #+BEGIN_SRC lfe
 (defun generated
+  "Print a string of the form:
+
+> Generated {{app-name}} v{{version}} docs in {{output directory}}"
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
@@ -1082,6 +1089,14 @@ If [[file-doc/1]] returns the empty list, return `false`."
     '()))
 
 (defun documented (modules)
+  "Given a list of parsed modules, return a map representing undocumented
+functions therein.
+
+```commonlisp
+(map 'percentage   {{float 0.0-100.0}}
+     'undocumented (map {{module name (atom) }} [\"{{function/arity}}\" ...]
+                        ...))
+```"
   (flet ((percentage
            ([`#(#(,n ,d) ,modules)]
             (->> `[,(* (/ n d) 100)]

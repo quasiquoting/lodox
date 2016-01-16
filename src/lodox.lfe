@@ -7,8 +7,9 @@
   (doc "The Lodox [Rebar3][1] [provider][2].
 
 [1]: http://www.rebar3.org/docs/plugins
-[2]: https://github.com/tsloughter/providers ")
+[2]: https://github.com/tsloughter/providers")
   (behaviour provider)
+  ;; N.B. Export all since LFE doesn't like us defining do/1.
   (export all))
 
 (defun namespace ()
@@ -76,6 +77,9 @@ so a string can be formatted explaining the issue."
 ;;;===================================================================
 
 (defun write-docs (app-info)
+  "Given an [app_info_t], call [[lodox-html-writer:write-docs/2]] appropriately.
+
+[app_info_t]: https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl"
   (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
                      '(opts dir name original_vsn out_dir)))
@@ -90,6 +94,9 @@ so a string can be formatted explaining the issue."
     (generated name vsn doc-dir)))
 
 (defun generated
+  "Print a string of the form:
+
+> Generated {{app-name}} v{{version}} docs in {{output directory}}"
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]

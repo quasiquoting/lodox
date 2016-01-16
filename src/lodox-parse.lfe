@@ -264,6 +264,14 @@ If [[file-doc/1]] returns the empty list, return `false`."
     '()))
 
 (defun documented (modules)
+  "Given a list of parsed modules, return a map representing undocumented
+functions therein.
+
+```commonlisp
+(map 'percentage   {{float 0.0-100.0}}
+     'undocumented (map {{module name (atom) }} [\"{{function/arity}}\" ...]
+                        ...))
+```"
   (flet ((percentage
            ([`#(#(,n ,d) ,modules)]
             (->> `[,(* (/ n d) 100)]
