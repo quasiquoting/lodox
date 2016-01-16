@@ -1105,7 +1105,7 @@ return the list of non-empty results."
 (defun lib-doc (filename)
   "Parse `filename` and attempt to return a tuple, `` `#(true ,defsmap) ``
 where `defsmap` is a map representing the definitions in `filename`.
-If [[file-doc/1]] returns the empty list, return `false`."
+If `file-doc/1` returns the empty list, return `false`."
   (case (filename:extension filename)
     (".lfe" (case (file-doc filename)
               ('()     'false)
