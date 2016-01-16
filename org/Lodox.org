@@ -108,6 +108,16 @@ branch = gh-pages
 #+BEGIN_SRC erlang :exports none
 <<generated("erlang")>>
 #+END_SRC
+#+NAME: lodox-github
+#+BEGIN_SRC emacs-lisp :exports none :tangle no
+"github.com/quasiquoting/lodox"
+#+END_SRC
+#+NAME: lodox-dependency
+#+BEGIN_SRC erlang :exports none :tangle no
+{dependency, {lodox,
+              {git, "git://<<lodox-github()>>.git",
+               {tag, "<<lodox-version()>>"}}}}
+#+END_SRC
 #+BEGIN_SRC erlang :padline yes :tangle ../src/lodox.app.src
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
@@ -119,7 +129,11 @@ branch = gh-pages
   {applications, [kernel, stdlib]},
   {env,
    [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
+     "https://<<lodox-github()>>/blob/master/{filepath}#L{line}"},
+    <<lodox-dependency>>]},
+  {links,
+   [{"Homepage", "https://<<lodox-github()>>"},
+    {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
 #+END_SRC
 
 * Rebar3 Configuration
@@ -622,13 +636,17 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                    ("" "")
                    (doc (div '(class "doc") (p (h doc)))))
                 ;; TODO: finish this
-                ;; ,(case (package project)
-                ;;    ("" [])
-                ;;    (pkg
-                ;;     `[,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps")
-                ;;          (h (++ "[" pkg " " (mref project 'version) "]")))]))
+                #|
+                ,(case (application:get_env
+                        (binary_to_atom (mref project 'name) 'latin1)
+                        'dependency)
+                   ('undefined "")
+                   (`#(ok ,dependency)
+                    `[,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (io_lib:format "~p" `[,dependency])))]))
+                |#
                 ,(case (lists:sort
                          (lambda (a b) (=< (mod-name a) (mod-name b)))
                          (mref project 'libs))

@@ -243,13 +243,17 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                    ("" "")
                    (doc (div '(class "doc") (p (h doc)))))
                 ;; TODO: finish this
-                ;; ,(case (package project)
-                ;;    ("" [])
-                ;;    (pkg
-                ;;     `[,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps")
-                ;;          (h (++ "[" pkg " " (mref project 'version) "]")))]))
+                #|
+                ,(case (application:get_env
+                        (binary_to_atom (mref project 'name) 'latin1)
+                        'dependency)
+                   ('undefined "")
+                   (`#(ok ,dependency)
+                    `[,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (io_lib:format "~p" `[,dependency])))]))
+                |#
                 ,(case (lists:sort
                          (lambda (a b) (=< (mod-name a) (mod-name b)))
                          (mref project 'libs))
