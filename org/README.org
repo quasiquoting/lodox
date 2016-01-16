@@ -91,7 +91,7 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.9.0 docs in /path/to/lodox/doc
+: Generated lodox v0.10.0 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent

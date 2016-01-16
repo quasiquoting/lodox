@@ -33,7 +33,7 @@
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.9.0\"
+    version     \"0.10.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
