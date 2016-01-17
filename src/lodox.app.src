@@ -5,7 +5,7 @@
 
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.10.0"},
+  {vsn,          "0.11.0"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -16,7 +16,7 @@
      "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"},
     {dependency, {lodox,
                   {git, "git://github.com/quasiquoting/lodox.git",
-                   {tag, "0.10.0"}}}}]},
+                   {tag, "0.11.0"}}}}]},
   {links,
    [{"Homepage", "https://github.com/quasiquoting/lodox"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.

@@ -66,12 +66,12 @@ rebar3 compile
 Then, to invoke Lodox, simply run:
 #+NAME: lodox
 #+BEGIN_SRC sh
-rebar3 lodox
+rebar3 lfe lodox
 #+END_SRC
 
 Alternatively, you can ~do~ both at once:
 #+BEGIN_SRC sh
-rebar3 do compile, lodox
+rebar3 do compile, lfe lodox
 #+END_SRC
 
 #+NAME: last-line-only
@@ -91,7 +91,7 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.10.0 docs in /path/to/lodox/doc
+: Generated lodox v0.11.0 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
@@ -108,7 +108,7 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
 #+BEGIN_SRC erlang
 {provider_hooks,
  [{pre,  [{compile, {lfe, compile}}]},
-  {post, [{compile, lodox}]}]}.
+  {post, [{compile, {lfe, lodox}]}]}.
 #+END_SRC
 
 #+INCLUDE: LICENSE.org :minlevel 1

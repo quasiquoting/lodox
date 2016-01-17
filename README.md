@@ -32,7 +32,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.10.0"}}}]}.
+    {tag, "0.11.0"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
@@ -49,18 +49,18 @@ rebar3 compile
 Then, to invoke Lodox, simply run:
 
 ```sh
-rebar3 lodox
+rebar3 lfe lodox
 ```
 
 Alternatively, you can `do` both at once:
 
 ```sh
-rebar3 do compile, lodox
+rebar3 do compile, lfe lodox
 ```
 
 If all goes well, the output will look something like:
 
-    Generated lodox v0.10.0 docs in /path/to/lodox/doc
+    Generated lodox v0.11.0 docs in /path/to/lodox/doc
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.
@@ -70,7 +70,7 @@ Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/
 ```erlang
 {provider_hooks,
  [{pre,  [{compile, {lfe, compile}}]},
-  {post, [{compile, lodox}]}]}.
+  {post, [{compile, {lfe, lodox}]}]}.
 ```
 
 # License

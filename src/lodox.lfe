@@ -14,7 +14,7 @@
 
 (defun namespace ()
   "The namespace in which `lodox` is registered, `default`."
-  'default)
+  'lfe)
 
 (defun provider-name ()
   "The 'user friendly' name of the task, `lodox`."
@@ -39,16 +39,16 @@
 
 (defun init (state)
   "Initiate the Lodox provider."
-  (rebar_api:debug "Initializing {default, lodox}" '())
-  (let* ((opts `(#(name       ,(provider-name)) ; The 'user friendly' name
-                 #(module     ,(MODULE))        ; The module implementation
-                 #(namespace  ,(namespace))     ; Plugin namespace
-                 #(opts       ())               ; List of plugin options
-                 #(deps       ,(deps))          ; The list of dependencies
-                 #(example    "rebar3 lodox")   ; How to use the plugin
-                 #(short_desc ,(short-desc))    ; A one-line description
-                 #(desc       ,(desc))          ; A longer description
-                 #(bare       true)))           ; Task can be run by user
+  (rebar_api:debug "Initializing {~p, ~p}" `[,(namespace) ,(provider-name)])
+  (let* ((opts `(#(name       ,(provider-name))   ; The 'user friendly' name
+                 #(module     ,(MODULE))          ; The module implementation
+                 #(namespace  ,(namespace))       ; Plugin namespace
+                 #(opts       [])                 ; List of plugin options
+                 #(deps       ,(deps))            ; The list of dependencies
+                 #(example    "rebar3 lfe lodox") ; How to use the plugin
+                 #(short_desc ,(short-desc))      ; A one-line description
+                 #(desc       ,(desc))            ; A longer description
+                 #(bare       true)))             ; Task can be run by user
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
       (rebar_api:debug "Initialized lodox" '())
