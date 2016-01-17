@@ -91,7 +91,7 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.11.0 docs in /path/to/lodox/doc
+: Generated lodox v0.12.0 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
@@ -110,5 +110,30 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
  [{pre,  [{compile, {lfe, compile}}]},
   {post, [{compile, {lfe, lodox}]}]}.
 #+END_SRC
+
+** Source Links
+/[ Modified from [[https://github.com/weavejester/codox#source-links][Codox documentation]]. ]/
+
+If you have the source available at a URI and would like to have links to the
+function/macro's source file in the documentation, you can set the ~​'source-uri'​~
+[[http://www.erlang.org/doc/design_principles/applications.html#id76014][configuration parameter]] in your [[http://www.erlang.org/doc/design_principles/applications.html#id75484][application resource file]].
+
+#+BEGIN_SRC erlang
+{env,
+ [{'source-uri',
+   "https://github.com/foo/bar/blob/{version}/{filepath}#L{line}"}]}
+#+END_SRC
+
+The URI is a template that may contain the following keys:
+
+| Template     | Description                                   |
+|--------------+-----------------------------------------------|
+| ~{filepath}~ | the file path from the root of the repository |
+| ~{line}~     | the line number of the source file            |
+| ~{version}~  | the version of the project                    |
+
+N.B. In order for ~{version}~ to work properly, you must add the corresponding
+tag. For example, if you =.app= file contains ~{vsn, "1.2.3"}~ you must add the
+tag, =​"1.2.3"​=, to your repo.
 
 #+INCLUDE: LICENSE.org :minlevel 1

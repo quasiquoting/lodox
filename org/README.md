@@ -109,7 +109,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.11.0"},
+  {vsn,          "0.12.0"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -117,10 +117,10 @@ branch = gh-pages
   {applications, [kernel, stdlib]},
   {env,
    [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"},
+     "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"},
     {dependency, {lodox,
                   {git, "git://github.com/quasiquoting/lodox.git",
-                   {tag, "0.11.0"}}}}]},
+                   {tag, "0.12.0"}}}}]},
   {links,
    [{"Homepage", "https://github.com/quasiquoting/lodox"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
@@ -459,11 +459,14 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   (++ (mod-filename module) "#" (func-id func)))
 
 (defun func-source-uri (source-uri project module func)
-  (let* ((filepath1 (mref module 'filepath))
-         (filepath2 (lists:nthtail (+ 1 (length (mref project 'app-dir))) filepath1))
-         (line      (mref func 'line))
-         (uri1 (re:replace source-uri "{filepath}" filepath2 '(#(return list)))))
-    (re:replace uri1 "{line}" (integer_to_list line) '(#(return list)))))
+  (let* ((offset   (+ 1 (length (mref project 'app-dir))))
+         (filepath (lists:nthtail offset (mref module 'filepath)))
+         (line     (integer_to_list (mref func 'line)))
+         (version  (mref project 'version)))
+    (fold-replace source-uri
+      `[#("{filepath}"  ,filepath)
+        #("{line}"      ,line)
+        #("{version}"   ,version)])))
 
 (defun index-link (project on-index?)
   `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
@@ -771,11 +774,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   ([x] (when (is_atom x))
    (escape-html (atom_to_list x)))
   ([text]
-   (fold-replace text '(#("\\&"  "\\&amp;")
-                        #("<"  "\\&lt;")
-                        ;; #(">"  "\\&gt;")
-                        #("\"" "\\&quot;")
-                        #("'"  "\\&apos;")))))
+   (fold-replace text
+     '[#("\\&"  "\\&amp;")
+       #("<"  "\\&lt;")
+       ;; #(">"  "\\&gt;")
+       #("\"" "\\&quot;")
+       #("'"  "\\&apos;")])))
 
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
@@ -828,7 +832,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.11.0\"
+    version     \"0.12.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}

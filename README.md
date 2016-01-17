@@ -32,7 +32,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.11.0"}}}]}.
+    {tag, "0.12.0"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
@@ -60,7 +60,7 @@ rebar3 do compile, lfe lodox
 
 If all goes well, the output will look something like:
 
-    Generated lodox v0.11.0 docs in /path/to/lodox/doc
+    Generated lodox v0.12.0 docs in /path/to/lodox/doc
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.
@@ -72,6 +72,61 @@ Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/
  [{pre,  [{compile, {lfe, compile}}]},
   {post, [{compile, {lfe, lodox}]}]}.
 ```
+
+## Source Links
+
+*[ Modified from [Codox documentation](https://github.com/weavejester/codox#source-links). ]*
+
+If you have the source available at a URI and would like to have links to the
+function/macro's source file in the documentation, you can set the `​'source-uri'​`
+[configuration parameter](http://www.erlang.org/doc/design_principles/applications.html#id76014) in your [application resource file](http://www.erlang.org/doc/design_principles/applications.html#id75484).
+
+```erlang
+{env,
+ [{'source-uri',
+   "https://github.com/foo/bar/blob/{version}/{filepath}#L{line}"}]}
+```
+
+The URI is a template that may contain the following keys:
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Template</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="org-left">`{filepath}`</td>
+<td class="org-left">the file path from the root of the repository</td>
+</tr>
+
+
+<tr>
+<td class="org-left">`{line}`</td>
+<td class="org-left">the line number of the source file</td>
+</tr>
+
+
+<tr>
+<td class="org-left">`{version}`</td>
+<td class="org-left">the version of the project</td>
+</tr>
+</tbody>
+</table>
+
+N.B. In order for `{version}` to work properly, you must add the corresponding
+tag. For example, if you `.app` file contains `{vsn, "1.2.3"}` you must add the
+tag, `​"1.2.3"​`, to your repo.
 
 # License
 

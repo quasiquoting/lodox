@@ -132,11 +132,14 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   (++ (mod-filename module) "#" (func-id func)))
 
 (defun func-source-uri (source-uri project module func)
-  (let* ((filepath1 (mref module 'filepath))
-         (filepath2 (lists:nthtail (+ 1 (length (mref project 'app-dir))) filepath1))
-         (line      (mref func 'line))
-         (uri1 (re:replace source-uri "{filepath}" filepath2 '(#(return list)))))
-    (re:replace uri1 "{line}" (integer_to_list line) '(#(return list)))))
+  (let* ((offset   (+ 1 (length (mref project 'app-dir))))
+         (filepath (lists:nthtail offset (mref module 'filepath)))
+         (line     (integer_to_list (mref func 'line)))
+         (version  (mref project 'version)))
+    (fold-replace source-uri
+      `[#("{filepath}"  ,filepath)
+        #("{line}"      ,line)
+        #("{version}"   ,version)])))
 
 (defun index-link (project on-index?)
   `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
@@ -444,11 +447,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   ([x] (when (is_atom x))
    (escape-html (atom_to_list x)))
   ([text]
-   (fold-replace text '(#("\\&"  "\\&amp;")
-                        #("<"  "\\&lt;")
-                        ;; #(">"  "\\&gt;")
-                        #("\"" "\\&quot;")
-                        #("'"  "\\&apos;")))))
+   (fold-replace text
+     '[#("\\&"  "\\&amp;")
+       #("<"  "\\&lt;")
+       ;; #(">"  "\\&gt;")
+       #("\"" "\\&quot;")
+       #("'"  "\\&apos;")])))
 
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
