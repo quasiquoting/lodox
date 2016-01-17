@@ -109,7 +109,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.9.0"},
+  {vsn,          "0.10.0"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -117,7 +117,13 @@ branch = gh-pages
   {applications, [kernel, stdlib]},
   {env,
    [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"}]}]}.
+     "https://github.com/quasiquoting/lodox/blob/master/{filepath}#L{line}"},
+    {dependency, {lodox,
+                  {git, "git://github.com/quasiquoting/lodox.git",
+                   {tag, "0.10.0"}}}}]},
+  {links,
+   [{"Homepage", "https://github.com/quasiquoting/lodox"},
+    {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
 ```
 
 # Rebar3 Configuration<a id="orgheadline6"></a>
@@ -179,8 +185,9 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
   (doc "The Lodox [Rebar3][1] [provider][2].
 
 [1]: http://www.rebar3.org/docs/plugins
-[2]: https://github.com/tsloughter/providers ")
+[2]: https://github.com/tsloughter/providers")
   (behaviour provider)
+  ;; N.B. Export all since LFE doesn't like us defining do/1.
   (export all))
 ```
 
@@ -287,6 +294,9 @@ documentation for it.
 
 ```lfe
 (defun write-docs (app-info)
+  "Given an [app_info_t], call [[lodox-html-writer:write-docs/2]] appropriately.
+
+[app_info_t]: https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl"
   (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
                      '(opts dir name original_vsn out_dir)))
@@ -306,6 +316,9 @@ describing the docs that were generated.
 
 ```lfe
 (defun generated
+  "Print a string of the form:
+
+> Generated {{app-name}} v{{version}} docs in {{output directory}}"
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
@@ -379,7 +392,7 @@ describing the docs that were generated.
    (pre '(class "plaintext") (h (mref m 'doc))))
   ([project mod m 'markdown]
    (case (mref m 'doc)
-     ('() (br))
+     ("" "")
      (doc
       (format-wikilinks
        project (markdown->html (unicode:characters_to_list doc))
@@ -542,51 +555,77 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                            (mref 'percentage)
                            (round))]))]))]))
 
-;; TODO: package in lodox-parse
-(defun package (project)
-  (maps:get 'package project ""))
-
 (defun index-page (project)
   (html
-    `(,(head
-         `(,(default-includes)
+    `[,(head
+         `[,(default-includes)
            ,(title (++ (h (mref project 'name)) " "
-                       (h (mref project 'version))))))
+                       (h (mref project 'version))))])
       ,(body
-         `(,(header* project)
+         `[,(header* project)
            ,(primary-sidebar project)
            ,(div '(id "content" class "module-index")
-              `(,(h1 (project-title project))
-                ,(div '(class "doc") (p (h (mref project 'description))))
+              `[,(h1 (project-title project))
+                ,(case (mref project 'description)
+                   ("" "")
+                   (doc (div '(class "doc") (p (h doc)))))
                 ;; TODO: finish this
-                ;; ,(case (package project)
-                ;;    ("" [])
-                ;;    (pkg
-                ;;     `[,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps")
-                ;;          (h (++ "[" pkg " " (mref project 'version) "]")))]))
-                ;; TODO: includes
+                #|
+                ,(case (application:get_env
+                        (binary_to_atom (mref project 'name) 'latin1)
+                        'dependency)
+                   ('undefined "")
+                   (`#(ok ,dependency)
+                    `[,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (io_lib:format "~p" `[,dependency])))]))
+                |#
+                ,(case (lists:sort
+                         (lambda (a b) (=< (mod-name a) (mod-name b)))
+                         (mref project 'libs))
+                   ([] "")
+                   (libs
+                    `[,(h2 "Includes")
+                      ,(lists:map
+                         (lambda (lib)
+                           (div '(class "module")
+                             `[,(h3 (link-to (mod-filename lib)
+                                      (h (mod-name lib))))
+                               ,(div '(class "index")
+                                  `(,(p "Definitions")
+                                    ,(unordered-list
+                                      (lists:map
+                                        (lambda (func)
+                                          `[" "
+                                            ,(link-to (func-uri lib func)
+                                               (func-name func))
+                                            " "])
+                                        (sorted-exported-funcs lib)))))]))
+                         libs)]))
                 ,(h2 "Modules")
                 ,(lists:map
                    (lambda (module)
                      (div '(class "module")
-                       `(,(h3 (link-to (mod-filename module)
+                       `[,(h3 (link-to (mod-filename module)
                                 (h (mod-name module))))
-                         ;; TODO: module doc
+                         ,(case (format-docstring project '() module)
+                            (""  "")
+                            ;; TODO: summarize
+                            (doc (div '(class "doc") doc)))
                          ,(div '(class "index")
                             `(,(p "Exports")
                               ,(unordered-list
                                 (lists:map
                                   (lambda (func)
-                                    `(" "
+                                    `[" "
                                       ,(link-to (func-uri module func)
                                          (func-name func))
-                                      " "))
-                                  (sorted-exported-funcs module))))))))
+                                      " "])
+                                  (sorted-exported-funcs module)))))]))
                    (lists:sort
                      (lambda (a b) (=< (mod-name a) (mod-name b)))
-                     (mref project 'modules))))))))))
+                     (mref project 'modules)))])])]))
 
 ;; TODO: exemplar-ify this
 (defun unordered-list (lst) (ul (lists:map #'li/1 lst)))
@@ -789,7 +828,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.9.0\"
+    version     \"0.10.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -996,7 +1035,7 @@ return the list of non-empty results."
 (defun lib-doc (filename)
   "Parse `filename` and attempt to return a tuple, `` `#(true ,defsmap) ``
 where `defsmap` is a map representing the definitions in `filename`.
-If [[file-doc/1]] returns the empty list, return `false`."
+If `file-doc/1` returns the empty list, return `false`."
   (case (filename:extension filename)
     (".lfe" (case (file-doc filename)
               ('()     'false)
@@ -1020,6 +1059,14 @@ If [[file-doc/1]] returns the empty list, return `false`."
     '()))
 
 (defun documented (modules)
+  "Given a list of parsed modules, return a map representing undocumented
+functions therein.
+
+```commonlisp
+(map 'percentage   {{float 0.0-100.0}}
+     'undocumented (map {{module name (atom) }} [\"{{function/arity}}\" ...]
+                        ...))
+```"
   (flet ((percentage
            ([`#(#(,n ,d) ,modules)]
             (->> `[,(* (/ n d) 100)]

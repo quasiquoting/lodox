@@ -33,7 +33,7 @@
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.9.0\"
+    version     \"0.10.0\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -240,7 +240,7 @@ return the list of non-empty results."
 (defun lib-doc (filename)
   "Parse `filename` and attempt to return a tuple, `` `#(true ,defsmap) ``
 where `defsmap` is a map representing the definitions in `filename`.
-If [[file-doc/1]] returns the empty list, return `false`."
+If `file-doc/1` returns the empty list, return `false`."
   (case (filename:extension filename)
     (".lfe" (case (file-doc filename)
               ('()     'false)
@@ -264,6 +264,14 @@ If [[file-doc/1]] returns the empty list, return `false`."
     '()))
 
 (defun documented (modules)
+  "Given a list of parsed modules, return a map representing undocumented
+functions therein.
+
+```commonlisp
+(map 'percentage   {{float 0.0-100.0}}
+     'undocumented (map {{module name (atom) }} [\"{{function/arity}}\" ...]
+                        ...))
+```"
   (flet ((percentage
            ([`#(#(,n ,d) ,modules)]
             (->> `[,(* (/ n d) 100)]

@@ -65,7 +65,7 @@
    (pre '(class "plaintext") (h (mref m 'doc))))
   ([project mod m 'markdown]
    (case (mref m 'doc)
-     ('() (br))
+     ("" "")
      (doc
       (format-wikilinks
        project (markdown->html (unicode:characters_to_list doc))
@@ -228,51 +228,77 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                            (mref 'percentage)
                            (round))]))]))]))
 
-;; TODO: package in lodox-parse
-(defun package (project)
-  (maps:get 'package project ""))
-
 (defun index-page (project)
   (html
-    `(,(head
-         `(,(default-includes)
+    `[,(head
+         `[,(default-includes)
            ,(title (++ (h (mref project 'name)) " "
-                       (h (mref project 'version))))))
+                       (h (mref project 'version))))])
       ,(body
-         `(,(header* project)
+         `[,(header* project)
            ,(primary-sidebar project)
            ,(div '(id "content" class "module-index")
-              `(,(h1 (project-title project))
-                ,(div '(class "doc") (p (h (mref project 'description))))
+              `[,(h1 (project-title project))
+                ,(case (mref project 'description)
+                   ("" "")
+                   (doc (div '(class "doc") (p (h doc)))))
                 ;; TODO: finish this
-                ;; ,(case (package project)
-                ;;    ("" [])
-                ;;    (pkg
-                ;;     `[,(h2 "Installation")
-                ;;       ,(p "To install, add the following dependency to your rebar.config:")
-                ;;       ,(pre '(class "deps")
-                ;;          (h (++ "[" pkg " " (mref project 'version) "]")))]))
-                ;; TODO: includes
+                #|
+                ,(case (application:get_env
+                        (binary_to_atom (mref project 'name) 'latin1)
+                        'dependency)
+                   ('undefined "")
+                   (`#(ok ,dependency)
+                    `[,(h2 "Installation")
+                      ,(p "To install, add the following dependency to your rebar.config:")
+                      ,(pre '(class "deps")
+                         (h (io_lib:format "~p" `[,dependency])))]))
+                |#
+                ,(case (lists:sort
+                         (lambda (a b) (=< (mod-name a) (mod-name b)))
+                         (mref project 'libs))
+                   ([] "")
+                   (libs
+                    `[,(h2 "Includes")
+                      ,(lists:map
+                         (lambda (lib)
+                           (div '(class "module")
+                             `[,(h3 (link-to (mod-filename lib)
+                                      (h (mod-name lib))))
+                               ,(div '(class "index")
+                                  `(,(p "Definitions")
+                                    ,(unordered-list
+                                      (lists:map
+                                        (lambda (func)
+                                          `[" "
+                                            ,(link-to (func-uri lib func)
+                                               (func-name func))
+                                            " "])
+                                        (sorted-exported-funcs lib)))))]))
+                         libs)]))
                 ,(h2 "Modules")
                 ,(lists:map
                    (lambda (module)
                      (div '(class "module")
-                       `(,(h3 (link-to (mod-filename module)
+                       `[,(h3 (link-to (mod-filename module)
                                 (h (mod-name module))))
-                         ;; TODO: module doc
+                         ,(case (format-docstring project '() module)
+                            (""  "")
+                            ;; TODO: summarize
+                            (doc (div '(class "doc") doc)))
                          ,(div '(class "index")
                             `(,(p "Exports")
                               ,(unordered-list
                                 (lists:map
                                   (lambda (func)
-                                    `(" "
+                                    `[" "
                                       ,(link-to (func-uri module func)
                                          (func-name func))
-                                      " "))
-                                  (sorted-exported-funcs module))))))))
+                                      " "])
+                                  (sorted-exported-funcs module)))))]))
                    (lists:sort
                      (lambda (a b) (=< (mod-name a) (mod-name b)))
-                     (mref project 'modules))))))))))
+                     (mref project 'modules)))])])]))
 
 ;; TODO: exemplar-ify this
 (defun unordered-list (lst) (ul (lists:map #'li/1 lst)))
