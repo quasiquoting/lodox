@@ -209,6 +209,8 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   {branch, "master"}}}
 #+END_SRC
 
+For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
+
 #+NAME: proper
 #+BEGIN_SRC erlang
 {proper,
