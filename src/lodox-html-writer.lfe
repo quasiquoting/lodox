@@ -19,7 +19,10 @@
   (write-docs project #m()))
 
 (defun write-docs (project opts)
-  "Take raw documentation info and turn it into formatted HTML."
+  "Take raw documentation info and turn it into formatted HTML.
+Write to and return `output-path` in `opts`. Default: `\"doc\"`
+
+N.B. [[write-docs/2]] makes great use of [[doto/255]] under the hood."
   (let* ((`#(ok ,cwd) (file:get_cwd))
          (`#m(output-path ,output-path app-dir ,app-dir)
           (maps:merge `#m(output-path "doc" app-dir ,cwd) opts))
@@ -61,17 +64,15 @@
   (format-docstring project module func (maps:get 'format func 'markdown)))
 
 (defun format-docstring
-  ([project _ m 'plaintext]
-   (pre '(class "plaintext") (h (mref m 'doc))))
-  ([project mod m 'markdown]
-   (case (mref m 'doc)
-     ("" "")
-     (doc
-      (format-wikilinks
-       project (markdown->html (unicode:characters_to_list doc))
-       (if (is_map mod)
-         (maps:get 'name mod 'undefined)
-         (mref m 'name)))))))
+  ([_project _mod (map 'doc "") _format]   "")
+  ([_project _mod `#m(doc ,doc) 'plaintext] (pre '(class "plaintext") (h doc)))
+  ([project mod `#m(doc ,doc) 'markdown] (when (is_map mod))
+   (let ((name (maps:get 'name mod 'undefined))
+         (html (markdown->html (unicode:characters_to_list doc))))
+     (format-wikilinks project html name)))
+  ([project mod `#m(name ,name doc ,doc) 'markdown]
+   (let ((html (markdown->html (unicode:characters_to_list doc))))
+     (format-wikilinks project html name))))
 
 (defun markdown->html (markdown)
   "Given a Markdown string, convert it to HTML.
@@ -87,27 +88,26 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                  (os:cmd)))))
 
 (defun format-wikilinks
-  ([`#m(modules ,modules) html starting-mod]
+  ([`#m(libs ,libs modules ,modules) html init]
    (case (re:run html "\\[\\[([^\\[]+/\\d+)\\]\\]"
                  '[global #(capture all_but_first)])
+     ('nomatch html)
      (`#(match ,matches)
-      (-> (match-lambda
-            ([`#(,start ,length)]
-             (let ((match (lists:sublist html (+ 1 start) length)))
-               (case (lodox-util:search-funcs modules match starting-mod)
-                 ('undefined
-                  'false)
-                 (mfa
-                  (let ((`#(,mod [,_ . ,fname])
-                         (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
-                    `#(true #(,(re-escape (++ "[[" match "]]"))
-                              ,(link-to (func-uri mod fname)
-                                 (if (=:= (atom_to_list starting-mod) mod)
-                                   (h fname)
-                                   (h (++ mod ":" fname))))))))))))
-          (lists:filtermap (lists:flatten matches))
-          (->> (fold-replace html))))
-     ('nomatch html))))
+      (let ((to-search (++ modules libs)))
+        (-> (match-lambda
+              ([`#(,start ,length)]
+               (let* ((match (lists:sublist html (+ 1 start) length))
+                      (mfa   (lodox-util:search-funcs to-search match init)))
+                 (if (=/= mfa 'undefined)
+                   (let ((`#(,mod [,_ . ,fname])
+                          (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
+                     `#(true #(,(re-escape (++ "[[" match "]]"))
+                               ,(link-to (func-uri mod fname)
+                                  (if (=:= (atom_to_list init) mod)
+                                    (h fname)
+                                    (h (++ mod ":" fname)))))))))))
+            (lists:filtermap (lists:flatten matches))
+            (->> (fold-replace html))))))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 

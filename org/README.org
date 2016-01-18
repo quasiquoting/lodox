@@ -91,7 +91,7 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 #+END_SRC
 
 #+RESULTS: generate-docs
-: Generated lodox v0.12.0 docs in /path/to/lodox/doc
+: Generated lodox v0.12.1 docs in /path/to/lodox/doc
 
 #+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
@@ -126,14 +126,50 @@ function/macro's source file in the documentation, you can set the ~​'source-u
 
 The URI is a template that may contain the following keys:
 
-| Template     | Description                                   |
-|--------------+-----------------------------------------------|
-| ~{filepath}~ | the file path from the root of the repository |
-| ~{line}~     | the line number of the source file            |
-| ~{version}~  | the version of the project                    |
+| Key      | Description                                   |
+|----------+-----------------------------------------------|
+| filepath | the file path from the root of the repository |
+| line     | the line number of the source file            |
+| version  | the version of the project                    |
 
 N.B. In order for ~{version}~ to work properly, you must add the corresponding
-tag. For example, if you =.app= file contains ~{vsn, "1.2.3"}~ you must add the
+tag. For example, if your =.app= file contains ~{vsn, "1.2.3"}~ you must add the
 tag, =​"1.2.3"​=, to your repo.
+
+** Docstring Formats
+/[ Modified from [[https://github.com/weavejester/codox#docstring-formats][Codox documentation]]. ]/
+
+By default, docstrings are rendered by Lodox as Markdown via [[http://pandoc.org][pandoc]]. If ~pandoc~
+is not available, Lodox will fall back to [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
+
+It is strongly recommended that you install [[http://pandoc.org][pandoc]], as it is much more robust.
+
+In a future version, you will be able to override this behaviour by specifying
+an explicit format for your docstrings.
+
+# Currently there are only two formats for docstrings: ~​'markdown​~ and
+# ~​'plaintext​~. The Markdown format includes extensions for code blocks,
+# tables, and, like the plaintext format, URLs are automatically encoded as links.
+#
+# You can specify the docstring format globally by adding it to the
+# ~env~ list in your =rebar.config=  file:
+#
+# #+BEGIN_SRC erlang
+# {env, [{lodox, [{format, markdown}]}]}
+# #+END_SRC
+
+Markdown docstrings also support wikilink-style relative links, for referencing
+other definitions. Definitions in the current module will be matched first, and
+then Lodox will try to find a best match out of all the definitions it's
+documenting.
+
+N.B. Module-less definitions in =.lfe= files in the =include= directory,
+e.g. [[file:include/lodox-macros.lfe][lodox-macros]], will also be included in the search.
+
+#+BEGIN_SRC lfe
+(defun bar (x)
+  "See [[foo/2]] and [[baz:square/1]] for other examples."
+  ...)
+#+END_SRC
 
 #+INCLUDE: LICENSE.org :minlevel 1

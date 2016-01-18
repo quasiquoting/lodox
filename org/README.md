@@ -109,7 +109,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.0"},
+  {vsn,          "0.12.1"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -120,7 +120,7 @@ branch = gh-pages
      "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"},
     {dependency, {lodox,
                   {git, "git://github.com/quasiquoting/lodox.git",
-                   {tag, "0.12.0"}}}}]},
+                   {tag, "0.12.1"}}}}]},
   {links,
    [{"Homepage", "https://github.com/quasiquoting/lodox"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
@@ -346,7 +346,10 @@ describing the docs that were generated.
   (write-docs project #m()))
 
 (defun write-docs (project opts)
-  "Take raw documentation info and turn it into formatted HTML."
+  "Take raw documentation info and turn it into formatted HTML.
+Write to and return `output-path` in `opts`. Default: `\"doc\"`
+
+N.B. [[write-docs/2]] makes great use of [[doto/255]] under the hood."
   (let* ((`#(ok ,cwd) (file:get_cwd))
          (`#m(output-path ,output-path app-dir ,app-dir)
           (maps:merge `#m(output-path "doc" app-dir ,cwd) opts))
@@ -388,17 +391,15 @@ describing the docs that were generated.
   (format-docstring project module func (maps:get 'format func 'markdown)))
 
 (defun format-docstring
-  ([project _ m 'plaintext]
-   (pre '(class "plaintext") (h (mref m 'doc))))
-  ([project mod m 'markdown]
-   (case (mref m 'doc)
-     ("" "")
-     (doc
-      (format-wikilinks
-       project (markdown->html (unicode:characters_to_list doc))
-       (if (is_map mod)
-         (maps:get 'name mod 'undefined)
-         (mref m 'name)))))))
+  ([_project _mod (map 'doc "") _format]   "")
+  ([_project _mod `#m(doc ,doc) 'plaintext] (pre '(class "plaintext") (h doc)))
+  ([project mod `#m(doc ,doc) 'markdown] (when (is_map mod))
+   (let ((name (maps:get 'name mod 'undefined))
+         (html (markdown->html (unicode:characters_to_list doc))))
+     (format-wikilinks project html name)))
+  ([project mod `#m(name ,name doc ,doc) 'markdown]
+   (let ((html (markdown->html (unicode:characters_to_list doc))))
+     (format-wikilinks project html name))))
 
 (defun markdown->html (markdown)
   "Given a Markdown string, convert it to HTML.
@@ -414,27 +415,26 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                  (os:cmd)))))
 
 (defun format-wikilinks
-  ([`#m(modules ,modules) html starting-mod]
+  ([`#m(libs ,libs modules ,modules) html init]
    (case (re:run html "\\[\\[([^\\[]+/\\d+)\\]\\]"
                  '[global #(capture all_but_first)])
+     ('nomatch html)
      (`#(match ,matches)
-      (-> (match-lambda
-            ([`#(,start ,length)]
-             (let ((match (lists:sublist html (+ 1 start) length)))
-               (case (lodox-util:search-funcs modules match starting-mod)
-                 ('undefined
-                  'false)
-                 (mfa
-                  (let ((`#(,mod [,_ . ,fname])
-                         (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
-                    `#(true #(,(re-escape (++ "[[" match "]]"))
-                              ,(link-to (func-uri mod fname)
-                                 (if (=:= (atom_to_list starting-mod) mod)
-                                   (h fname)
-                                   (h (++ mod ":" fname))))))))))))
-          (lists:filtermap (lists:flatten matches))
-          (->> (fold-replace html))))
-     ('nomatch html))))
+      (let ((to-search (++ modules libs)))
+        (-> (match-lambda
+              ([`#(,start ,length)]
+               (let* ((match (lists:sublist html (+ 1 start) length))
+                      (mfa   (lodox-util:search-funcs to-search match init)))
+                 (if (=/= mfa 'undefined)
+                   (let ((`#(,mod [,_ . ,fname])
+                          (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
+                     `#(true #(,(re-escape (++ "[[" match "]]"))
+                               ,(link-to (func-uri mod fname)
+                                  (if (=:= (atom_to_list init) mod)
+                                    (h fname)
+                                    (h (++ mod ":" fname)))))))))))
+            (lists:filtermap (lists:flatten matches))
+            (->> (fold-replace html))))))))
 
 (defun index-by (k ms) (lists:foldl (lambda (m mm) (mset mm (mref m k) m)) (map) ms))
 
@@ -474,38 +474,24 @@ Use [pandoc] if available, otherwise [erlmarkdown].
          (li `(class ,(++ "depth-1" (if on-index? " current" "")))
              (link-to "index.html" (div '(class "inner") "Index"))))))
 
-(defun includes-menu (project current-lib)
-  (case (mref project 'libs)
-    ([] [])
-    (libs
-     (let ((lib-map (index-by 'name libs)))
-       `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
-         ,(ul
-            (lists:map
-              (match-lambda
-                ([`#(,lib-name ,lib)]
-                 (let ((class (++ "depth-1" (if (=:= lib current-lib)
-                                              " current"
-                                              "")))
-                       (inner (div '(class "inner")
-                                (h (atom_to_list lib-name)))))
-                   (li `(class ,class) (link-to (mod-filename lib) inner)))))
-              (maps:to_list lib-map))))))))
+(defun includes-menu
+  ([`#m(libs ,libs) current-lib]
+   (make-menu "Includes" libs current-lib)))
 
-(defun modules-menu (project current-mod)
-  (let* ((modules (mref project 'modules))
-         (mod-map (index-by 'name modules)))
-    `(,(h3 '(class "no-link") (span '(class "inner") "Modules"))
-      ,(ul
-         (lists:map
-           (match-lambda
-             ([`#(,mod-name ,mod)]
-              (let ((class (++ "depth-1" (if (=:= mod current-mod)
-                                           " current"
-                                           "")))
-                    (inner (div '(class "inner") (h (atom_to_list mod-name)))))
-                (li `(class ,class) (link-to (mod-filename mod) inner)))))
-           (maps:to_list mod-map))))))
+(defun modules-menu
+  ([`#m(modules ,modules) current-mod]
+   (make-menu "Modules" modules current-mod)))
+
+(defun make-menu
+  ([_heading [] _current] [])
+  ([heading maps current]
+   (flet ((menu-item
+           ([`#(,name ,m)]
+            (let ((class (++ "depth-1" (if (=:= m current) " current" "")))
+                  (inner (div '(class "inner") (h (atom_to_list name)))))
+              (li `(class ,class) (link-to (mod-filename m) inner))))))
+     `[,(h3 '(class "no-link") (span '(class "inner") heading))
+       ,(ul (lists:map #'menu-item/1 (maps:to_list (index-by 'name maps))))])))
 
 (defun primary-sidebar (project) (primary-sidebar project '()))
 
@@ -701,7 +687,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                 ,(mod-behaviour module)
                 ,(div '(class "doc") (format-docstring project '() module))
                 ,(lists:map (lambda (func) (func-docs project module func))
-                            (sorted-exported-funcs module)))))))))
+                   (sorted-exported-funcs module)))))))))
 
 (defun lib-page (project lib)
   (html
@@ -715,7 +701,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
            ,(div '(id "content" class "module-docs") ; TODO: confirm this
               `(,(h1 '(id "top" class "anchor") (h (mref lib 'name)))
                 ,(lists:map (lambda (func) (func-docs project lib func))
-                            (sorted-exported-funcs lib)))))))))
+                   (sorted-exported-funcs lib)))))))))
 
 (defun copy-resource (output-dir resource)
   (let* ((this  (proplists:get_value 'source (module_info 'compile)))
@@ -788,7 +774,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defun fold-replace (string pairs)
   (-> (match-lambda
         ([`#(,patt ,replacement) acc]
-         (re:replace acc patt replacement '(global #(return list)))))
+         (re:replace acc patt replacement '[global #(return list)])))
       (lists:foldl string pairs)))
 
 ;; Stolen from Elixir
@@ -832,7 +818,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.0\"
+    version     \"0.12.1\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -1261,23 +1247,29 @@ elements satisfying [[pattern?/1]] or a term that satisfies [[pattern?/1]]."
   (export (search-funcs 2) (search-funcs 3)))
 
 (defun search-funcs (modules partial-func)
+  "Find the best-matching `def{un,macro}`.
+
+Given a list of modules and a partial `def{un,macro}` string, return the first
+matching definition. If none is found, return `` 'undefined ``.
+
+Equivalent to [[search-funcs/3]] with `` 'undefined `` as `starting-mod`."
   (search-funcs modules partial-func 'undefined))
 
 (defun search-funcs (modules partial-func starting-mod)
-  (let* ((suffix  (if (lists:member #\/ partial-func)
-                    partial-func
-                    `(#\/ . ,partial-func)))
-         (matches (lists:filter
-                    (lambda (func-name) (lists:suffix suffix func-name))
-                    (exported-funcs modules))))
-    (case (lists:dropwhile
-           (lambda (func-name)
-             (=/= (atom_to_list starting-mod) (module func-name)))
-           matches)
-      (`(,func . ,_) func)
-      ('()           (case matches
-                       (`(,func . ,_) func)
-                       ('()           'undefined))))))
+  "Like [[search-funcs/2]], but give precedence to matches in `starting-mod`."
+  (let* ((suffix   (if (lists:member #\: partial-func)
+                     partial-func
+                     (cons #\: partial-func)))
+         (matches  (lists:filter
+                     (lambda (func-name) (lists:suffix suffix func-name))
+                     (exported-funcs modules)))
+         (external (lists:dropwhile
+                     (lambda (func-name)
+                       (=/= (atom_to_list starting-mod) (module func-name)))
+                     matches)))
+    (if (lodox-p:null? external)
+      (if (lodox-p:null? matches) 'undefined (car matches))
+      (car external))))
 ```
 
 ```lfe

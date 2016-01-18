@@ -32,7 +32,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.0"}}}]}.
+    {tag, "0.12.1"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
@@ -60,7 +60,7 @@ rebar3 do compile, lfe lodox
 
 If all goes well, the output will look something like:
 
-    Generated lodox v0.12.0 docs in /path/to/lodox/doc
+    Generated lodox v0.12.1 docs in /path/to/lodox/doc
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.
@@ -99,34 +99,60 @@ The URI is a template that may contain the following keys:
 </colgroup>
 <thead>
 <tr>
-<th scope="col" class="org-left">Template</th>
+<th scope="col" class="org-left">Key</th>
 <th scope="col" class="org-left">Description</th>
 </tr>
 </thead>
 
 <tbody>
 <tr>
-<td class="org-left">`{filepath}`</td>
+<td class="org-left">filepath</td>
 <td class="org-left">the file path from the root of the repository</td>
 </tr>
 
 
 <tr>
-<td class="org-left">`{line}`</td>
+<td class="org-left">line</td>
 <td class="org-left">the line number of the source file</td>
 </tr>
 
 
 <tr>
-<td class="org-left">`{version}`</td>
+<td class="org-left">version</td>
 <td class="org-left">the version of the project</td>
 </tr>
 </tbody>
 </table>
 
 N.B. In order for `{version}` to work properly, you must add the corresponding
-tag. For example, if you `.app` file contains `{vsn, "1.2.3"}` you must add the
+tag. For example, if your `.app` file contains `{vsn, "1.2.3"}` you must add the
 tag, `​"1.2.3"​`, to your repo.
+
+## Docstring Formats
+
+*[ Modified from [Codox documentation](https://github.com/weavejester/codox#docstring-formats). ]*
+
+By default, docstrings are rendered by Lodox as Markdown via [pandoc](http://pandoc.org). If `pandoc`
+is not available, Lodox will fall back to [erlmarkdown](https://github.com/erlware/erlmarkdown).
+
+It is strongly recommended that you install [pandoc](http://pandoc.org), as it is much more robust.
+
+In a future version, you will be able to override this behaviour by specifying
+an explicit format for your docstrings.
+
+Markdown docstrings also support wikilink-style relative links, for referencing
+other definitions. Definitions in the current module will be matched first, and
+then Lodox will try to find a best match out of all the definitions it's
+documenting.
+
+N.B. Module-less definitions in `.lfe` files in the `include` directory,
+e.g. [lodox-macros](include/lodox-macros.lfe), will also be included in the search.
+
+```lfe
+(defun bar (x)
+  "See [[foo/2]] and [[baz:square/1]] for other examples."
+  ...)
+```
 
 # License
 
