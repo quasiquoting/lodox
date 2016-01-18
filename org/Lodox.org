@@ -753,7 +753,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                 ,(mod-behaviour module)
                 ,(div '(class "doc") (format-docstring project '() module))
                 ,(lists:map (lambda (func) (func-docs project module func))
-                            (sorted-exported-funcs module)))))))))
+                   (sorted-exported-funcs module)))))))))
 
 (defun lib-page (project lib)
   (html
@@ -767,7 +767,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
            ,(div '(id "content" class "module-docs") ; TODO: confirm this
               `(,(h1 '(id "top" class "anchor") (h (mref lib 'name)))
                 ,(lists:map (lambda (func) (func-docs project lib func))
-                            (sorted-exported-funcs lib)))))))))
+                   (sorted-exported-funcs lib)))))))))
 
 (defun copy-resource (output-dir resource)
   (let* ((this  (proplists:get_value 'source (module_info 'compile)))
@@ -840,7 +840,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defun fold-replace (string pairs)
   (-> (match-lambda
         ([`#(,patt ,replacement) acc]
-         (re:replace acc patt replacement '(global #(return list)))))
+         (re:replace acc patt replacement '[global #(return list)])))
       (lists:foldl string pairs)))
 
 ;; Stolen from Elixir
