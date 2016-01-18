@@ -26,7 +26,7 @@
 
 (defun deps ()
   "The list of dependencies, providers, that need to run before this one."
-  '(#(default app_discovery)))
+  '[#(default app_discovery)])
 
 (defun desc ()
   "The description for the task, used by `rebar3 help`."
@@ -40,7 +40,7 @@
 (defun init (state)
   "Initiate the Lodox provider."
   (rebar_api:debug "Initializing {~p, ~p}" `[,(namespace) ,(provider-name)])
-  (let* ((opts `(#(name       ,(provider-name))   ; The 'user friendly' name
+  (let* ((opts `[#(name       ,(provider-name))   ; The 'user friendly' name
                  #(module     ,(MODULE))          ; The module implementation
                  #(namespace  ,(namespace))       ; Plugin namespace
                  #(opts       [])                 ; List of plugin options
@@ -48,17 +48,17 @@
                  #(example    "rebar3 lfe lodox") ; How to use the plugin
                  #(short_desc ,(short-desc))      ; A one-line description
                  #(desc       ,(desc))            ; A longer description
-                 #(bare       true)))             ; Task can be run by user
+                 #(bare       true)])             ; Task can be run by user
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
-      (rebar_api:debug "Initialized lodox" '())
+      (rebar_api:debug "Initialized lodox" [])
       `#(ok ,state*))))
 
 (defun do (state)
   "Generate documentation for each application in the project.
 
 See: [[lodox-html-writer:write-docs/2]]"
-  (rebar_api:debug "Starting do/1 for lodox" '())
+  (rebar_api:debug "Starting do/1 for lodox" [])
   (let ((apps (rebar_state:project_apps state)))
     (lists:foreach #'write-docs/1 apps))
   `#(ok ,state))
@@ -67,7 +67,7 @@ See: [[lodox-html-writer:write-docs/2]]"
   "When an exception is raised or a value returned as
 `#(error #((MODULE) reason)`, `(format_error reason)` will be called
 so a string can be formatted explaining the issue."
-  (io_lib:format "~p" `(,reason)))
+  (io_lib:format "~p" `[,reason]))
 
 
 ;;;===================================================================
@@ -78,12 +78,12 @@ so a string can be formatted explaining the issue."
   "Given an [app_info_t], call [[lodox-html-writer:write-docs/2]] appropriately.
 
 [app_info_t]: https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl"
-  (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
+  (let* ((`[,opts ,app-dir ,name ,vsn ,out-dir]
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
-                     '(opts dir name original_vsn out_dir)))
+            '[opts dir name original_vsn out_dir]))
          (ebin-dir (filename:join out-dir "ebin"))
          (doc-dir  (filename:join app-dir "doc")))
-    (rebar_api:debug "Adding ~p to the code path" `(,ebin-dir))
+    (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
     (let ((project (lodox-parse:docs name))
           (opts    `#m(output-path ,doc-dir app-dir ,app-dir)))
@@ -98,4 +98,4 @@ so a string can be formatted explaining the issue."
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
-   (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
+   (rebar_api:console "Generated ~s v~s docs in ~s" `[,name ,vsn ,doc-dir])))
