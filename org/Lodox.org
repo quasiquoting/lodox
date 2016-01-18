@@ -491,7 +491,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
               ([`#(,start ,length)]
                (let* ((match (lists:sublist html (+ 1 start) length))
                       (mfa   (lodox-util:search-funcs to-search match init)))
-                 (if (=/= mfa 'undefined)
+                 (iff (=/= mfa 'undefined)
                    (let ((`#(,mod [,_ . ,fname])
                           (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
                      `#(true #(,(re-escape (++ "[[" match "]]"))
