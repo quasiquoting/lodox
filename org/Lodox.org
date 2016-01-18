@@ -326,9 +326,7 @@ actual work happens.
 
 See: [[lodox-html-writer:write-docs/2]]"
   (rebar_api:debug "Starting do/1 for lodox" '())
-  (let ((apps (case (rebar_state:current_app state)
-                ('undefined (rebar_state:project_apps state))
-                (apps-info   `(,apps-info)))))
+  (let ((apps (rebar_state:project_apps state)))
     (lists:foreach #'write-docs/1 apps))
   `#(ok ,state))
 #+END_SRC
