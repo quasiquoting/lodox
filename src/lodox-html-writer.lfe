@@ -147,38 +147,24 @@ Use [pandoc] if available, otherwise [erlmarkdown].
          (li `(class ,(++ "depth-1" (if on-index? " current" "")))
              (link-to "index.html" (div '(class "inner") "Index"))))))
 
-(defun includes-menu (project current-lib)
-  (case (mref project 'libs)
-    ([] [])
-    (libs
-     (let ((lib-map (index-by 'name libs)))
-       `(,(h3 '(class "no-link") (span '(class "inner") "Includes"))
-         ,(ul
-            (lists:map
-              (match-lambda
-                ([`#(,lib-name ,lib)]
-                 (let ((class (++ "depth-1" (if (=:= lib current-lib)
-                                              " current"
-                                              "")))
-                       (inner (div '(class "inner")
-                                (h (atom_to_list lib-name)))))
-                   (li `(class ,class) (link-to (mod-filename lib) inner)))))
-              (maps:to_list lib-map))))))))
+(defun includes-menu
+  ([`#m(libs ,libs) current-lib]
+   (make-menu "Includes" libs current-lib)))
 
-(defun modules-menu (project current-mod)
-  (let* ((modules (mref project 'modules))
-         (mod-map (index-by 'name modules)))
-    `(,(h3 '(class "no-link") (span '(class "inner") "Modules"))
-      ,(ul
-         (lists:map
-           (match-lambda
-             ([`#(,mod-name ,mod)]
-              (let ((class (++ "depth-1" (if (=:= mod current-mod)
-                                           " current"
-                                           "")))
-                    (inner (div '(class "inner") (h (atom_to_list mod-name)))))
-                (li `(class ,class) (link-to (mod-filename mod) inner)))))
-           (maps:to_list mod-map))))))
+(defun modules-menu
+  ([`#m(modules ,modules) current-mod]
+   (make-menu "Modules" modules current-mod)))
+
+(defun make-menu
+  ([_heading [] _current] [])
+  ([heading maps current]
+   (flet ((menu-item
+           ([`#(,name ,m)]
+            (let ((class (++ "depth-1" (if (=:= m current) " current" "")))
+                  (inner (div '(class "inner") (h (atom_to_list name)))))
+              (li `(class ,class) (link-to (mod-filename m) inner))))))
+     `[,(h3 '(class "no-link") (span '(class "inner") heading))
+       ,(ul (lists:map #'menu-item/1 (maps:to_list (index-by 'name maps))))])))
 
 (defun primary-sidebar (project) (primary-sidebar project '()))
 
