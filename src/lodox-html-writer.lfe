@@ -21,7 +21,18 @@ N.B. [[write-docs/1]] makes great use of [[doto/255]] under the hood."
   (let* ((`#(ok ,cwd) (file:get_cwd))
          (output-path (maps:get 'output-path project "doc"))
          (app-dir     (maps:get 'app-dir project cwd))
-         (project* (mset project 'app-dir app-dir)))
+         (project*    (-> project
+                          (mset 'app-dir app-dir)
+                          (mset 'modules
+                                (let ((excluded-modules
+                                       (maps:get 'excluded-modules project [])))
+                                  (lists:foldl
+                                    (match-lambda
+                                      ([(= `#m(name ,name) module) acc]
+                                       (if (lists:member name excluded-modules)
+                                         acc
+                                         (cons module acc))))
+                                    [] (mref project 'modules)))))))
     (doto output-path
           (mkdirs '["css" "js"])
           (copy-resource "css/default.css")
