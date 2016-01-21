@@ -77,10 +77,13 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (->> `[,pandoc ,(escape markdown)]
-                 (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
-                 (lists:flatten)
-                 (os:cmd)))))
+    (pandoc (let* ((tmp-md (doto (filename:absname "./tmp.md")
+                                 (file:write_file markdown)))
+                   (html   (os:cmd (++ pandoc
+                                       " -f markdown_github -t html "
+                                       tmp-md))))
+              (file:delete tmp-md)
+              html))))
 
 (defun format-wikilinks
   ([`#m(libs ,libs modules ,modules) html init]
