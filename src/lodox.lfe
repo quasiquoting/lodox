@@ -81,15 +81,16 @@ so a string can be formatted explaining the issue."
   (let* ((`[,opts ,app-dir ,name ,vsn ,out-dir]
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
             '[opts dir name original_vsn out_dir]))
-         (ebin-dir (filename:join out-dir "ebin"))
-         (doc-dir  (filename:join app-dir "doc")))
+         (lodox-opts (get-lodox-opts name opts))
+         (ebin-dir   (filename:join out-dir "ebin"))
+         (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
-    (let ((project (lodox-parse:docs name))
-          (opts    `#m(output-path ,doc-dir app-dir ,app-dir)))
-      (rebar_api:debug "Generating docs for ~p" `(,(mref project 'name)))
-      (lodox-html-writer:write-docs project opts))
-    (generated name vsn doc-dir)))
+    (let ((project (lists:foldl #'maps:merge/2 (lodox-parse:docs name)
+                     `[#m(output-path ,doc-dir app-dir ,app-dir) ,lodox-opts])))
+      (rebar_api:debug "Generating docs for ~p" `[,(mref project 'name)])
+      (lodox-html-writer:write-docs project)
+      (generated name vsn doc-dir))))
 
 (defun generated
   "Print a string of the form:
@@ -99,3 +100,13 @@ so a string can be formatted explaining the issue."
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
    (rebar_api:console "Generated ~s v~s docs in ~s" `[,name ,vsn ,doc-dir])))
+
+(defun get-lodox-opts
+  "Parse rebar.config for Lodox options.
+If `name` is a binary, convert it to an atom first."
+  ([name rebar-opts] (when (is_binary name))
+   (get-lodox-opts (binary_to_atom name 'latin1) rebar-opts))
+  ([app rebar-opts] (when (is_atom app))
+   (let* ((lodox-config (dict:fetch 'lodox rebar-opts))
+          (lodox-apps   (proplists:get_value 'apps lodox-config)))
+     (maps:from_list (proplists:get_value app lodox-apps [])))))

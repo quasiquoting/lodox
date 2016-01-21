@@ -11,12 +11,7 @@
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {env,
-   [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"},
-    {dependency, {lodox,
-                  {git, "git://github.com/quasiquoting/lodox.git",
-                   {tag, "0.12.1"}}}}]},
+  {env,          []},
   {links,
    [{"Homepage", "https://github.com/quasiquoting/lodox"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.

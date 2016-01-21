@@ -98,7 +98,7 @@ cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
 cd .. && \
 <<compile>> && \
 lfe -pa   _build/default/lib/*/ebin \
-    -eval '(lodox-html-writer:write-docs (lodox-parse:docs #"lodox"))'
+    -eval "(lodox-html-writer:write-docs (maps:merge (lodox-parse:docs #\"lodox\") '#m(source-uri \"https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}\")))"
 #+END_SRC
 
 And, as promised, [[http://quasiquoting.org/lodox/][generated documentation]] will be in the =doc= subdirectory of

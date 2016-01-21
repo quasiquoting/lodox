@@ -112,12 +112,6 @@ branch = gh-pages
 #+BEGIN_SRC emacs-lisp :exports none :tangle no
 "github.com/quasiquoting/lodox"
 #+END_SRC
-#+NAME: lodox-dependency
-#+BEGIN_SRC erlang :exports none :tangle no
-{dependency, {lodox,
-              {git, "git://<<lodox-github()>>.git",
-               {tag, "<<lodox-version()>>"}}}}
-#+END_SRC
 #+BEGIN_SRC erlang :padline yes :tangle ../src/lodox.app.src
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
@@ -127,10 +121,7 @@ branch = gh-pages
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {env,
-   [{'source-uri',
-     "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"},
-    <<lodox-dependency>>]},
+  {env,          []},
   {links,
    [{"Homepage", "https://<<lodox-github()>>"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
@@ -218,6 +209,17 @@ For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
   {branch, "master"}}}
 #+END_SRC
 
+TODO: describe Lodox config here and document it in the README.
+
+#+NAME: lodox-config
+#+BEGIN_SRC erlang
+{lodox,
+ [{apps,
+   [{lodox,
+     [{'source-uri',
+       "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"}]}]}]}.
+#+END_SRC
+
 #+BEGIN_SRC erlang :exports code :padline yes :tangle ../rebar.config
 {deps,
  [<<lfe>>,
@@ -226,6 +228,8 @@ For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
   <<exemplar>>,
   <<markdown>>,
   <<proper>>]}.
+
+<<lodox-config>>
 #+END_SRC
 
 * Modules
@@ -363,15 +367,16 @@ documentation for it.
   (let* ((`[,opts ,app-dir ,name ,vsn ,out-dir]
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
             '[opts dir name original_vsn out_dir]))
-         (ebin-dir (filename:join out-dir "ebin"))
-         (doc-dir  (filename:join app-dir "doc")))
+         (lodox-opts (get-lodox-opts name opts))
+         (ebin-dir   (filename:join out-dir "ebin"))
+         (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
-    (let ((project (lodox-parse:docs name))
-          (opts    `#m(output-path ,doc-dir app-dir ,app-dir)))
-      (rebar_api:debug "Generating docs for ~p" `(,(mref project 'name)))
-      (lodox-html-writer:write-docs project opts))
-    (generated name vsn doc-dir)))
+    (let ((project (lists:foldl #'maps:merge/2 (lodox-parse:docs name)
+                     `[#m(output-path ,doc-dir app-dir ,app-dir) ,lodox-opts])))
+      (rebar_api:debug "Generating docs for ~p" `[,(mref project 'name)])
+      (lodox-html-writer:write-docs project)
+      (generated name vsn doc-dir))))
 #+END_SRC
 
 ~generated/3~ takes an app ~name~, ~vsn~ and output directory and prints a line
@@ -387,6 +392,19 @@ describing the docs that were generated.
    (rebar_api:console "Generated ~s v~s docs in ~s" `[,name ,vsn ,doc-dir])))
 #+END_SRC
 
+TODO: describe ~get-lodox-opts/2~ here and document it in the README.
+#+BEGIN_SRC lfe
+(defun get-lodox-opts
+  "Parse rebar.config for Lodox options.
+If `name` is a binary, convert it to an atom first."
+  ([name rebar-opts] (when (is_binary name))
+   (get-lodox-opts (binary_to_atom name 'latin1) rebar-opts))
+  ([app rebar-opts] (when (is_atom app))
+   (let* ((lodox-config (dict:fetch 'lodox rebar-opts))
+          (lodox-apps   (proplists:get_value 'apps lodox-config)))
+     (maps:from_list (proplists:get_value app lodox-apps [])))))
+#+END_SRC
+
 ** lodox-html-writer
    :PROPERTIES:
    :tangle:   ../src/lodox-html-writer.lfe
@@ -398,7 +416,7 @@ describing the docs that were generated.
 #+BEGIN_SRC lfe
 (defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 1) (write-docs 2)))
+  (export (write-docs 1)))
 
 (include-lib "clj/include/compose.lfe")
 
@@ -406,19 +424,14 @@ describing the docs that were generated.
 
 (include-lib "lodox/include/lodox-macros.lfe")
 
-
 (defun write-docs (project)
-  "Equivalent to [[write-docs/2]] with `[]` as `opts`."
-  (write-docs project #m()))
-
-(defun write-docs (project opts)
   "Take raw documentation info and turn it into formatted HTML.
 Write to and return `output-path` in `opts`. Default: `\"doc\"`
 
-N.B. [[write-docs/2]] makes great use of [[doto/255]] under the hood."
+N.B. [[write-docs/1]] makes great use of [[doto/255]] under the hood."
   (let* ((`#(ok ,cwd) (file:get_cwd))
-         (`#m(output-path ,output-path app-dir ,app-dir)
-          (maps:merge `#m(output-path "doc" app-dir ,cwd) opts))
+         (output-path (maps:get 'output-path project "doc"))
+         (app-dir     (maps:get 'app-dir project cwd))
          (project* (mset project 'app-dir app-dir)))
     (doto output-path
           (mkdirs '["css" "js"])
