@@ -426,9 +426,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
        #("\"" "\\&quot;")
        #("'"  "\\&apos;")])))
 
+;; TODO: remove this unless we actually need it.
+#|
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
   (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
+|#
 
 (defun fold-replace (string pairs)
   (-> (match-lambda
