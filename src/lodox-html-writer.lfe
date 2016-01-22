@@ -335,13 +335,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
       ,(div '[class "doc"]
          (format-docstring project module func))
       ;; TODO: members?
-      ,(let ((app (binary_to_atom (mref project 'name) 'latin1)))
-         (case (maps:get 'source-uri project 'undefined)
-           ('undefined [])              ; Log failure to generate link?
-           (source-uri
-            (div '[class "src-link"]
-              (link-to (func-source-uri source-uri project module func)
-                "view source")))))]))
+      ,(case (maps:get 'source-uri project 'undefined)
+         ('undefined [])                ; Log failure to generate link?
+         (source-uri
+          (div '[class "src-link"]
+            (link-to (func-source-uri source-uri project module func)
+              "view source"))))]))
 
 (defun module-page (project module)
   (html
