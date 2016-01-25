@@ -110,7 +110,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.2"},
+  {vsn,          "0.12.3"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -309,11 +309,13 @@ documentation for it.
          (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
-    (let ((project (lists:foldl #'maps:merge/2 (lodox-parse:docs name)
+    (let ((project (lists:foldl
+                     (lambda (m acc) (maps:merge acc m))
+                     (lodox-parse:docs name)
                      `[#m(output-path ,doc-dir app-dir ,app-dir) ,lodox-opts])))
       (rebar_api:debug "Generating docs for ~p" `[,(mref project 'name)])
       (lodox-html-writer:write-docs project)
-      (generated name vsn doc-dir))))
+      (generated name vsn (mref project 'output-path)))))
 ```
 
 `generated/3` takes an app `name`, `vsn` and output directory and prints a line
@@ -830,7 +832,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.2\"
+    version     \"0.12.3\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}

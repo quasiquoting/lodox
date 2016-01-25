@@ -32,7 +32,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.2"}}}]}.
+    {tag, "0.12.3"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
@@ -60,7 +60,7 @@ rebar3 do compile, lfe lodox
 
 If all goes well, the output will look something like:
 
-    Generated lodox v0.12.2 docs in /path/to/lodox/doc
+    Generated lodox v0.12.3 docs in /path/to/lodox/doc
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.

@@ -86,11 +86,13 @@ so a string can be formatted explaining the issue."
          (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
-    (let ((project (lists:foldl #'maps:merge/2 (lodox-parse:docs name)
+    (let ((project (lists:foldl
+                     (lambda (m acc) (maps:merge acc m))
+                     (lodox-parse:docs name)
                      `[#m(output-path ,doc-dir app-dir ,app-dir) ,lodox-opts])))
       (rebar_api:debug "Generating docs for ~p" `[,(mref project 'name)])
       (lodox-html-writer:write-docs project)
-      (generated name vsn doc-dir))))
+      (generated name vsn (mref project 'output-path)))))
 
 (defun generated
   "Print a string of the form:
