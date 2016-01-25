@@ -12,6 +12,7 @@
   - [lodox-parse](#lodox-parse)
   - [lodox-p](#lodox-p)
   - [lodox-util](#lodox-util)
+  - [pandoc](#pandoc)
 - [Macros](#macros)
 - [Tests](#tests)
   - [Property Tests](#property-tests)
@@ -109,18 +110,13 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.1"},
+  {vsn,          "0.12.2"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {env,
-   [{'source-uri',
-     "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"},
-    {dependency, {lodox,
-                  {git, "git://github.com/quasiquoting/lodox.git",
-                   {tag, "0.12.1"}}}}]},
+  {env,          []},
   {links,
    [{"Homepage", "https://github.com/quasiquoting/lodox"},
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
@@ -160,6 +156,10 @@ gets merged into the [lfex](https://github.com/lfex) repo.
 
 For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
 
+For property-based testing, use [PropEr](http://proper.softlab.ntua.gr).
+
+TODO: describe Lodox config here and document it in the README.
+
 ```erlang
 {deps,
  [{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "0.10.1"}}},
@@ -172,9 +172,15 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
   {proper,
    {git, "git://github.com/quasiquoting/proper.git",
     {branch, "master"}}}]}.
+
+{lodox,
+ [{apps,
+   [{lodox,
+     [{'source-uri',
+       "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"}]}]}]}.
 ```
 
-# Modules<a id="orgheadline14"></a>
+# Modules<a id="orgheadline15"></a>
 
 ## lodox<a id="orgheadline9"></a>
 
@@ -225,7 +231,7 @@ For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
 ```lfe
 (defun deps ()
   "The list of dependencies, providers, that need to run before this one."
-  '(#(default app_discovery)))
+  '[#(default app_discovery)])
 ```
 
 -   *desc*: The description for the task, used by `rebar3 help`.
@@ -243,7 +249,7 @@ and sets up the state.
 (defun init (state)
   "Initiate the Lodox provider."
   (rebar_api:debug "Initializing {~p, ~p}" `[,(namespace) ,(provider-name)])
-  (let* ((opts `(#(name       ,(provider-name))   ; The 'user friendly' name
+  (let* ((opts `[#(name       ,(provider-name))   ; The 'user friendly' name
                  #(module     ,(MODULE))          ; The module implementation
                  #(namespace  ,(namespace))       ; Plugin namespace
                  #(opts       [])                 ; List of plugin options
@@ -251,10 +257,10 @@ and sets up the state.
                  #(example    "rebar3 lfe lodox") ; How to use the plugin
                  #(short_desc ,(short-desc))      ; A one-line description
                  #(desc       ,(desc))            ; A longer description
-                 #(bare       true)))             ; Task can be run by user
+                 #(bare       true)])             ; Task can be run by user
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
-      (rebar_api:debug "Initialized lodox" '())
+      (rebar_api:debug "Initialized lodox" [])
       `#(ok ,state*))))
 ```
 
@@ -267,10 +273,8 @@ actual work happens.
   "Generate documentation for each application in the project.
 
 See: [[lodox-html-writer:write-docs/2]]"
-  (rebar_api:debug "Starting do/1 for lodox" '())
-  (let ((apps (case (rebar_state:current_app state)
-                ('undefined (rebar_state:project_apps state))
-                (apps-info   `(,apps-info)))))
+  (rebar_api:debug "Starting do/1 for lodox" [])
+  (let ((apps (rebar_state:project_apps state)))
     (lists:foreach #'write-docs/1 apps))
   `#(ok ,state))
 ```
@@ -284,7 +288,7 @@ prints the `reason`.
   "When an exception is raised or a value returned as
 `#(error #((MODULE) reason)`, `(format_error reason)` will be called
 so a string can be formatted explaining the issue."
-  (io_lib:format "~p" `(,reason)))
+  (io_lib:format "~p" `[,reason]))
 ```
 
 ### Internal Functions<a id="orgheadline8"></a>
@@ -297,18 +301,19 @@ documentation for it.
   "Given an [app_info_t], call [[lodox-html-writer:write-docs/2]] appropriately.
 
 [app_info_t]: https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl"
-  (let* ((`(,opts ,app-dir ,name ,vsn ,out-dir)
+  (let* ((`[,opts ,app-dir ,name ,vsn ,out-dir]
           (lists:map (lambda (f) (call 'rebar_app_info f app-info))
-                     '(opts dir name original_vsn out_dir)))
-         (ebin-dir (filename:join out-dir "ebin"))
-         (doc-dir  (filename:join app-dir "doc")))
-    (rebar_api:debug "Adding ~p to the code path" `(,ebin-dir))
+            '[opts dir name original_vsn out_dir]))
+         (lodox-opts (get-lodox-opts name opts))
+         (ebin-dir   (filename:join out-dir "ebin"))
+         (doc-dir    (filename:join app-dir "doc")))
+    (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
     (code:add_path ebin-dir)
-    (let ((project (lodox-parse:docs name))
-          (opts    `#m(output-path ,doc-dir app-dir ,app-dir)))
-      (rebar_api:debug "Generating docs for ~p" `(,(mref project 'name)))
-      (lodox-html-writer:write-docs project opts))
-    (generated name vsn doc-dir)))
+    (let ((project (lists:foldl #'maps:merge/2 (lodox-parse:docs name)
+                     `[#m(output-path ,doc-dir app-dir ,app-dir) ,lodox-opts])))
+      (rebar_api:debug "Generating docs for ~p" `[,(mref project 'name)])
+      (lodox-html-writer:write-docs project)
+      (generated name vsn doc-dir))))
 ```
 
 `generated/3` takes an app `name`, `vsn` and output directory and prints a line
@@ -322,7 +327,21 @@ describing the docs that were generated.
   ([name `#(cmd ,cmd) doc-dir]
    (generated name (os:cmd (++ cmd " | tr -d \"\\n\"")) doc-dir))
   ([name vsn doc-dir]
-   (rebar_api:console "Generated ~s v~s docs in ~s" `(,name ,vsn ,doc-dir))))
+   (rebar_api:console "Generated ~s v~s docs in ~s" `[,name ,vsn ,doc-dir])))
+```
+
+TODO: describe `get-lodox-opts/2` here and document it in the README.
+
+```lfe
+(defun get-lodox-opts
+  "Parse rebar.config for Lodox options.
+If `name` is a binary, convert it to an atom first."
+  ([name rebar-opts] (when (is_binary name))
+   (get-lodox-opts (binary_to_atom name 'latin1) rebar-opts))
+  ([app rebar-opts] (when (is_atom app))
+   (let* ((lodox-config (dict:fetch 'lodox rebar-opts))
+          (lodox-apps   (proplists:get_value 'apps lodox-config)))
+     (maps:from_list (proplists:get_value app lodox-apps [])))))
 ```
 
 ## lodox-html-writer<a id="orgheadline10"></a>
@@ -332,7 +351,7 @@ describing the docs that were generated.
 ```lfe
 (defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 1) (write-docs 2)))
+  (export (write-docs 1)))
 
 (include-lib "clj/include/compose.lfe")
 
@@ -340,59 +359,65 @@ describing the docs that were generated.
 
 (include-lib "lodox/include/lodox-macros.lfe")
 
-
 (defun write-docs (project)
-  "Equivalent to [[write-docs/2]] with `[]` as `opts`."
-  (write-docs project #m()))
-
-(defun write-docs (project opts)
   "Take raw documentation info and turn it into formatted HTML.
 Write to and return `output-path` in `opts`. Default: `\"doc\"`
 
-N.B. [[write-docs/2]] makes great use of [[doto/255]] under the hood."
+N.B. [[write-docs/1]] makes great use of [[doto/255]] under the hood."
   (let* ((`#(ok ,cwd) (file:get_cwd))
-         (`#m(output-path ,output-path app-dir ,app-dir)
-          (maps:merge `#m(output-path "doc" app-dir ,cwd) opts))
-         (project* (mset project 'app-dir app-dir)))
+         (output-path (maps:get 'output-path project "doc"))
+         (app-dir     (maps:get 'app-dir project cwd))
+         (project*    (-> project
+                          (mset 'app-dir app-dir)
+                          (mset 'modules
+                                (let ((excluded-modules
+                                       (maps:get 'excluded-modules project [])))
+                                  (lists:foldl
+                                    (match-lambda
+                                      ([(= `#m(name ,name) module) acc]
+                                       (if (lists:member name excluded-modules)
+                                         acc
+                                         (cons module acc))))
+                                    [] (mref project 'modules)))))))
     (doto output-path
-          (mkdirs '("css" "js"))
+          (mkdirs '["css" "js"])
           (copy-resource "css/default.css")
           (copy-resource "css/hk-pyg.css")
           (copy-resource "js/jquery.min.js")
           (copy-resource "js/page_effects.js")
-          (write-index project*)
-          (write-modules project*)
-          (write-libs project*)
+          (write-index        project*)
+          (write-modules      project*)
+          (write-libs         project*)
           (write-undocumented project*))))
 
 (defun include-css (style)
-  (link `(type "text/css" href ,style rel "stylesheet")))
+  (link `[type "text/css" href ,style rel "stylesheet"]))
 
 (defun include-js (script)
-  (script `(type "text/javascript" src ,script)))
+  (script `[type "text/javascript" src ,script]))
 
 (defun link-to (uri content)
   "```html
 <a href=\"{{uri}}\">{{content}}</a>
 ```"
-  (a `(href ,uri) content))
+  (a `[href ,uri] content))
 
 (defun func-id
   ([func] (when (is_map func))
    (func-id (func-name func)))
   ([fname] (when (is_list fname))
    (-> (http_uri:encode (h fname))
-       (re:replace "%" "." '(global #(return list)))
+       (re:replace "%" "." '[global #(return list)])
        (->> (++ "func-")))))
 
-(defun format-docstring (project m) (format-docstring project '() m))
+(defun format-docstring (project m) (format-docstring project [] m))
 
 (defun format-docstring (project module func)
   (format-docstring project module func (maps:get 'format func 'markdown)))
 
 (defun format-docstring
   ([_project _mod (map 'doc "") _format]   "")
-  ([_project _mod `#m(doc ,doc) 'plaintext] (pre '(class "plaintext") (h doc)))
+  ([_project _mod `#m(doc ,doc) 'plaintext] (pre '[class "plaintext"] (h doc)))
   ([project mod `#m(doc ,doc) 'markdown] (when (is_map mod))
    (let ((name (maps:get 'name mod 'undefined))
          (html (markdown->html (unicode:characters_to_list doc))))
@@ -409,10 +434,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (->> `[,pandoc ,(escape markdown)]
-                 (io_lib:format "~s -f markdown_github -t html <<< \"~s\"")
-                 (lists:flatten)
-                 (os:cmd)))))
+    (pandoc (let ((`#(ok ,html) (pandoc:convert-string markdown))) html))))
 
 (defun format-wikilinks
   ([`#m(libs ,libs modules ,modules) html init]
@@ -425,7 +447,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
               ([`#(,start ,length)]
                (let* ((match (lists:sublist html (+ 1 start) length))
                       (mfa   (lodox-util:search-funcs to-search match init)))
-                 (if (=/= mfa 'undefined)
+                 (iff (=/= mfa 'undefined)
                    (let ((`#(,mod [,_ . ,fname])
                           (lists:splitwith (lambda (c) (=/= c #\:)) mfa)))
                      `#(true #(,(re-escape (++ "[[" match "]]"))
@@ -469,10 +491,10 @@ Use [pandoc] if available, otherwise [erlmarkdown].
         #("{version}"   ,version)])))
 
 (defun index-link (project on-index?)
-  `(,(h3 '(class "no-link") (span '(class "inner") "Application"))
-    ,(ul '(class "index-link")
-         (li `(class ,(++ "depth-1" (if on-index? " current" "")))
-             (link-to "index.html" (div '(class "inner") "Index"))))))
+  `[,(h3 '[class "no-link"] (span '[class "inner"] "Application"))
+    ,(ul '[class "index-link"]
+         (li `[class ,(++ "depth-1" (if on-index? " current" ""))]
+             (link-to "index.html" (div '[class "inner"] "Index"))))])
 
 (defun includes-menu
   ([`#m(libs ,libs) current-lib]
@@ -488,18 +510,18 @@ Use [pandoc] if available, otherwise [erlmarkdown].
    (flet ((menu-item
            ([`#(,name ,m)]
             (let ((class (++ "depth-1" (if (=:= m current) " current" "")))
-                  (inner (div '(class "inner") (h (atom_to_list name)))))
-              (li `(class ,class) (link-to (mod-filename m) inner))))))
-     `[,(h3 '(class "no-link") (span '(class "inner") heading))
+                  (inner (div '[class "inner"] (h (atom_to_list name)))))
+              (li `[class ,class] (link-to (mod-filename m) inner))))))
+     `[,(h3 '[class "no-link"] (span '[class "inner"] heading))
        ,(ul (lists:map #'menu-item/1 (maps:to_list (index-by 'name maps))))])))
 
-(defun primary-sidebar (project) (primary-sidebar project '()))
+(defun primary-sidebar (project) (primary-sidebar project []))
 
 (defun primary-sidebar (project current)
-  (div '(class "sidebar primary")
-    `(,(index-link project (=:= '() current))
+  (div '[class "sidebar primary"]
+    `[,(index-link project (lodox-p:null? current))
       ,(includes-menu project current)
-      ,(modules-menu project current))))
+      ,(modules-menu project current)]))
 
 (defun sorted-exported-funcs (module)
   (lists:sort
@@ -509,36 +531,36 @@ Use [pandoc] if available, otherwise [erlmarkdown].
     (mref module 'exports)))
 
 (defun funcs-sidebar (module)
-  (div '(class "sidebar secondary")
-    `(,(h3 (link-to "#top" (span '(class "inner") "Exports")))
+  (div '[class "sidebar secondary"]
+    `[,(h3 (link-to "#top" (span '[class "inner"] "Exports")))
       ,(ul
          (lists:map
            (lambda (func)
-             `(,(li '(class "depth-1")
-                    (link-to (func-uri module func)
-                      (div '(class "inner")
-                        (span (h (func-name func)))))))) ; TODO: members?
-           (sorted-exported-funcs module))))))
+             (li '[class "depth-1"]
+                 (link-to (func-uri module func)
+                   (div '[class "inner"]
+                     (span (h (func-name func))))))) ; TODO: members?
+           (sorted-exported-funcs module)))]))
 
 (defun default-includes ()
-  `(,(meta '(charset "UTF-8"))
+  `[,(meta '[charset "UTF-8"])
     ,(include-css "css/default.css")
     ,(include-css "css/hk-pyg.css")
     ,(include-js "js/jquery.min.js")
-    ,(include-js "js/page_effects.js")))
+    ,(include-js "js/page_effects.js")])
 
 (defun project-title (project)
-  (span '(class "project-title")
-    `[,(span '(class "project-name")    (h (mref project 'name))) " "
-      ,(span '(class "project-version") (h (mref project 'version)))]))
+  (span '[class "project-title"]
+    `[,(span '[class "project-name"]    (h (mref project 'name))) " "
+      ,(span '[class "project-version"] (h (mref project 'version)))]))
 
 (defun header* (project)
-  (div '(id "header")
+  (div '[id "header"]
     `[,(h2 `["Generated by "
              ,(link-to "https://github.com/quasiquoting/lodox" "Lodox")])
       ,(h1 (link-to "index.html"
              `[,(project-title project) " "
-               ,(span '(class "project-documented")
+               ,(span '[class "project-documented"]
                   (io_lib:format "(~w% documented)"
                     `[,(-> (mref project 'documented)
                            (mref 'percentage)
@@ -553,23 +575,11 @@ Use [pandoc] if available, otherwise [erlmarkdown].
       ,(body
          `[,(header* project)
            ,(primary-sidebar project)
-           ,(div '(id "content" class "module-index")
+           ,(div '[id "content" class "module-index"]
               `[,(h1 (project-title project))
                 ,(case (mref project 'description)
                    ("" "")
-                   (doc (div '(class "doc") (p (h doc)))))
-                ;; TODO: finish this
-                #|
-                ,(case (application:get_env
-                        (binary_to_atom (mref project 'name) 'latin1)
-                        'dependency)
-                   ('undefined "")
-                   (`#(ok ,dependency)
-                    `[,(h2 "Installation")
-                      ,(p "To install, add the following dependency to your rebar.config:")
-                      ,(pre '(class "deps")
-                         (h (io_lib:format "~p" `[,dependency])))]))
-                |#
+                   (doc (div '[class "doc"] (p (h doc)))))
                 ,(case (lists:sort
                          (lambda (a b) (=< (mod-name a) (mod-name b)))
                          (mref project 'libs))
@@ -578,11 +588,11 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                     `[,(h2 "Includes")
                       ,(lists:map
                          (lambda (lib)
-                           (div '(class "module")
+                           (div '[class "module"]
                              `[,(h3 (link-to (mod-filename lib)
                                       (h (mod-name lib))))
-                               ,(div '(class "index")
-                                  `(,(p "Definitions")
+                               ,(div '[class "index"]
+                                  `[,(p "Definitions")
                                     ,(unordered-list
                                       (lists:map
                                         (lambda (func)
@@ -590,20 +600,20 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                                             ,(link-to (func-uri lib func)
                                                (func-name func))
                                             " "])
-                                        (sorted-exported-funcs lib)))))]))
+                                        (sorted-exported-funcs lib)))])]))
                          libs)]))
                 ,(h2 "Modules")
                 ,(lists:map
                    (lambda (module)
-                     (div '(class "module")
+                     (div '[class "module"]
                        `[,(h3 (link-to (mod-filename module)
                                 (h (mod-name module))))
-                         ,(case (format-docstring project '() module)
+                         ,(case (format-docstring project [] module)
                             (""  "")
                             ;; TODO: summarize
-                            (doc (div '(class "doc") doc)))
-                         ,(div '(class "index")
-                            `(,(p "Exports")
+                            (doc (div '[class "doc"] doc)))
+                         ,(div '[class "index"]
+                            `[,(p "Exports")
                               ,(unordered-list
                                 (lists:map
                                   (lambda (func)
@@ -611,7 +621,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
                                       ,(link-to (func-uri module func)
                                          (func-name func))
                                       " "])
-                                  (sorted-exported-funcs module)))))]))
+                                  (sorted-exported-funcs module)))])]))
                    (lists:sort
                      (lambda (a b) (=< (mod-name a) (mod-name b)))
                      (mref project 'modules)))])])]))
@@ -623,18 +633,18 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defun format-document
   ([project (= doc `#m(format ,format))] (when (=:= format 'markdown))
    ;; TODO: render markdown
-   `(div (class "markdown") ,(mref doc 'content))))
+   `[div (class "markdown") ,(mref doc 'content)]))
 
 (defun document-page (project doc)
   (html
     (head
-      `(,(default-includes)
-        ,(title (h (mref doc 'title)))))
+      `[,(default-includes)
+        ,(title (h (mref doc 'title)))])
     (body
-      `(,(header* project)
+      `[,(header* project)
         ,(primary-sidebar project doc)
-        ,(div '(id "content" class "document")
-           (div '(id "doc") (format-document project doc)))))))
+        ,(div '[id "content" class "document"]
+           (div '[id "doc"] (format-document project doc)))])))
 |#
 
 (defun func-usage (func)
@@ -647,66 +657,65 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 (defun mod-behaviour (mod)
   (lists:map
     (lambda (behaviour)
-      (h4 '(class "behaviour") (atom_to_list behaviour)))
+      (h4 '[class "behaviour"] (atom_to_list behaviour)))
     (mref mod 'behaviour)))
 
 (defun func-docs (project module func)
-  (div `(class "public anchor" id ,(h (func-id func)))
-    `(,(h3 (h (func-name func)))
+  (div `[class "public anchor" id ,(h (func-id func))]
+    `[,(h3 (h (func-name func)))
       ,(case (func-usage func)
-         ('("()") '())
+         ('["()"] [])
          (usages
-          (div '(class "usage")
+          (div '[class "usage"]
             (-> `["```commonlisp"
                   ,@(lists:map #'unicode:characters_to_list/1 usages)
                   "```"]
                 (string:join "\n")
                 (markdown->html)))))
-      ,(div '(class "doc")
+      ,(div '[class "doc"]
          (format-docstring project module func))
       ;; TODO: members?
-      ,(let ((app (binary_to_atom (mref project 'name) 'latin1)))
-         (case (application:get_env app 'source-uri)
-           ('undefined '())             ; Log failure to generate link?
-           (`#(ok ,source-uri)
-            (div '(class "src-link")
-              (link-to (func-source-uri source-uri project module func)
-                "view source"))))))))
+      ,(case (maps:get 'source-uri project 'undefined)
+         ('undefined [])                ; Log failure to generate link?
+         (source-uri
+          (div '[class "src-link"]
+            (link-to (func-source-uri source-uri project module func)
+              "view source"))))]))
 
 (defun module-page (project module)
   (html
-    `(,(head
-         `(,(default-includes)
-           ,(title (++ (h (mod-name module)) " documentation"))))
+    `[,(head
+         `[,(default-includes)
+           ,(title (++ (h (mod-name module)) " documentation"))])
       ,(body
-         `(,(header* project)
+         `[,(header* project)
            ,(primary-sidebar project module)
            ,(funcs-sidebar module)
-           ,(div '(id "content" class "module-docs")
-              `(,(h1 '(id "top" class "anchor") (h (mod-name module)))
+           ,(div '[id "content" class "module-docs"]
+              `[,(h1 '[id "top" class "anchor"] (h (mod-name module)))
                 ,(mod-behaviour module)
-                ,(div '(class "doc") (format-docstring project '() module))
+                ,(div '[class "doc"] (format-docstring project [] module))
                 ,(lists:map (lambda (func) (func-docs project module func))
-                   (sorted-exported-funcs module)))))))))
+                   (sorted-exported-funcs module))])])]))
 
 (defun lib-page (project lib)
   (html
-    `(,(head
-         `(,(default-includes)
-           ,(title (++ (h (mref lib 'name)) " documentation"))))
+    `[,(head
+         `[,(default-includes)
+           ,(title (++ (h (mref lib 'name)) " documentation"))])
       ,(body
-         `(,(header* project)
+         `[,(header* project)
            ,(primary-sidebar project lib)
            ,(funcs-sidebar lib)
-           ,(div '(id "content" class "module-docs") ; TODO: confirm this
-              `(,(h1 '(id "top" class "anchor") (h (mref lib 'name)))
+           ,(div '[id "content" class "module-docs"] ; TODO: confirm this
+              `[,(h1 '[id "top" class "anchor"] (h (mref lib 'name)))
                 ,(lists:map (lambda (func) (func-docs project lib func))
-                   (sorted-exported-funcs lib)))))))))
+                   (sorted-exported-funcs lib))])])]))
 
 (defun copy-resource (output-dir resource)
   (let* ((this  (proplists:get_value 'source (module_info 'compile)))
          (lodox (filename:dirname (filename:dirname this))))
-    (file:copy (filename:join `(,lodox "resources" ,resource))
+    (file:copy (filename:join `[,lodox "resources" ,resource])
                (filename:join output-dir resource))))
 
 (defun mkdirs (output-dir dirs)
@@ -767,9 +776,12 @@ Use [pandoc] if available, otherwise [erlmarkdown].
        #("\"" "\\&quot;")
        #("'"  "\\&apos;")])))
 
+;; TODO: remove this unless we actually need it.
+#|
 (defun escape (string)
   "Given a string, return a copy with backticks and double quotes escaped."
   (re:replace string "[`\"]" "\\\\&" '[global #(return list)]))
+|#
 
 (defun fold-replace (string pairs)
   (-> (match-lambda
@@ -818,7 +830,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.1\"
+    version     \"0.12.2\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -1287,7 +1299,69 @@ Equivalent to [[search-funcs/3]] with `` 'undefined `` as `starting-mod`."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
-# Macros<a id="orgheadline15"></a>
+## pandoc<a id="orgheadline14"></a>
+
+[Source](https://github.com/quasiquoting/lodox/blob/master/src/pandoc.lfe)
+
+A partial LFE port of [Pandex](https://github.com/FilterKaapi/pandex).
+
+```lfe
+(defmodule pandoc
+  (doc "A partial LFE port of [Pandex][].
+
+[Pandex]: https://github.com/FilterKaapi/pandex")
+  (export all))
+
+(include-lib "clj/include/compose.lfe")
+
+(defun convert-string (string)
+  "Equivalent to `(`[[convert-string/3]]` string \"markdown_github\" \"html\")`."
+  (convert-string string "markdown_github" "html"))
+
+(defun convert-string (string from to)
+  "Equivalent to `(`[[convert-string/4]]` string from to [])`."
+  (convert-string string from to []))
+
+(defun convert-string (string from to _options)
+  (let ((dot-temp ".temp"))
+    (if (filelib:is_dir dot-temp) 'ok (file:make_dir dot-temp))
+    (let ((name (filename:join dot-temp (random-name))))
+      (file:write_file name string)
+      (let ((`#(ok ,output) (convert-file name from to)))
+        (file:delete name)
+        `#(ok ,output)))))
+
+(defun convert-file (file)
+  "Equivalent to `(`[[convert-file/3]]` file \"markdown_github\" \"html\")`."
+  (convert-file file "markdown" "html"))
+
+(defun convert-file (file from to)
+  "Equivalent to `(`[[convert-file/4]]` file from to [])`."
+  (convert-file file from to []))
+
+(defun convert-file (file from to _options)
+  "[[convert-file/4]] works under the hood of all the other functions."
+  (let ((output (os:cmd (++ "pandoc " file " -f " from " -t " to))))
+    `#(ok ,output)))
+
+(defun random-name ()
+  (++ (random-string) "-" (timestamp) ".md"))
+
+(defun random-string ()
+  (random:seed (erlang:monotonic_time)
+               (erlang:time_offset)
+               (erlang:unique_integer))
+  (-> #0x100000000000000
+      (random:uniform)
+      (integer_to_list 36)
+      (string:to_lower)))
+
+(defun timestamp ()
+  (let ((`#(,megasec ,sec ,_microsec) (os:timestamp)))
+    (-> (* megasec 1000000) (+ sec) (integer_to_list))))
+```
+
+# Macros<a id="orgheadline16"></a>
 
 Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
 s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
@@ -1316,9 +1390,9 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (defmacro iff (test then) `(if ,test ,then))
 ```
 
-# Tests<a id="orgheadline21"></a>
+# Tests<a id="orgheadline22"></a>
 
-## Property Tests<a id="orgheadline16"></a>
+## Property Tests<a id="orgheadline17"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/lodox_parse_tests.erl)
 
@@ -1491,7 +1565,7 @@ pprint(Term) ->
              [global, {return, list}]).
 ```
 
-## Unit Tests<a id="orgheadline20"></a>
+## Unit Tests<a id="orgheadline21"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/unit-lodox-tests.lfe)
 
@@ -1505,7 +1579,7 @@ pprint(Term) ->
 (include-lib "ltest/include/ltest-macros.lfe")
 ```
 
-### `project` Shapes<a id="orgheadline17"></a>
+### `project` Shapes<a id="orgheadline18"></a>
 
 ```lfe
 (deftestgen projects-shapes
@@ -1527,7 +1601,7 @@ pprint(Term) ->
       ,(_assert (is_list (mref* project 'version))))])
 ```
 
-### `modules` Shapes<a id="orgheadline18"></a>
+### `modules` Shapes<a id="orgheadline19"></a>
 
 ```lfe
 (deftestgen modules-shapes
@@ -1550,7 +1624,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* module 'name))))])
 ```
 
-### `exports` Shapes<a id="orgheadline19"></a>
+### `exports` Shapes<a id="orgheadline20"></a>
 
 ```lfe
 (deftestgen exports-shapes
@@ -1582,7 +1656,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* exports 'name))))])
 ```
 
-# Travis CI<a id="orgheadline22"></a>
+# Travis CI<a id="orgheadline23"></a>
 
 [Link](https://travis-ci.org/quasiquoting/lodox)
 
@@ -1610,7 +1684,7 @@ otp_release:
   - 18.0
 ```
 
-# License<a id="orgheadline23"></a>
+# License<a id="orgheadline24"></a>
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 

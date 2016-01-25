@@ -88,13 +88,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (let* ((tmp-md (doto (filename:absname "./tmp.md")
-                                 (file:write_file markdown)))
-                   (html   (os:cmd (++ pandoc
-                                       " -f markdown_github -t html "
-                                       tmp-md))))
-              (file:delete tmp-md)
-              html))))
+    (pandoc (let ((`#(ok ,html) (pandoc:convert-string markdown))) html))))
 
 (defun format-wikilinks
   ([`#m(libs ,libs modules ,modules) html init]
