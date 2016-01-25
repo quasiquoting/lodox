@@ -1421,7 +1421,7 @@ parse_test_() ->
     , {"A simple function with a docstring is correctly parsed.",
        prop_defun_simple_doc(), 500}
     , {"A function with pattern clauses produces an empty docstring.",
-       prop_defun_match(), 40}
+       prop_defun_match(), 30}
     , {"A function with pattern clauses and a docstring is correctly parsed.",
        prop_defun_match_doc(), 30}
     ],
