@@ -110,7 +110,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.3"},
+  {vsn,          "0.12.4"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -124,7 +124,7 @@ branch = gh-pages
 
 # Rebar3 Configuration<a id="orgheadline6"></a>
 
-**Describe `rebar.config` here.**
+TODO: Describe `rebar.config` here.
 
 ```erlang
 {erl_opts, [debug_info, {src_dirs, ["test"]}]}.
@@ -341,8 +341,10 @@ If `name` is a binary, convert it to an atom first."
   ([name rebar-opts] (when (is_binary name))
    (get-lodox-opts (binary_to_atom name 'latin1) rebar-opts))
   ([app rebar-opts] (when (is_atom app))
-   (let* ((lodox-config (dict:fetch 'lodox rebar-opts))
-          (lodox-apps   (proplists:get_value 'apps lodox-config)))
+   (let* ((lodox-config (if (dict:is_key 'lodox rebar-opts)
+                          (dict:fetch 'lodox rebar-opts)
+                          []))
+          (lodox-apps   (proplists:get_value 'apps lodox-config [])))
      (maps:from_list (proplists:get_value app lodox-apps [])))))
 ```
 
@@ -832,7 +834,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.3\"
+    version     \"0.12.4\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -1423,9 +1425,9 @@ parse_test_() ->
     , {"A simple function with a docstring is correctly parsed.",
        prop_defun_simple_doc(), 500}
     , {"A function with pattern clauses produces an empty docstring.",
-       prop_defun_match(), 30}
+       prop_defun_match(), 100}
     , {"A function with pattern clauses and a docstring is correctly parsed.",
-       prop_defun_match_doc(), 30}
+       prop_defun_match_doc(), 100}
     ],
   [{timeout, ?TIMEOUT,
     {Title, ?_assert(proper:quickcheck(Property, ?OPTIONS(NumTests)))}}
@@ -1518,7 +1520,9 @@ pattern_form() ->
           match_fun()])
    | non_empty(list())].
 
-match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).
+%% Don't waste atoms, since we're already running out.
+%% match_fun() -> ?LET(F, printable_string(), list_to_atom("match-" ++ F)).
+match_fun() -> 'match-record'.
 
 pattern_clause(Arity) ->
   [arglist_patterns(Arity) |
@@ -1677,7 +1681,7 @@ before_script:
     - wget https://s3.amazonaws.com/rebar3/rebar3
     - chmod 755 rebar3
 script:
-  - ./rebar3 eunit -v
+  - erl +t 10000000 -pa _build/default/lib/*/ebin -noshell -eval 'eunit:test({application, lodox}, [verbose]).' -s init stop
 notifications:
   email:
     - quasiquoting@gmail.com
