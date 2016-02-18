@@ -85,7 +85,7 @@ so a string can be formatted explaining the issue."
          (ebin-dir   (filename:join out-dir "ebin"))
          (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
-    (code:add_path ebin-dir)
+    (code:add_patha ebin-dir)
     (let ((project (lists:foldl
                      (lambda (m acc) (maps:merge acc m))
                      (lodox-parse:docs name)
