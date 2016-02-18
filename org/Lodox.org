@@ -83,7 +83,6 @@ _*
 *.beam
 ebin
 erl_crash.dump
-rebar.lock
 #+END_SRC
 
 ** Submodules
