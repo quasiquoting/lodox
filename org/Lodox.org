@@ -143,6 +143,15 @@ TODO: Describe =rebar.config= here.
 {erl_opts, [debug_info, {src_dirs, ["test"]}]}.
 
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
+#+END_SRC
+
+# TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
+
+#+BEGIN_SRC erlang :exports code :tangle ../rebar.config :padline yes
+{plugins,
+ [{'lfe-compile',
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {ref, "14843c8"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 #+END_SRC
