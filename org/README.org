@@ -85,15 +85,9 @@ sed 's/[^ ]*\/\(lodox\)/\/path\/to\/\1/'
 #+END_SRC
 
 If all goes well, the output will look something like:
+: Generated lodox vX.Y.Z docs in /path/to/lodox/doc
+
 #+NAME: generate-docs
-#+BEGIN_SRC sh :exports results :results output
-cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
-#+END_SRC
-
-#+RESULTS: generate-docs
-: Generated lodox v0.12.2 docs in /path/to/lodox/doc
-
-#+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
 cd .. && \
 <<compile>> && \

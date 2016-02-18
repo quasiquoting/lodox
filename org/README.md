@@ -93,7 +93,6 @@ _*
 *.beam
 ebin
 erl_crash.dump
-rebar.lock
 ```
 
 ## Submodules<a id="orgheadline3"></a>
@@ -110,7 +109,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.4"},
+  {vsn,          "0.12.5"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -130,6 +129,13 @@ TODO: Describe `rebar.config` here.
 {erl_opts, [debug_info, {src_dirs, ["test"]}]}.
 
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
+```
+
+```erlang
+{plugins,
+ [{'lfe-compile',
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {ref, "14843c8"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 ```
@@ -308,7 +314,7 @@ documentation for it.
          (ebin-dir   (filename:join out-dir "ebin"))
          (doc-dir    (filename:join app-dir "doc")))
     (rebar_api:debug "Adding ~p to the code path" `[,ebin-dir])
-    (code:add_path ebin-dir)
+    (code:add_patha ebin-dir)
     (let ((project (lists:foldl
                      (lambda (m acc) (maps:merge acc m))
                      (lodox-parse:docs name)
@@ -834,7 +840,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.4\"
+    version     \"0.12.5\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
