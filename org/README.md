@@ -12,7 +12,6 @@
   - [lodox-parse](#lodox-parse)
   - [lodox-p](#lodox-p)
   - [lodox-util](#lodox-util)
-  - [pandoc](#pandoc)
 - [Macros](#macros)
 - [Tests](#tests)
   - [Property Tests](#property-tests)
@@ -162,6 +161,8 @@ gets merged into the [lfex](https://github.com/lfex) repo.
 
 For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
 
+[levaindoc](https://github.com/quasiquoting/levaindoc), LFE wrapper for [Pandoc](http://pandoc.org).
+
 For property-based testing, use [PropEr](http://proper.softlab.ntua.gr).
 
 TODO: describe Lodox config here and document it in the README.
@@ -175,6 +176,9 @@ TODO: describe Lodox config here and document it in the README.
   {markdown,
    {git, "git://github.com/erlware/erlmarkdown.git",
     {branch, "master"}}},
+  {levaindoc,
+   {git, "git://github.com/quasiquoting/levaindoc.git",
+    {branch, "master"}}},
   {proper,
    {git, "git://github.com/quasiquoting/proper.git",
     {branch, "master"}}}]}.
@@ -186,7 +190,7 @@ TODO: describe Lodox config here and document it in the README.
        "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"}]}]}]}.
 ```
 
-# Modules<a id="orgheadline15"></a>
+# Modules<a id="orgheadline14"></a>
 
 ## lodox<a id="orgheadline9"></a>
 
@@ -361,7 +365,8 @@ If `name` is a binary, convert it to an atom first."
 ```lfe
 (defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 1)))
+  (export (write-docs 1))
+  (import (from levaindoc (markdown_github->html 1 ))))
 
 (include-lib "clj/include/compose.lfe")
 
@@ -444,7 +449,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (let ((`#(ok ,html) (pandoc:convert-string markdown))) html))))
+    (pandoc (let ((`#(ok ,html) (markdown_github->html markdown))) html))))
 
 (defun format-wikilinks
   ([`#m(libs ,libs modules ,modules) html init]
@@ -1309,69 +1314,7 @@ Equivalent to [[search-funcs/3]] with `` 'undefined `` as `starting-mod`."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
-## pandoc<a id="orgheadline14"></a>
-
-[Source](https://github.com/quasiquoting/lodox/blob/master/src/pandoc.lfe)
-
-A partial LFE port of [Pandex](https://github.com/FilterKaapi/pandex).
-
-```lfe
-(defmodule pandoc
-  (doc "A partial LFE port of [Pandex][].
-
-[Pandex]: https://github.com/FilterKaapi/pandex")
-  (export all))
-
-(include-lib "clj/include/compose.lfe")
-
-(defun convert-string (string)
-  "Equivalent to `(`[[convert-string/3]]` string \"markdown_github\" \"html\")`."
-  (convert-string string "markdown_github" "html"))
-
-(defun convert-string (string from to)
-  "Equivalent to `(`[[convert-string/4]]` string from to [])`."
-  (convert-string string from to []))
-
-(defun convert-string (string from to _options)
-  (let ((dot-temp ".temp"))
-    (if (filelib:is_dir dot-temp) 'ok (file:make_dir dot-temp))
-    (let ((name (filename:join dot-temp (random-name))))
-      (file:write_file name string)
-      (let ((`#(ok ,output) (convert-file name from to)))
-        (file:delete name)
-        `#(ok ,output)))))
-
-(defun convert-file (file)
-  "Equivalent to `(`[[convert-file/3]]` file \"markdown_github\" \"html\")`."
-  (convert-file file "markdown" "html"))
-
-(defun convert-file (file from to)
-  "Equivalent to `(`[[convert-file/4]]` file from to [])`."
-  (convert-file file from to []))
-
-(defun convert-file (file from to _options)
-  "[[convert-file/4]] works under the hood of all the other functions."
-  (let ((output (os:cmd (++ "pandoc " file " -f " from " -t " to))))
-    `#(ok ,output)))
-
-(defun random-name ()
-  (++ (random-string) "-" (timestamp) ".md"))
-
-(defun random-string ()
-  (random:seed (erlang:monotonic_time)
-               (erlang:time_offset)
-               (erlang:unique_integer))
-  (-> #0x100000000000000
-      (random:uniform)
-      (integer_to_list 36)
-      (string:to_lower)))
-
-(defun timestamp ()
-  (let ((`#(,megasec ,sec ,_microsec) (os:timestamp)))
-    (-> (* megasec 1000000) (+ sec) (integer_to_list))))
-```
-
-# Macros<a id="orgheadline16"></a>
+# Macros<a id="orgheadline15"></a>
 
 Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
 s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
@@ -1400,9 +1343,9 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (defmacro iff (test then) `(if ,test ,then))
 ```
 
-# Tests<a id="orgheadline22"></a>
+# Tests<a id="orgheadline21"></a>
 
-## Property Tests<a id="orgheadline17"></a>
+## Property Tests<a id="orgheadline16"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/lodox_parse_tests.erl)
 
@@ -1577,7 +1520,7 @@ pprint(Term) ->
              [global, {return, list}]).
 ```
 
-## Unit Tests<a id="orgheadline21"></a>
+## Unit Tests<a id="orgheadline20"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/unit-lodox-tests.lfe)
 
@@ -1591,7 +1534,7 @@ pprint(Term) ->
 (include-lib "ltest/include/ltest-macros.lfe")
 ```
 
-### `project` Shapes<a id="orgheadline18"></a>
+### `project` Shapes<a id="orgheadline17"></a>
 
 ```lfe
 (deftestgen projects-shapes
@@ -1613,7 +1556,7 @@ pprint(Term) ->
       ,(_assert (is_list (mref* project 'version))))])
 ```
 
-### `modules` Shapes<a id="orgheadline19"></a>
+### `modules` Shapes<a id="orgheadline18"></a>
 
 ```lfe
 (deftestgen modules-shapes
@@ -1636,7 +1579,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* module 'name))))])
 ```
 
-### `exports` Shapes<a id="orgheadline20"></a>
+### `exports` Shapes<a id="orgheadline19"></a>
 
 ```lfe
 (deftestgen exports-shapes
@@ -1668,7 +1611,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* exports 'name))))])
 ```
 
-# Travis CI<a id="orgheadline23"></a>
+# Travis CI<a id="orgheadline22"></a>
 
 [Link](https://travis-ci.org/quasiquoting/lodox)
 
@@ -1697,7 +1640,7 @@ otp_release:
   - 18.0
 ```
 
-# License<a id="orgheadline24"></a>
+# License<a id="orgheadline23"></a>
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 

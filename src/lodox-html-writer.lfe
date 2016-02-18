@@ -5,7 +5,8 @@
 
 (defmodule lodox-html-writer
   (doc "Documentation writer that outputs HTML.")
-  (export (write-docs 1)))
+  (export (write-docs 1))
+  (import (from levaindoc (markdown_github->html 1 ))))
 
 (include-lib "clj/include/compose.lfe")
 
@@ -88,7 +89,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
 [erlmarkdown]: https://github.com/erlware/erlmarkdown"
   (case (os:find_executable "pandoc")
     ('false (markdown:conv_utf8 markdown))
-    (pandoc (let ((`#(ok ,html) (pandoc:convert-string markdown))) html))))
+    (pandoc (let ((`#(ok ,html) (markdown_github->html markdown))) html))))
 
 (defun format-wikilinks
   ([`#m(libs ,libs modules ,modules) html init]
