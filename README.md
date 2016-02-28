@@ -6,6 +6,8 @@
 
 Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://quasiquoting.org/lodox/).
 
+Requires Erlang 18.x or later.
+
 # Installation
 
 First, make sure you have the [lfe-compile](https://github.com/lfe-rebar3/compile) plugin as a dependency in your
