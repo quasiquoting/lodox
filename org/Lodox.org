@@ -134,20 +134,37 @@ branch = gh-pages
   :noweb:    yes
   :padline:  no
   :END:
-TODO: Describe =rebar.config= here.
-
 #+BEGIN_SRC erlang :tangle ../rebar.config
 <<generated("erlang")>>
 #+END_SRC
 #+BEGIN_SRC erlang :exports code :tangle ../rebar.config
-{erl_opts, [debug_info, {src_dirs, ["test"]}]}.
+<<eunit_compile_opts>>
 
+<<plugins>>
+
+{deps,
+ [<<lfe>>,
+  <<ltest>>,
+  <<clj>>,
+  <<exemplar>>,
+  <<markdown>>,
+  <<levaindoc>>,
+  <<proper>>]}.
+
+<<lodox-config>>
+#+END_SRC
+
+** EUnit Compile Options
+TODO: Describe =rebar.config= here.
+#+NAME: eunit_compile_opts
+#+BEGIN_SRC erlang :exports code
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
 #+END_SRC
 
-# TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
-
-#+BEGIN_SRC erlang :exports code :tangle ../rebar.config :padline yes
+** Plugins
+TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
+#+NAME: plugins
+#+BEGIN_SRC erlang :exports code
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
@@ -156,6 +173,7 @@ TODO: Describe =rebar.config= here.
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 #+END_SRC
 
+** Dependencies
 The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
 Use the latest version, which as of this writing, is:
 #+NAME: lfe-version
@@ -235,19 +253,6 @@ TODO: describe Lodox config here and document it in the README.
        "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"}]}]}]}.
 #+END_SRC
 
-#+BEGIN_SRC erlang :exports code :padline yes :tangle ../rebar.config
-{deps,
- [<<lfe>>,
-  <<ltest>>,
-  <<clj>>,
-  <<exemplar>>,
-  <<markdown>>,
-  <<levaindoc>>,
-  <<proper>>]}.
-
-<<lodox-config>>
-#+END_SRC
-
 * Modules
   :PROPERTIES:
   :noweb:    yes
@@ -271,7 +276,8 @@ TODO: describe Lodox config here and document it in the README.
   ;; N.B. Export all since LFE doesn't like us defining do/1.
   (export all))
 #+END_SRC
-*** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
+*** Provider Interface
+[[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Documentation]]
 - /namespace/: in which the provider is registered.
   In this case, use ~default~, which is the main namespace.
 #+BEGIN_SRC lfe
@@ -1764,14 +1770,13 @@ pprint(Term) ->
 
 * Travis CI
   :PROPERTIES:
-  :tangle:   ../.travis.yml
   :noweb:    yes
   :END:
 [[https://travis-ci.org/quasiquoting/lodox][Link]]
-#+BEGIN_SRC yaml :exports none
+#+BEGIN_SRC yaml :exports none :tangle ../.travis.yml
 <<generated("yaml")>>
 #+END_SRC
-#+BEGIN_SRC yaml :padline yes
+#+BEGIN_SRC yaml :padline yes :tangle ../.travis.yml
 language: erlang
 # http://stackoverflow.com/a/24600210/1793234
 # Handle git submodules yourself
@@ -1787,13 +1792,52 @@ before_script:
     - chmod 755 rebar3
 script:
   - ./rebar3 compile
-  - erl +t 10000000 -pa _build/default/lib/*/ebin -noshell -eval 'eunit:test({application, lodox}, [verbose]).' -s init stop
+  - <<erlang-vm-tuning-hacks>>
 notifications:
   email:
     - quasiquoting@gmail.com
 otp_release:
   - 18.2
   - 18.0
+#+END_SRC
+
+** Erlang VM Tuning Hacks
+Due to the the property-based tests generating lots and lots of atoms via
+~list_to_atom/1~, it's necessary to tune the Erlang VM a bit.
+
+Per [[http://erlang.org/doc/man/erl.html#+t][the documentation]], ~+t size~ lets you:
+#+BEGIN_QUOTE
+Set the maximum number of atoms the VM can handle. Default is 1048576.
+#+END_QUOTE
+
+1048576 is nowhere near enough for these particular tests,
+so we set it to 10000000 instead.
+#+NAME: max_atoms
+#+BEGIN_SRC fish
++t 10000000
+#+END_SRC
+
+Next, we ensure all the necessary directories are on the code path:
+#+NAME: code_path
+#+BEGIN_SRC fish
+-pa _build/default/lib/*/ebin
+#+END_SRC
+
+Then, without a shell, we run the EUnit tests with the ~verbose~ option:
+#+NAME: eunit_test
+#+BEGIN_SRC fish
+-noshell -eval 'eunit:test({application, lodox}, [verbose]).'
+#+END_SRC
+
+Finally, we make ~init~ call ~init:stop/0~:
+#+NAME: init_stop
+#+BEGIN_SRC fish
+-s init stop
+#+END_SRC
+
+#+NAME: erlang-vm-tuning-hacks
+#+BEGIN_SRC fish :exports none
+erl <<max_atoms>> <<code_path>> <<eunit_test>> <<init_stop>>
 #+END_SRC
 
 #+INCLUDE: LICENSE.org :minlevel 1
