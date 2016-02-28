@@ -154,9 +154,6 @@ For the Clojure-inspired threading macros, use [clj](https://github.com/lfex/clj
 
 To handle HTML rendering, use [exemplar](https://github.com/lfex/exemplar).
 
-N.B. Only using [my fork](https://github.com/yurrriq/exemplar) until [this pull request](https://github.com/lfex/exemplar/pull/15) or similar
-gets merged into the [lfex](https://github.com/lfex) repo.
-
     0.3.0
 
 For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
@@ -172,7 +169,7 @@ TODO: describe Lodox config here and document it in the README.
  [{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "0.10.1"}}},
   {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "0.7.0"}}},
   {clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}},
-  {exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "0.3.0"}}},
+  {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "0.3.0"}}},
   {markdown,
    {git, "git://github.com/erlware/erlmarkdown.git",
     {branch, "master"}}},

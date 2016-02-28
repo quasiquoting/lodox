@@ -1,3 +1,4 @@
+#+STARTUP: showall
 #+OPTIONS: toc:t
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
@@ -188,15 +189,12 @@ For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][cl
 
 To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 
-N.B. Only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or similar
-gets merged into the [[https://github.com/lfex][lfex]] repo.
-
 #+NAME: exemplar-version
 : 0.3.0
 
 #+NAME: exemplar
 #+BEGIN_SRC erlang
-{exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "<<exemplar-version()>>"}}}
+{exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "<<exemplar-version()>>"}}}
 #+END_SRC
 
 For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
