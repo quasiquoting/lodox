@@ -7,6 +7,14 @@
   - [EUnit Compile Options](#eunit-compile-options)
   - [Plugins](#plugins)
   - [Dependencies](#dependencies)
+    - [lfe](#lfe)
+    - [ltest](#ltest)
+    - [clj](#clj)
+    - [exemplar](#exemplar)
+    - [erlmarkdown](#erlmarkdown)
+    - [levaindoc](#levaindoc)
+    - [proper](#proper)
+  - [Lodox Config](#lodox-config)
 - [Modules](#modules)
   - [lodox](#lodox)
     - [Provider Interface](#provider-interface)
@@ -124,7 +132,7 @@ branch = gh-pages
     {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
 ```
 
-# Rebar3 Configuration<a id="orgheadline9"></a>
+# Rebar3 Configuration<a id="orgheadline17"></a>
 
 ```erlang
 {eunit_compile_opts, [{src_dirs, ["test"]}]}.
@@ -179,36 +187,60 @@ TODO: Describe this and the mess wrt `~/.config/rebar3/rebar.config`
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 ```
 
-## Dependencies<a id="orgheadline8"></a>
+## Dependencies<a id="orgheadline15"></a>
+
+### lfe<a id="orgheadline8"></a>
 
 The first and foremost dependency is, of course, [LFE](https://github.com/rvirding/lfe) itself.
 Use the latest version, which as of this writing, is:
 
     0.10.1
 
+### ltest<a id="orgheadline9"></a>
+
 To make writing [EUnit](http://www.erlang.org/doc/apps/eunit/chapter.html) tests easier, use [ltest](https://github.com/lfex/ltest).
 
     0.7.0
+
+### clj<a id="orgheadline10"></a>
 
 For the Clojure-inspired threading macros, use [clj](https://github.com/lfex/clj).
 
     0.3.0
 
+### exemplar<a id="orgheadline11"></a>
+
 To handle HTML rendering, use [exemplar](https://github.com/lfex/exemplar).
 
     0.3.0
 
+### erlmarkdown<a id="orgheadline12"></a>
+
 For markdown: [erlmarkdown](https://github.com/erlware/erlmarkdown).
+
+### levaindoc<a id="orgheadline13"></a>
 
 [levaindoc](https://github.com/quasiquoting/levaindoc), LFE wrapper for [Pandoc](http://pandoc.org).
 
+### proper<a id="orgheadline14"></a>
+
 For property-based testing, use [PropEr](http://proper.softlab.ntua.gr).
+
+## Lodox Config<a id="orgheadline16"></a>
 
 TODO: describe Lodox config here and document it in the README.
 
-# Modules<a id="orgheadline17"></a>
+```erlang
+{lodox,
+ [{apps,
+   [{lodox,
+     [{'source-uri',
+       "https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}"}]}]}]}.
+```
 
-## lodox<a id="orgheadline12"></a>
+# Modules<a id="orgheadline25"></a>
+
+## lodox<a id="orgheadline20"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/src/lodox.lfe)
 
@@ -223,7 +255,7 @@ TODO: describe Lodox config here and document it in the README.
   (export all))
 ```
 
-### Provider Interface<a id="orgheadline10"></a>
+### Provider Interface<a id="orgheadline18"></a>
 
 [Documentation](http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface)
 
@@ -319,7 +351,7 @@ so a string can be formatted explaining the issue."
   (io_lib:format "~p" `[,reason]))
 ```
 
-### Internal Functions<a id="orgheadline11"></a>
+### Internal Functions<a id="orgheadline19"></a>
 
 `write-docs/1` takes an `app_info_t` (see: [rebar​\_app​\_info.erl](https://github.com/rebar/rebar3/blob/master/src/rebar_app_info.erl)) and generates
 documentation for it.
@@ -376,7 +408,7 @@ If `name` is a binary, convert it to an atom first."
      (maps:from_list (proplists:get_value app lodox-apps [])))))
 ```
 
-## lodox-html-writer<a id="orgheadline13"></a>
+## lodox-html-writer<a id="orgheadline21"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/src/lodox-html-writer.lfe)
 
@@ -828,7 +860,7 @@ Use [pandoc] if available, otherwise [erlmarkdown].
   (re:replace string "[.^$*+?()[{\\\|\s#]" "\\\\&" '[global  #(return list)]))
 ```
 
-## lodox-parse<a id="orgheadline14"></a>
+## lodox-parse<a id="orgheadline22"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/src/lodox-parse.lfe)
 
@@ -1194,7 +1226,7 @@ functions therein.
    (->> `[,name ,arity] (io_lib:format "~s/~w") (lists:flatten))))
 ```
 
-## lodox-p<a id="orgheadline15"></a>
+## lodox-p<a id="orgheadline23"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/src/lodox-p.lfe)
 
@@ -1282,7 +1314,7 @@ elements satisfying [[pattern?/1]] or a term that satisfies [[pattern?/1]]."
   ([_]   'false))
 ```
 
-## lodox-util<a id="orgheadline16"></a>
+## lodox-util<a id="orgheadline24"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/src/lodox-util.lfe)
 
@@ -1332,7 +1364,7 @@ Equivalent to [[search-funcs/3]] with `` 'undefined `` as `starting-mod`."
   (lists:takewhile (lambda (c) (=/= c #\:)) func-name))
 ```
 
-# Macros<a id="orgheadline18"></a>
+# Macros<a id="orgheadline26"></a>
 
 Inspired by [Clojure](http://clojuredocs.org/clojure.core/doto), `doto` takes a term `x` and threads it through given
 s-expressions as the first argument, e.g. `(-> x (f y z))`, or functions,
@@ -1361,9 +1393,9 @@ N.B. `iff` cannot be called `when` in LFE, since `when` is reserved for guards.
 (defmacro iff (test then) `(if ,test ,then))
 ```
 
-# Tests<a id="orgheadline24"></a>
+# Tests<a id="orgheadline32"></a>
 
-## Property Tests<a id="orgheadline19"></a>
+## Property Tests<a id="orgheadline27"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/lodox_parse_tests.erl)
 
@@ -1538,7 +1570,7 @@ pprint(Term) ->
              [global, {return, list}]).
 ```
 
-## Unit Tests<a id="orgheadline23"></a>
+## Unit Tests<a id="orgheadline31"></a>
 
 [Source](https://github.com/quasiquoting/lodox/blob/master/test/unit-lodox-tests.lfe)
 
@@ -1552,7 +1584,7 @@ pprint(Term) ->
 (include-lib "ltest/include/ltest-macros.lfe")
 ```
 
-### `project` Shapes<a id="orgheadline20"></a>
+### `project` Shapes<a id="orgheadline28"></a>
 
 ```lfe
 (deftestgen projects-shapes
@@ -1574,7 +1606,7 @@ pprint(Term) ->
       ,(_assert (is_list (mref* project 'version))))])
 ```
 
-### `modules` Shapes<a id="orgheadline21"></a>
+### `modules` Shapes<a id="orgheadline29"></a>
 
 ```lfe
 (deftestgen modules-shapes
@@ -1597,7 +1629,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* module 'name))))])
 ```
 
-### `exports` Shapes<a id="orgheadline22"></a>
+### `exports` Shapes<a id="orgheadline30"></a>
 
 ```lfe
 (deftestgen exports-shapes
@@ -1629,7 +1661,7 @@ pprint(Term) ->
       ,(_assert (is_atom (mref* exports 'name))))])
 ```
 
-# Travis CI<a id="orgheadline26"></a>
+# Travis CI<a id="orgheadline34"></a>
 
 [Link](https://travis-ci.org/quasiquoting/lodox)
 
@@ -1658,7 +1690,7 @@ otp_release:
   - 18.0
 ```
 
-## Erlang VM Tuning Hacks<a id="orgheadline25"></a>
+## Erlang VM Tuning Hacks<a id="orgheadline33"></a>
 
 Due to the the property-based tests generating lots and lots of atoms via
 `list_to_atom/1`, it's necessary to tune the Erlang VM a bit.
@@ -1692,7 +1724,7 @@ Finally, we make `init` call `init:stop/0`:
 -s init stop
 ```
 
-# License<a id="orgheadline27"></a>
+# License<a id="orgheadline35"></a>
 
 Lodox is licensed under [the MIT License](http://yurrriq.mit-license.org).
 

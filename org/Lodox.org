@@ -174,6 +174,7 @@ TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
 #+END_SRC
 
 ** Dependencies
+*** lfe
 The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
 Use the latest version, which as of this writing, is:
 #+NAME: lfe-version
@@ -184,8 +185,8 @@ Use the latest version, which as of this writing, is:
 {lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
 #+END_SRC
 
+*** ltest
 To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
-
 #+NAME: ltest-version
 : 0.7.0
 
@@ -194,8 +195,8 @@ To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tes
 {ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
 #+END_SRC
 
+*** clj
 For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
-
 #+NAME: clj-version
 : 0.3.0
 
@@ -204,9 +205,8 @@ For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][cl
 {clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}}
 #+END_SRC
 
-
+*** exemplar
 To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
-
 #+NAME: exemplar-version
 : 0.3.0
 
@@ -215,8 +215,8 @@ To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "<<exemplar-version()>>"}}}
 #+END_SRC
 
+*** erlmarkdown
 For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
-
 #+NAME: markdown
 #+BEGIN_SRC erlang
 {markdown,
@@ -224,8 +224,8 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   {branch, "master"}}}
 #+END_SRC
 
+*** levaindoc
 [[https://github.com/quasiquoting/levaindoc][levaindoc]], LFE wrapper for [[http://pandoc.org][Pandoc]].
-
 #+NAME: levaindoc
 #+BEGIN_SRC erlang
 {levaindoc,
@@ -233,8 +233,8 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   {branch, "master"}}}
 #+END_SRC
 
+*** proper
 For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
-
 #+NAME: proper
 #+BEGIN_SRC erlang
 {proper,
@@ -242,10 +242,11 @@ For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
   {branch, "master"}}}
 #+END_SRC
 
+** Lodox Config
 TODO: describe Lodox config here and document it in the README.
 
 #+NAME: lodox-config
-#+BEGIN_SRC erlang
+#+BEGIN_SRC erlang :exports code
 {lodox,
  [{apps,
    [{lodox,
