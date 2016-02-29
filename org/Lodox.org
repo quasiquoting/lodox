@@ -473,7 +473,7 @@ N.B. [[write-docs/1]] makes great use of [[doto/255]] under the hood."
                                          (cons module acc))))
                                     [] (mref project 'modules)))))))
     (doto output-path
-          (mkdirs '["css" "js"])
+          (ensure-dirs '["css" "js"])
           (copy-resource "css/default.css")
           (copy-resource "css/hk-pyg.css")
           (copy-resource "js/jquery.min.js")
@@ -811,10 +811,24 @@ Use [pandoc] if available, otherwise [erlmarkdown].
     (file:copy (filename:join `[,lodox "resources" ,resource])
                (filename:join output-dir resource))))
 
-(defun mkdirs (output-dir dirs)
-  (file:make_dir output-dir)
-  (flet ((mkdir (dir) (file:make_dir (filename:join output-dir dir))))
-    (lists:foreach #'mkdir/1 dirs)))
+(defun ensure-dirs
+  "Given a `path` and list of `dirs`, call [[ensure-dir/2]] `path` `dir`
+for each `dir` in `dirs`."
+  ([path `(,dir . ,dirs)]
+   (ensure-dir path dir)
+   (ensure-dirs path dirs))
+  ([path ()] 'ok))
+
+(defun ensure-dir (dir)
+  "Given a `dir`ectory path, perform the equivalent of `mkdir -p`.
+If something goes wrong, throw a descriptive error."
+  (case (filelib:ensure_dir (filename:join dir "dummy"))
+    ('ok               'ok)
+    (`#(error ,reason) (error reason))))
+
+(defun ensure-dir (path dir)
+  "Given a `path` and `dir`ectory name, call [[ensure-dir/1]] on `path`/`dir`."
+  (ensure-dir (filename:join path dir)))
 
 (defun write-index (output-dir project)
   (file:write_file (filename:join output-dir "index.html")
