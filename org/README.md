@@ -120,7 +120,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.5"},
+  {vsn,          "0.12.6"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -909,7 +909,7 @@ If something goes wrong, throw a descriptive error."
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.5\"
+    version     \"0.12.6\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}

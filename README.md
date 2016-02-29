@@ -34,7 +34,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox, ".*",
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.5"}}}]}.
+    {tag, "0.12.6"}}}]}.
 ```
 
 The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
