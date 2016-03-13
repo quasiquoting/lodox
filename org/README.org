@@ -1,3 +1,4 @@
+#+STARTUP: showall
 #+OPTIONS: toc:nil
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
@@ -19,6 +20,8 @@ cat VERSION
 
 * Introduction
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
+
+Requires Erlang 18.x or later.
 
 * Installation
   :PROPERTIES:

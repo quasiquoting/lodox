@@ -16,7 +16,7 @@
   1},
  {<<"levaindoc">>,
   {git,"git://github.com/quasiquoting/levaindoc.git",
-       {ref,"f2aa96d3f699b2daec2b7119c3b396cb7789f819"}},
+       {ref,"a0c632bb8200ce6b90004d050879bd114ad48755"}},
   0},
  {<<"lfe">>,
   {git,"git://github.com/rvirding/lfe.git",

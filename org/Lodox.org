@@ -1,3 +1,4 @@
+#+STARTUP: showall
 #+OPTIONS: toc:t
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
@@ -133,111 +134,14 @@ branch = gh-pages
   :noweb:    yes
   :padline:  no
   :END:
-TODO: Describe =rebar.config= here.
-
 #+BEGIN_SRC erlang :tangle ../rebar.config
 <<generated("erlang")>>
 #+END_SRC
 #+BEGIN_SRC erlang :exports code :tangle ../rebar.config
-{erl_opts, [debug_info, {src_dirs, ["test"]}]}.
+<<eunit_compile_opts>>
 
-{eunit_compile_opts, [{src_dirs, ["test"]}]}.
-#+END_SRC
+<<plugins>>
 
-# TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
-
-#+BEGIN_SRC erlang :exports code :tangle ../rebar.config :padline yes
-{plugins,
- [{'lfe-compile',
-   {git, "git://github.com/lfe-rebar3/compile.git",
-    {ref, "14843c8"}}}]}.
-
-{provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
-#+END_SRC
-
-The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
-Use the latest version, which as of this writing, is:
-#+NAME: lfe-version
-: 0.10.1
-
-#+NAME: lfe
-#+BEGIN_SRC erlang
-{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
-#+END_SRC
-
-To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
-
-#+NAME: ltest-version
-: 0.7.0
-
-#+NAME: ltest
-#+BEGIN_SRC erlang
-{ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
-#+END_SRC
-
-For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
-
-#+NAME: clj-version
-: 0.3.0
-
-#+NAME: clj
-#+BEGIN_SRC erlang
-{clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}}
-#+END_SRC
-
-
-To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
-
-N.B. Only using [[https://github.com/yurrriq/exemplar][my fork]] until [[https://github.com/lfex/exemplar/pull/15][this pull request]] or similar
-gets merged into the [[https://github.com/lfex][lfex]] repo.
-
-#+NAME: exemplar-version
-: 0.3.0
-
-#+NAME: exemplar
-#+BEGIN_SRC erlang
-{exemplar, {git, "git://github.com/yurrriq/exemplar.git", {tag, "<<exemplar-version()>>"}}}
-#+END_SRC
-
-For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
-
-#+NAME: markdown
-#+BEGIN_SRC erlang
-{markdown,
- {git, "git://github.com/erlware/erlmarkdown.git",
-  {branch, "master"}}}
-#+END_SRC
-
-[[https://github.com/quasiquoting/levaindoc][levaindoc]], LFE wrapper for [[http://pandoc.org][Pandoc]].
-
-#+NAME: levaindoc
-#+BEGIN_SRC erlang
-{levaindoc,
- {git, "git://github.com/quasiquoting/levaindoc.git",
-  {branch, "master"}}}
-#+END_SRC
-
-For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
-
-#+NAME: proper
-#+BEGIN_SRC erlang
-{proper,
- {git, "git://github.com/quasiquoting/proper.git",
-  {branch, "master"}}}
-#+END_SRC
-
-TODO: describe Lodox config here and document it in the README.
-
-#+NAME: lodox-config
-#+BEGIN_SRC erlang
-{lodox,
- [{apps,
-   [{lodox,
-     [{'source-uri',
-       "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"}]}]}]}.
-#+END_SRC
-
-#+BEGIN_SRC erlang :exports code :padline yes :tangle ../rebar.config
 {deps,
  [<<lfe>>,
   <<ltest>>,
@@ -248,6 +152,106 @@ TODO: describe Lodox config here and document it in the README.
   <<proper>>]}.
 
 <<lodox-config>>
+#+END_SRC
+
+** EUnit Compile Options
+TODO: Describe =rebar.config= here.
+#+NAME: eunit_compile_opts
+#+BEGIN_SRC erlang :exports code
+{eunit_compile_opts, [{src_dirs, ["test"]}]}.
+#+END_SRC
+
+** Plugins
+TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
+#+NAME: plugins
+#+BEGIN_SRC erlang :exports code
+{plugins,
+ [{'lfe-compile',
+   {git, "git://github.com/lfe-rebar3/compile.git",
+    {ref, "14843c8"}}}]}.
+
+{provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
+#+END_SRC
+
+** Dependencies
+*** lfe
+The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
+Use the latest version, which as of this writing, is:
+#+NAME: lfe-version
+: 0.10.1
+
+#+NAME: lfe
+#+BEGIN_SRC erlang
+{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
+#+END_SRC
+
+*** ltest
+To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
+#+NAME: ltest-version
+: 0.7.0
+
+#+NAME: ltest
+#+BEGIN_SRC erlang
+{ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
+#+END_SRC
+
+*** clj
+For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
+#+NAME: clj-version
+: 0.3.0
+
+#+NAME: clj
+#+BEGIN_SRC erlang
+{clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}}
+#+END_SRC
+
+*** exemplar
+To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
+#+NAME: exemplar-version
+: 0.3.0
+
+#+NAME: exemplar
+#+BEGIN_SRC erlang
+{exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "<<exemplar-version()>>"}}}
+#+END_SRC
+
+*** erlmarkdown
+For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
+#+NAME: markdown
+#+BEGIN_SRC erlang
+{markdown,
+ {git, "git://github.com/erlware/erlmarkdown.git",
+  {branch, "master"}}}
+#+END_SRC
+
+*** levaindoc
+[[https://github.com/quasiquoting/levaindoc][levaindoc]], LFE wrapper for [[http://pandoc.org][Pandoc]].
+#+NAME: levaindoc
+#+BEGIN_SRC erlang
+{levaindoc,
+ {git, "git://github.com/quasiquoting/levaindoc.git",
+  {branch, "master"}}}
+#+END_SRC
+
+*** proper
+For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
+#+NAME: proper
+#+BEGIN_SRC erlang
+{proper,
+ {git, "git://github.com/quasiquoting/proper.git",
+  {branch, "master"}}}
+#+END_SRC
+
+** Lodox Config
+TODO: describe Lodox config here and document it in the README.
+
+#+NAME: lodox-config
+#+BEGIN_SRC erlang :exports code
+{lodox,
+ [{apps,
+   [{lodox,
+     [{'source-uri',
+       "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"}]}]}]}.
 #+END_SRC
 
 * Modules
@@ -273,7 +277,8 @@ TODO: describe Lodox config here and document it in the README.
   ;; N.B. Export all since LFE doesn't like us defining do/1.
   (export all))
 #+END_SRC
-*** [[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Provider Interface]]
+*** Provider Interface
+[[http://www.rebar3.org/v3.0/docs/plugins#section-provider-interface][Documentation]]
 - /namespace/: in which the provider is registered.
   In this case, use ~default~, which is the main namespace.
 #+BEGIN_SRC lfe
@@ -468,7 +473,7 @@ N.B. [[write-docs/1]] makes great use of [[doto/255]] under the hood."
                                          (cons module acc))))
                                     [] (mref project 'modules)))))))
     (doto output-path
-          (mkdirs '["css" "js"])
+          (ensure-dirs '["css" "js"])
           (copy-resource "css/default.css")
           (copy-resource "css/hk-pyg.css")
           (copy-resource "js/jquery.min.js")
@@ -806,10 +811,24 @@ Use [pandoc] if available, otherwise [erlmarkdown].
     (file:copy (filename:join `[,lodox "resources" ,resource])
                (filename:join output-dir resource))))
 
-(defun mkdirs (output-dir dirs)
-  (file:make_dir output-dir)
-  (flet ((mkdir (dir) (file:make_dir (filename:join output-dir dir))))
-    (lists:foreach #'mkdir/1 dirs)))
+(defun ensure-dirs
+  "Given a `path` and list of `dirs`, call [[ensure-dir/2]] `path` `dir`
+for each `dir` in `dirs`."
+  ([path `(,dir . ,dirs)]
+   (ensure-dir path dir)
+   (ensure-dirs path dirs))
+  ([path ()] 'ok))
+
+(defun ensure-dir (dir)
+  "Given a `dir`ectory path, perform the equivalent of `mkdir -p`.
+If something goes wrong, throw a descriptive error."
+  (case (filelib:ensure_dir (filename:join dir "dummy"))
+    ('ok               'ok)
+    (`#(error ,reason) (error reason))))
+
+(defun ensure-dir (path dir)
+  "Given a `path` and `dir`ectory name, call [[ensure-dir/1]] on `path`/`dir`."
+  (ensure-dir (filename:join path dir)))
 
 (defun write-index (output-dir project)
   (file:write_file (filename:join output-dir "index.html")
@@ -1766,14 +1785,13 @@ pprint(Term) ->
 
 * Travis CI
   :PROPERTIES:
-  :tangle:   ../.travis.yml
   :noweb:    yes
   :END:
 [[https://travis-ci.org/quasiquoting/lodox][Link]]
-#+BEGIN_SRC yaml :exports none
+#+BEGIN_SRC yaml :exports none :tangle ../.travis.yml
 <<generated("yaml")>>
 #+END_SRC
-#+BEGIN_SRC yaml :padline yes
+#+BEGIN_SRC yaml :padline yes :tangle ../.travis.yml
 language: erlang
 # http://stackoverflow.com/a/24600210/1793234
 # Handle git submodules yourself
@@ -1789,13 +1807,52 @@ before_script:
     - chmod 755 rebar3
 script:
   - ./rebar3 compile
-  - erl +t 10000000 -pa _build/default/lib/*/ebin -noshell -eval 'eunit:test({application, lodox}, [verbose]).' -s init stop
+  - <<erlang-vm-tuning-hacks>>
 notifications:
   email:
     - quasiquoting@gmail.com
 otp_release:
   - 18.2
   - 18.0
+#+END_SRC
+
+** Erlang VM Tuning Hacks
+Due to the the property-based tests generating lots and lots of atoms via
+~list_to_atom/1~, it's necessary to tune the Erlang VM a bit.
+
+Per [[http://erlang.org/doc/man/erl.html#+t][the documentation]], ~+t size~ lets you:
+#+BEGIN_QUOTE
+Set the maximum number of atoms the VM can handle. Default is 1048576.
+#+END_QUOTE
+
+1048576 is nowhere near enough for these particular tests,
+so we set it to 10000000 instead.
+#+NAME: max_atoms
+#+BEGIN_SRC fish
++t 10000000
+#+END_SRC
+
+Next, we ensure all the necessary directories are on the code path:
+#+NAME: code_path
+#+BEGIN_SRC fish
+-pa _build/default/lib/*/ebin
+#+END_SRC
+
+Then, without a shell, we run the EUnit tests with the ~verbose~ option:
+#+NAME: eunit_test
+#+BEGIN_SRC fish
+-noshell -eval 'eunit:test({application, lodox}, [verbose]).'
+#+END_SRC
+
+Finally, we make ~init~ call ~init:stop/0~:
+#+NAME: init_stop
+#+BEGIN_SRC fish
+-s init stop
+#+END_SRC
+
+#+NAME: erlang-vm-tuning-hacks
+#+BEGIN_SRC fish :exports none
+erl <<max_atoms>> <<code_path>> <<eunit_test>> <<init_stop>>
 #+END_SRC
 
 #+INCLUDE: LICENSE.org :minlevel 1
