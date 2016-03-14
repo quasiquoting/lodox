@@ -199,7 +199,7 @@ For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][cl
 **** exemplar
 To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 #+NAME: exemplar-version
-: 0.3.2
+: 0.3.0
 
 #+NAME: exemplar
 #+BEGIN_SRC erlang
@@ -221,7 +221,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 #+BEGIN_SRC erlang
 {levaindoc,
  {git, "git://github.com/quasiquoting/levaindoc.git",
-  {tag, "0.3.1"}}}
+  {tag, "0.3.2"}}}
 #+END_SRC
 
 *** Test profile

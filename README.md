@@ -34,7 +34,7 @@ Finally, add Lodox to your `plugins` list:
  [% ...
   {lodox,
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.7"}}}]}.
+    {tag, "0.12.8"}}}]}.
 ```
 
 # Usage

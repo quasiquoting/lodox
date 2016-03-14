@@ -116,7 +116,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.7"},
+  {vsn,          "0.12.8"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -143,13 +143,13 @@ branch = gh-pages
 {deps,
  [{lfe,      {git, "git://github.com/rvirding/lfe.git",  {tag, "0.10.1"}}},
   {clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.3.0"}}},
-  {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "0.3.2"}}},
+  {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "0.3.0"}}},
   {markdown,
    {git, "git://github.com/erlware/erlmarkdown.git",
     {branch, "master"}}},
   {levaindoc,
    {git, "git://github.com/quasiquoting/levaindoc.git",
-    {tag, "0.3.1"}}}]}.
+    {tag, "0.3.2"}}}]}.
 
 {lodox,
  [{apps,
@@ -208,7 +208,7 @@ TODO: Describe this and the mess wrt `~/.config/rebar3/rebar.config`
 
     To handle HTML rendering, use [exemplar](https://github.com/lfex/exemplar).
     
-        0.3.2
+        0.3.0
 
 4.  erlmarkdown
 
@@ -915,7 +915,7 @@ If something goes wrong, throw a descriptive error."
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.7\"
+    version     \"0.12.8\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
