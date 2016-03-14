@@ -27,15 +27,14 @@ Requires Erlang 18.x or later.
   :PROPERTIES:
   :noweb:    yes
   :END:
-#+MACRO: global-rebar-config the global [[https://github.com/rebar/rebar3][rebar3]] config, =~/.config/rebar3/rebar.config=
 
 First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
-project's =rebar.config= or, better yet, in the {{{global-rebar-config}}}:
+project's =rebar.config=:
 #+BEGIN_SRC erlang
 {plugins,
  [{'lfe-compile', ".*",
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}
+    {tag, "0.2.2"}}}]}
 #+END_SRC
 
 Then in your project's =rebar.config=, include the [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][provider pre-hook]]:
@@ -48,13 +47,10 @@ Finally, add Lodox to your =plugins= list:
 #+BEGIN_SRC erlang
 {plugins,
  [% ...
-  {lodox, ".*",
+  {lodox,
    {git, "git://github.com/quasiquoting/lodox.git",
     {tag, "<<lodox-version()>>"}}}]}.
 #+END_SRC
-
-The recommended place for the Lodox plugin entry is {{{global-rebar-config}}},
-but it works at the project level, too.
 
 * Usage
   :PROPERTIES:

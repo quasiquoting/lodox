@@ -144,14 +144,14 @@ branch = gh-pages
 
 {deps,
  [<<lfe>>,
-  <<ltest>>,
   <<clj>>,
   <<exemplar>>,
   <<markdown>>,
-  <<levaindoc>>,
-  <<proper>>]}.
+  <<levaindoc>>]}.
 
 <<lodox-config>>
+
+<<profiles>>
 #+END_SRC
 
 ** EUnit Compile Options
@@ -168,13 +168,14 @@ TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {ref, "14843c8"}}}]}.
+    {tag, "0.2.2"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 #+END_SRC
 
 ** Dependencies
-*** lfe
+*** Project-wide
+**** lfe
 The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
 Use the latest version, which as of this writing, is:
 #+NAME: lfe-version
@@ -182,40 +183,30 @@ Use the latest version, which as of this writing, is:
 
 #+NAME: lfe
 #+BEGIN_SRC erlang
-{lfe,      {git, "git://github.com/rvirding/lfe.git", {tag, "<<lfe-version()>>"}}}
+{lfe,      {git, "git://github.com/rvirding/lfe.git",  {tag, "<<lfe-version()>>"}}}
 #+END_SRC
 
-*** ltest
-To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
-#+NAME: ltest-version
-: 0.7.0
-
-#+NAME: ltest
-#+BEGIN_SRC erlang
-{ltest,    {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
-#+END_SRC
-
-*** clj
+**** clj
 For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
 #+NAME: clj-version
 : 0.3.0
 
 #+NAME: clj
 #+BEGIN_SRC erlang
-{clj,      {git, "git://github.com/lfex/clj.git", {tag, "0.3.0"}}}
+{clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.3.0"}}}
 #+END_SRC
 
-*** exemplar
+**** exemplar
 To handle HTML rendering, use [[https://github.com/lfex/exemplar][exemplar]].
 #+NAME: exemplar-version
-: 0.3.0
+: 0.3.2
 
 #+NAME: exemplar
 #+BEGIN_SRC erlang
 {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "<<exemplar-version()>>"}}}
 #+END_SRC
 
-*** erlmarkdown
+**** erlmarkdown
 For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 #+NAME: markdown
 #+BEGIN_SRC erlang
@@ -224,16 +215,27 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
   {branch, "master"}}}
 #+END_SRC
 
-*** levaindoc
+**** levaindoc
 [[https://github.com/quasiquoting/levaindoc][levaindoc]], LFE wrapper for [[http://pandoc.org][Pandoc]].
 #+NAME: levaindoc
 #+BEGIN_SRC erlang
 {levaindoc,
  {git, "git://github.com/quasiquoting/levaindoc.git",
-  {branch, "master"}}}
+  {tag, "0.3.1"}}}
 #+END_SRC
 
-*** proper
+*** Test profile
+**** ltest
+To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
+#+NAME: ltest-version
+: 0.7.0
+
+#+NAME: ltest
+#+BEGIN_SRC erlang
+{ltest, {git, "git://github.com/lfex/ltest.git", {tag, "<<ltest-version()>>"}}}
+#+END_SRC
+
+**** proper
 For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
 #+NAME: proper
 #+BEGIN_SRC erlang
@@ -252,6 +254,20 @@ TODO: describe Lodox config here and document it in the README.
    [{lodox,
      [{'source-uri',
        "https://<<lodox-github()>>/blob/{version}/{filepath}#L{line}"}]}]}]}.
+#+END_SRC
+** Profiles
+#+NAME: profiles
+#+BEGIN_SRC erlang
+{profiles,
+ [{test, [<<test-erl_opts>>,
+          {deps,
+           [<<ltest>>,
+            <<proper>>]}]}]}.
+#+END_SRC
+
+#+NAME: test-erl_opts
+#+BEGIN_SRC erlang
+{erl_opts, [{src_dirs, ["src", "test"]}]}
 #+END_SRC
 
 * Modules
@@ -1806,7 +1822,7 @@ before_script:
     - wget https://s3.amazonaws.com/rebar3/rebar3
     - chmod 755 rebar3
 script:
-  - ./rebar3 compile
+  - ./rebar3 as test compile
   - <<erlang-vm-tuning-hacks>>
 notifications:
   email:
@@ -1835,7 +1851,7 @@ so we set it to 10000000 instead.
 Next, we ensure all the necessary directories are on the code path:
 #+NAME: code_path
 #+BEGIN_SRC fish
--pa _build/default/lib/*/ebin
+-pa _build/test/lib/*/ebin
 #+END_SRC
 
 Then, without a shell, we run the EUnit tests with the ~verbose~ option:

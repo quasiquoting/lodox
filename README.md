@@ -11,13 +11,13 @@ Requires Erlang 18.x or later.
 # Installation
 
 First, make sure you have the [lfe-compile](https://github.com/lfe-rebar3/compile) plugin as a dependency in your
-project's `rebar.config` or, better yet, in the the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`:
+project's `rebar.config`:
 
 ```erlang
 {plugins,
  [{'lfe-compile', ".*",
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}
+    {tag, "0.2.2"}}}]}
 ```
 
 Then in your project's `rebar.config`, include the [provider pre-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
@@ -32,13 +32,10 @@ Finally, add Lodox to your `plugins` list:
 ```erlang
 {plugins,
  [% ...
-  {lodox, ".*",
+  {lodox,
    {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.6"}}}]}.
+    {tag, "0.12.7"}}}]}.
 ```
-
-The recommended place for the Lodox plugin entry is the global [rebar3](https://github.com/rebar/rebar3) config, `~/.config/rebar3/rebar.config`,
-but it works at the project level, too.
 
 # Usage
 
