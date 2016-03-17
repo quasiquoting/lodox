@@ -179,7 +179,7 @@ TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
 The first and foremost dependency is, of course, [[https://github.com/rvirding/lfe][LFE]] itself.
 Use the latest version, which as of this writing, is:
 #+NAME: lfe-version
-: 0.10.1
+: 1.0
 
 #+NAME: lfe
 #+BEGIN_SRC erlang

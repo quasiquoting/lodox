@@ -15,7 +15,7 @@ project's `rebar.config`:
 
 ```erlang
 {plugins,
- [{'lfe-compile', ".*",
+ [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
     {tag, "0.2.2"}}}]}
 ```
@@ -27,14 +27,18 @@ Then in your project's `rebar.config`, include the [provider pre-hook](https://w
  [{pre, [{compile, {lfe, compile}}]}]}
 ```
 
-Finally, add Lodox to your `plugins` list:
+Finally, add Lodox to your `plugins` list, preferably inside a `doc` [profile](https://www.rebar3.org/docs/profiles):
 
 ```erlang
-{plugins,
+{profiles,
  [% ...
-  {lodox,
-   {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.8"}}}]}.
+  {doc,
+   [% ...
+    {plugins,
+     [% ...
+      {lodox,
+       {git, "git://github.com/quasiquoting/lodox.git",
+        {tag, "0.12.9"}}}]}]}]}.
 ```
 
 # Usage
