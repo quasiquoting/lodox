@@ -116,7 +116,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.9"},
+  {vsn,          "0.12.10"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -136,13 +136,13 @@ branch = gh-pages
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.2"}}}]}.
+    {tag, "0.3.0"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 
 {deps,
  [{lfe,      {git, "git://github.com/rvirding/lfe.git",  {tag, "1.0"}}},
-  {clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.3.0"}}},
+  {clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.4.0"}}},
   {exemplar, {git, "git://github.com/lfex/exemplar.git", {tag, "0.3.0"}}},
   {markdown,
    {git, "git://github.com/erlware/erlmarkdown.git",
@@ -160,7 +160,7 @@ branch = gh-pages
 {profiles,
  [{test, [{erl_opts, [{src_dirs, ["src", "test"]}]},
           {deps,
-           [{ltest, {git, "git://github.com/lfex/ltest.git", {tag, "0.7.0"}}},
+           [{ltest, {git, "git://github.com/lfex/ltest.git", {tag, "0.8.0"}}},
             {proper,
              {git, "git://github.com/quasiquoting/proper.git",
               {branch, "master"}}}]}]}]}.
@@ -182,7 +182,7 @@ TODO: Describe this and the mess wrt `~/.config/rebar3/rebar.config`
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.2"}}}]}.
+    {tag, "0.3.0"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 ```
@@ -202,7 +202,7 @@ TODO: Describe this and the mess wrt `~/.config/rebar3/rebar.config`
 
     For the Clojure-inspired threading macros, use [clj](https://github.com/lfex/clj).
     
-        0.3.0
+        0.4.0
 
 3.  exemplar
 
@@ -224,7 +224,7 @@ TODO: Describe this and the mess wrt `~/.config/rebar3/rebar.config`
 
     To make writing [EUnit](http://www.erlang.org/doc/apps/eunit/chapter.html) tests easier, use [ltest](https://github.com/lfex/ltest).
     
-        0.7.0
+        0.8.0
 
 2.  proper
 
@@ -915,7 +915,7 @@ If something goes wrong, throw a descriptive error."
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.9\"
+    version     \"0.12.10\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}

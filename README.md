@@ -38,7 +38,7 @@ Finally, add Lodox to your `plugins` list, preferably inside a `doc` [profile](h
      [% ...
       {lodox,
        {git, "git://github.com/quasiquoting/lodox.git",
-        {tag, "0.12.9"}}}]}]}]}.
+        {tag, "0.12.10"}}}]}]}]}.
 ```
 
 # Usage
@@ -52,13 +52,13 @@ rebar3 compile
 Then, to invoke Lodox, simply run:
 
 ```sh
-rebar3 lfe lodox
+rebar3 as doc lfe lodox
 ```
 
 Alternatively, you can `do` both at once:
 
 ```sh
-rebar3 do compile, lfe lodox
+rebar3 as doc do compile, lfe lodox
 ```
 
 If all goes well, the output will look something like:

@@ -69,12 +69,12 @@ rebar3 compile
 Then, to invoke Lodox, simply run:
 #+NAME: lodox
 #+BEGIN_SRC sh
-rebar3 lfe lodox
+rebar3 as doc lfe lodox
 #+END_SRC
 
 Alternatively, you can ~do~ both at once:
 #+BEGIN_SRC sh
-rebar3 do compile, lfe lodox
+rebar3 as doc do compile, lfe lodox
 #+END_SRC
 
 #+NAME: last-line-only

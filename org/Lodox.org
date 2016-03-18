@@ -168,7 +168,7 @@ TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.2"}}}]}.
+    {tag, "0.3.0"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 #+END_SRC
@@ -189,11 +189,11 @@ Use the latest version, which as of this writing, is:
 **** clj
 For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
 #+NAME: clj-version
-: 0.3.0
+: 0.4.0
 
 #+NAME: clj
 #+BEGIN_SRC erlang
-{clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.3.0"}}}
+{clj,      {git, "git://github.com/lfex/clj.git",      {tag, "<<clj-version()>>"}}}
 #+END_SRC
 
 **** exemplar
@@ -228,7 +228,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 **** ltest
 To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
 #+NAME: ltest-version
-: 0.7.0
+: 0.8.0
 
 #+NAME: ltest
 #+BEGIN_SRC erlang
