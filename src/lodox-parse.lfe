@@ -33,7 +33,7 @@
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.9\"
+    version     \"0.12.10\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -355,7 +355,7 @@ functions therein.
 (defun patterns (forms) (lists:map #'pattern/1 forms))
 
 (defun pattern
-  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
+  ([`(,patt ,(= `(when . ,_) guard) . ,_)] `(,@patt ,guard))
   ([`(,arglist . ,_)] arglist))
 
 (defun func-name
