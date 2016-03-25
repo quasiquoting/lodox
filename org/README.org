@@ -1,3 +1,4 @@
+#+STARTUP: showall
 #+OPTIONS: toc:nil
 #+TITLE:    Lodox
 #+SUBTITLE: Like Codox for LFE.
@@ -20,19 +21,20 @@ cat VERSION
 * Introduction
 Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
 
+Requires Erlang 18.x or later.
+
 * Installation
   :PROPERTIES:
   :noweb:    yes
   :END:
-#+MACRO: global-rebar-config the global [[https://github.com/rebar/rebar3][rebar3]] config, =~/.config/rebar3/rebar.config=
 
 First, make sure you have the [[https://github.com/lfe-rebar3/compile][lfe-compile]] plugin as a dependency in your
-project's =rebar.config= or, better yet, in the {{{global-rebar-config}}}:
+project's =rebar.config=:
 #+BEGIN_SRC erlang
 {plugins,
- [{'lfe-compile', ".*",
+ [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.0"}}}]}
+    {tag, "0.2.2"}}}]}
 #+END_SRC
 
 Then in your project's =rebar.config=, include the [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][provider pre-hook]]:
@@ -41,17 +43,18 @@ Then in your project's =rebar.config=, include the [[https://www.rebar3.org/v3.0
  [{pre, [{compile, {lfe, compile}}]}]}
 #+END_SRC
 
-Finally, add Lodox to your =plugins= list:
+Finally, add Lodox to your =plugins= list, preferably inside a =doc= [[https://www.rebar3.org/docs/profiles][profile]]:
 #+BEGIN_SRC erlang
-{plugins,
+{profiles,
  [% ...
-  {lodox, ".*",
-   {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "<<lodox-version()>>"}}}]}.
+  {doc,
+   [% ...
+    {plugins,
+     [% ...
+      {lodox,
+       {git, "git://github.com/quasiquoting/lodox.git",
+        {tag, "<<lodox-version()>>"}}}]}]}]}.
 #+END_SRC
-
-The recommended place for the Lodox plugin entry is {{{global-rebar-config}}},
-but it works at the project level, too.
 
 * Usage
   :PROPERTIES:
@@ -66,12 +69,12 @@ rebar3 compile
 Then, to invoke Lodox, simply run:
 #+NAME: lodox
 #+BEGIN_SRC sh
-rebar3 lodox
+rebar3 lfe lodox
 #+END_SRC
 
 Alternatively, you can ~do~ both at once:
 #+BEGIN_SRC sh
-rebar3 do compile, lodox
+rebar3 do compile, lfe lodox
 #+END_SRC
 
 #+NAME: last-line-only
@@ -85,20 +88,14 @@ sed 's/[^ ]*\/\(lodox\)/\/path\/to\/\1/'
 #+END_SRC
 
 If all goes well, the output will look something like:
+: Generated lodox vX.Y.Z docs in /path/to/lodox/doc
+
 #+NAME: generate-docs
-#+BEGIN_SRC sh :exports results :results output
-cd .. && <<lodox>> | <<last-line-only>> | <<obfuscate-path>>
-#+END_SRC
-
-#+RESULTS: generate-docs
-: Generated lodox v0.10.0 docs in /path/to/lodox/doc
-
-#+NAME: but-actually-though
 #+BEGIN_SRC sh :exports results :results output silent
 cd .. && \
 <<compile>> && \
 lfe -pa   _build/default/lib/*/ebin \
-    -eval '(lodox-html-writer:write-docs (lodox-parse:docs #"lodox"))'
+    -eval "(lodox-html-writer:write-docs (maps:merge (lodox-parse:docs #\"lodox\") '#m(source-uri \"https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}\")))"
 #+END_SRC
 
 And, as promised, [[http://quasiquoting.org/lodox/][generated documentation]] will be in the =doc= subdirectory of
@@ -108,7 +105,68 @@ Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/
 #+BEGIN_SRC erlang
 {provider_hooks,
  [{pre,  [{compile, {lfe, compile}}]},
-  {post, [{compile, lodox}]}]}.
+  {post, [{compile, {lfe, lodox}]}]}.
+#+END_SRC
+
+** Source Links
+/[ Modified from [[https://github.com/weavejester/codox#source-links][Codox documentation]]. ]/
+
+If you have the source available at a URI and would like to have links to the
+function/macro's source file in the documentation, you can set the ~​'source-uri'​~
+[[http://www.erlang.org/doc/design_principles/applications.html#id76014][configuration parameter]] in your [[http://www.erlang.org/doc/design_principles/applications.html#id75484][application resource file]].
+
+#+BEGIN_SRC erlang
+{env,
+ [{'source-uri',
+   "https://github.com/foo/bar/blob/{version}/{filepath}#L{line}"}]}
+#+END_SRC
+
+The URI is a template that may contain the following keys:
+
+| Key      | Description                                   |
+|----------+-----------------------------------------------|
+| filepath | the file path from the root of the repository |
+| line     | the line number of the source file            |
+| version  | the version of the project                    |
+
+N.B. In order for ~{version}~ to work properly, you must add the corresponding
+tag. For example, if your =.app= file contains ~{vsn, "1.2.3"}~ you must add the
+tag, =​"1.2.3"​=, to your repo.
+
+** Docstring Formats
+/[ Modified from [[https://github.com/weavejester/codox#docstring-formats][Codox documentation]]. ]/
+
+By default, docstrings are rendered by Lodox as Markdown via [[http://pandoc.org][pandoc]]. If ~pandoc~
+is not available, Lodox will fall back to [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
+
+It is strongly recommended that you install [[http://pandoc.org][pandoc]], as it is much more robust.
+
+In a future version, you will be able to override this behaviour by specifying
+an explicit format for your docstrings.
+
+# Currently there are only two formats for docstrings: ~​'markdown​~ and
+# ~​'plaintext​~. The Markdown format includes extensions for code blocks,
+# tables, and, like the plaintext format, URLs are automatically encoded as links.
+#
+# You can specify the docstring format globally by adding it to the
+# ~env~ list in your =rebar.config=  file:
+#
+# #+BEGIN_SRC erlang
+# {env, [{lodox, [{format, markdown}]}]}
+# #+END_SRC
+
+Markdown docstrings also support wikilink-style relative links, for referencing
+other definitions. Definitions in the current module will be matched first, and
+then Lodox will try to find a best match out of all the definitions it's
+documenting.
+
+N.B. Module-less definitions in =.lfe= files in the =include= directory,
+e.g. [[file:include/lodox-macros.lfe][lodox-macros]], will also be included in the search.
+
+#+BEGIN_SRC lfe
+(defun bar (x)
+  "See [[foo/2]] and [[baz:square/1]] for other examples."
+  ...)
 #+END_SRC
 
 #+INCLUDE: LICENSE.org :minlevel 1

@@ -17,7 +17,8 @@ before_script:
     - wget https://s3.amazonaws.com/rebar3/rebar3
     - chmod 755 rebar3
 script:
-  - ./rebar3 eunit -v
+  - ./rebar3 as test compile
+  - erl +t 10000000 -pa _build/test/lib/*/ebin -noshell -eval 'eunit:test({application, lodox}, [verbose]).' -s init stop
 notifications:
   email:
     - quasiquoting@gmail.com
