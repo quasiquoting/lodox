@@ -17,7 +17,7 @@ project's `rebar.config`:
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.2"}}}]}
+    {tag, "0.3.0"}}}]}
 ```
 
 Then in your project's `rebar.config`, include the [provider pre-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
@@ -27,18 +27,14 @@ Then in your project's `rebar.config`, include the [provider pre-hook](https://w
  [{pre, [{compile, {lfe, compile}}]}]}
 ```
 
-Finally, add Lodox to your `plugins` list, preferably inside a `doc` [profile](https://www.rebar3.org/docs/profiles):
+Finally, add Lodox to your `project_plugins` list.
 
 ```erlang
-{profiles,
+{project_plugins,
  [% ...
-  {doc,
-   [% ...
-    {plugins,
-     [% ...
-      {lodox,
-       {git, "git://github.com/quasiquoting/lodox.git",
-        {tag, "0.12.9"}}}]}]}]}.
+  {lodox,
+   {git, "git://github.com/quasiquoting/lodox.git",
+    {tag, "0.12.11"}}}]}.
 ```
 
 # Usage
@@ -58,7 +54,7 @@ rebar3 lfe lodox
 Alternatively, you can `do` both at once:
 
 ```sh
-rebar3 do compile, lfe lodox
+rebar3 compile, lfe lodox
 ```
 
 If all goes well, the output will look something like:
@@ -67,14 +63,6 @@ If all goes well, the output will look something like:
 
 And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
 your project.
-
-Optionally, you can add Lodox as a `compile` [post-hook](https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks):
-
-```erlang
-{provider_hooks,
- [{pre,  [{compile, {lfe, compile}}]},
-  {post, [{compile, {lfe, lodox}]}]}.
-```
 
 ## Source Links
 
