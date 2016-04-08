@@ -240,7 +240,7 @@ For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
 #+NAME: proper
 #+BEGIN_SRC erlang
 {proper,
- {git, "git://github.com/quasiquoting/proper.git",
+ {git, "git://github.com/manopapad/proper.git",
   {branch, "master"}}}
 #+END_SRC
 

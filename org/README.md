@@ -116,7 +116,7 @@ branch = gh-pages
 ```erlang
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.10"},
+  {vsn,          "0.12.11"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -162,7 +162,7 @@ branch = gh-pages
           {deps,
            [{ltest, {git, "git://github.com/lfex/ltest.git", {tag, "0.8.0"}}},
             {proper,
-             {git, "git://github.com/quasiquoting/proper.git",
+             {git, "git://github.com/manopapad/proper.git",
               {branch, "master"}}}]}]}]}.
 ```
 
@@ -323,12 +323,21 @@ and sets up the state.
                  #(example    "rebar3 lfe lodox") ; How to use the plugin
                  #(short_desc ,(short-desc))      ; A one-line description
                  #(desc       ,(desc))            ; A longer description
-                 #(bare       true)])             ; Task can be run by user
+                 #(bare       true)               ; Task can be run by user
+                 #(profiles   [doc])])
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
       (rebar_api:debug "Initialized lodox" [])
       `#(ok ,state*))))
 ```
+
+Per [Tristan](https://github.com/tsloughter)'s [advice](https://twitter.com/t_sloughter/status/713457165525094400), specify that Lodox should use the `doc` profile.
+
+```lfe
+#(profiles   [doc])
+```
+
+See also: [Provider Interface documentation](https://www.rebar3.org/docs/plugins#section-provider-interface)
 
 `do/1` parses the rebar state for the `current_app` (as a singleton list) or the
 list of `project_apps` and calls `write-docs/1` on each one. This is where the
@@ -915,7 +924,7 @@ If something goes wrong, throw a descriptive error."
 
 ```commonlisp
 '#m(name        #\"lodox\"
-    version     \"0.12.10\"
+    version     \"0.12.11\"
     description \"The LFE rebar3 Lodox plugin\"
     documents   ()
     modules     {{list of maps of module metadata}}
@@ -1237,7 +1246,7 @@ functions therein.
 (defun patterns (forms) (lists:map #'pattern/1 forms))
 
 (defun pattern
-  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
+  ([`(,patt ,(= `(when . ,_) guard) . ,_)] `(,@patt ,guard))
   ([`(,arglist . ,_)] arglist))
 
 (defun func-name
