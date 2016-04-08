@@ -48,7 +48,8 @@
                  #(example    "rebar3 lfe lodox") ; How to use the plugin
                  #(short_desc ,(short-desc))      ; A one-line description
                  #(desc       ,(desc))            ; A longer description
-                 #(bare       true)])             ; Task can be run by user
+                 #(bare       true)               ; Task can be run by user
+                 #(profiles   [doc])])
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
       (rebar_api:debug "Initialized lodox" [])

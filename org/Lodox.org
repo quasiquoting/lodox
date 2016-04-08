@@ -168,7 +168,7 @@ TODO: Describe this and the mess wrt =~/.config/rebar3/rebar.config=
 {plugins,
  [{'lfe-compile',
    {git, "git://github.com/lfe-rebar3/compile.git",
-    {tag, "0.2.2"}}}]}.
+    {tag, "0.3.0"}}}]}.
 
 {provider_hooks, [{pre, [{compile, {lfe, compile}}]}]}.
 #+END_SRC
@@ -189,11 +189,11 @@ Use the latest version, which as of this writing, is:
 **** clj
 For the Clojure-inspired threading macros, use [[https://github.com/lfex/clj][clj]].
 #+NAME: clj-version
-: 0.3.0
+: 0.4.0
 
 #+NAME: clj
 #+BEGIN_SRC erlang
-{clj,      {git, "git://github.com/lfex/clj.git",      {tag, "0.3.0"}}}
+{clj,      {git, "git://github.com/lfex/clj.git",      {tag, "<<clj-version()>>"}}}
 #+END_SRC
 
 **** exemplar
@@ -228,7 +228,7 @@ For markdown: [[https://github.com/erlware/erlmarkdown][erlmarkdown]].
 **** ltest
 To make writing [[http://www.erlang.org/doc/apps/eunit/chapter.html][EUnit]] tests easier, use [[https://github.com/lfex/ltest][ltest]].
 #+NAME: ltest-version
-: 0.7.0
+: 0.8.0
 
 #+NAME: ltest
 #+BEGIN_SRC erlang
@@ -240,7 +240,7 @@ For property-based testing, use [[http://proper.softlab.ntua.gr][PropEr]].
 #+NAME: proper
 #+BEGIN_SRC erlang
 {proper,
- {git, "git://github.com/quasiquoting/proper.git",
+ {git, "git://github.com/manopapad/proper.git",
   {branch, "master"}}}
 #+END_SRC
 
@@ -355,12 +355,20 @@ and sets up the state.
                  #(example    "rebar3 lfe lodox") ; How to use the plugin
                  #(short_desc ,(short-desc))      ; A one-line description
                  #(desc       ,(desc))            ; A longer description
-                 #(bare       true)])             ; Task can be run by user
+                 #(bare       true)               ; Task can be run by user
+                 <<init-profiles>>])
          (provider (providers:create opts)))
     (let ((state* (rebar_state:add_provider state provider)))
       (rebar_api:debug "Initialized lodox" [])
       `#(ok ,state*))))
 #+END_SRC
+
+Per [[https://github.com/tsloughter][Tristan]]'s [[https://twitter.com/t_sloughter/status/713457165525094400][advice]], specify that Lodox should use the ~doc~ profile.
+#+NAME: init-profiles
+#+BEGIN_SRC lfe :tangle no
+#(profiles   [doc])
+#+END_SRC
+See also: [[https://www.rebar3.org/docs/plugins#section-provider-interface][Provider Interface documentation]]
 
 ~do/1~ parses the rebar state for the ~current_app~ (as a singleton list) or the
 list of ~project_apps~ and calls ~write-docs/1~ on each one. This is where the
@@ -1279,7 +1287,7 @@ functions therein.
 (defun patterns (forms) (lists:map #'pattern/1 forms))
 
 (defun pattern
-  ([`(,patt ,(= guard `(when . ,_)) . ,_)] `(,@patt ,guard))
+  ([`(,patt ,(= `(when . ,_) guard) . ,_)] `(,@patt ,guard))
   ([`(,arglist . ,_)] arglist))
 
 (defun func-name
