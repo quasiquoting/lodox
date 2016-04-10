@@ -6,12 +6,14 @@
 #+AUTHOR:   Eric Bailey
 #+EMAIL:    quasiquoting@gmail.com
 #+LANGUAGE: en
-#+CREATOR:  Emacs 24.5.1 (Org mode 8.3.2)
+#+CREATOR: Emacs 25.0.92.1 (Org mode 8.3.4)
 
 
-[[https://travis-ci.org/quasiquoting/lodox][file:https://travis-ci.org/quasiquoting/lodox.svg]]
-[[https:/github.com/quasiquoting/lodox/releases/latest][file:https://badge.fury.io/gh/quasiquoting%2Flodox.svg]]
-[[file:LICENSE][file:https://img.shields.io/github/license/quasiquoting/lodox.svg]]
+[[https://travis-ci.org/lfe-rebar3/lodox][file:https://travis-ci.org/lfe-rebar3/lodox.svg]]
+[[file:https://img.shields.io/github/tag/lfe-rebar3/lodox.svg]]
+[[http://www.erlang.org/downloads][file:https://img.shields.io/badge/erlang-%E2%89%A518.0-red.svg]]
+[[http://lfe-rebar3.github.io/lodox][file:https://img.shields.io/badge/docs-91%25-green.svg]]
+[[file:LICENSE][file:https://img.shields.io/badge/license-MIT-blue.svg]]
 
 #+NAME: lodox-version
 #+BEGIN_SRC sh :exports none
@@ -19,7 +21,7 @@ cat VERSION
 #+END_SRC
 
 * Introduction
-Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://quasiquoting.org/lodox/][self-generated documentation]].
+Like [[https://github.com/weavejester/codox][Codox]] for [[https://github.com/rvirding/lfe][LFE]]. Check out the [[http://lfe-rebar3.github.io/lodox/][self-generated documentation]].
 
 Requires Erlang 18.x or later.
 
@@ -49,7 +51,7 @@ Finally, add Lodox to your =project_plugins= list.
 {project_plugins,
  [% ...
   {lodox,
-   {git, "git://github.com/quasiquoting/lodox.git",
+   {git, "git://github.com/lfe-rebar3/lodox.git",
     {tag, "<<lodox-version()>>"}}}]}.
 #+END_SRC
 
@@ -92,10 +94,10 @@ If all goes well, the output will look something like:
 cd .. && \
 <<compile>> && \
 lfe -pa   _build/default/lib/*/ebin \
-    -eval "(lodox-html-writer:write-docs (maps:merge (lodox-parse:docs #\"lodox\") '#m(source-uri \"https://github.com/quasiquoting/lodox/blob/{version}/{filepath}#L{line}\")))"
+    -eval "(lodox-html-writer:write-docs (maps:merge (lodox-parse:docs #\"lodox\") '#m(source-uri \"https://github.com/lfe-rebar3/lodox/blob/{version}/{filepath}#L{line}\")))"
 #+END_SRC
 
-And, as promised, [[http://quasiquoting.org/lodox/][generated documentation]] will be in the =doc= subdirectory of
+And, as promised, [[http://lfe-rebar3.github.io/lodox][generated documentation]] will be in the =doc= subdirectory of
 your project.
 
 # Optionally, you can add Lodox as a =compile= [[https://www.rebar3.org/v3.0/docs/configuration#section-provider-hooks][post-hook]]:

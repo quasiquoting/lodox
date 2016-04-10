@@ -8,3 +8,4 @@ _*
 *.beam
 ebin
 erl_crash.dump
+.rebar3

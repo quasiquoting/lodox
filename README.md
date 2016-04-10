@@ -1,10 +1,12 @@
-[![img](https://travis-ci.org/quasiquoting/lodox.svg)](https://travis-ci.org/quasiquoting/lodox)
-[![img](https://badge.fury.io/gh/quasiquoting%2Flodox.svg)](https:/github.com/quasiquoting/lodox/releases/latest)
-[![img](https://img.shields.io/github/license/quasiquoting/lodox.svg)](LICENSE)
+[![img](https://travis-ci.org/lfe-rebar3/lodox.svg)](https://travis-ci.org/lfe-rebar3/lodox)
+![img](https://img.shields.io/github/tag/lfe-rebar3/lodox.svg)
+[![img](https://img.shields.io/badge/erlang-%E2%89%A518.0-red.svg)](http://www.erlang.org/downloads)
+[![img](https://img.shields.io/badge/docs-91%25-green.svg)](http://lfe-rebar3.github.io/lodox)
+[![img](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 # Introduction
 
-Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://quasiquoting.org/lodox/).
+Like [Codox](https://github.com/weavejester/codox) for [LFE](https://github.com/rvirding/lfe). Check out the [self-generated documentation](http://lfe-rebar3.github.io/lodox/).
 
 Requires Erlang 18.x or later.
 
@@ -33,8 +35,8 @@ Finally, add Lodox to your `project_plugins` list.
 {project_plugins,
  [% ...
   {lodox,
-   {git, "git://github.com/quasiquoting/lodox.git",
-    {tag, "0.12.11"}}}]}.
+   {git, "git://github.com/lfe-rebar3/lodox.git",
+    {tag, "0.12.12"}}}]}.
 ```
 
 # Usage
@@ -61,7 +63,7 @@ If all goes well, the output will look something like:
 
     Generated lodox vX.Y.Z docs in /path/to/lodox/doc
 
-And, as promised, [generated documentation](http://quasiquoting.org/lodox/) will be in the `doc` subdirectory of
+And, as promised, [generated documentation](http://lfe-rebar3.github.io/lodox) will be in the `doc` subdirectory of
 your project.
 
 ## Source Links

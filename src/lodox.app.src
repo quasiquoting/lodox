@@ -5,7 +5,7 @@
 
 {application,    'lodox',
  [{description,  "The LFE rebar3 Lodox plugin"},
-  {vsn,          "0.12.11"},
+  {vsn,          "0.12.12"},
   {modules,      [lodox,
                   'lodox-html-writer', 'lodox-p', 'lodox-parse', 'lodox-util',
                   'unit-lodox-tests']},
@@ -13,5 +13,5 @@
   {applications, [kernel, stdlib]},
   {env,          []},
   {links,
-   [{"Homepage", "https://github.com/quasiquoting/lodox"},
-    {"Documentation", "http://quasiquoting.org/lodox"}]}]}.
+   [{"Homepage", "https://github.com/lfe-rebar3/lodox"},
+    {"Documentation", "http://lfe-rebar3.github.io/lodox"}]}]}.
